@@ -1,10 +1,13 @@
 /**
  * Draws the current game state onto the existing canvas.
- * Webcam joints become a stick figure; the orb is the one verb.
+ * Each pose map is its own stick figure; the orb is the one verb.
  */
 
 import { STICK_BONES } from "../input/joints.js";
+import { posesFromSample } from "../input/poses.js";
 import { TARGET_LIFETIME } from "../game/index.js";
+
+const PLAYER_RGB = ["61, 255, 154", "56, 180, 255"];
 
 /**
  * @typedef {import("../game/index.js").GameState} GameState
@@ -39,24 +42,29 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
   function draw(state) {
     ctx.clearRect(0, 0, width, height);
     drawFlashVeil(state);
-    drawSkeleton(state.pose?.joints);
+    const poses = posesFromSample(state.pose);
+    poses.forEach((pose, index) => {
+      drawSkeleton(pose.joints, PLAYER_RGB[index % PLAYER_RGB.length], pose.id);
+    });
     if (state.phase !== "start") {
       drawTarget(state);
     }
-    drawMarker(state);
+    drawMarkers(state);
     drawFlash(state);
   }
 
   /**
    * @param {Record<string, Joint> | undefined | null} joints
+   * @param {string} rgb
+   * @param {string} [label]
    */
-  function drawSkeleton(joints) {
+  function drawSkeleton(joints, rgb, label) {
     if (!joints) return;
 
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.lineWidth = 5;
-    ctx.strokeStyle = "rgba(61, 255, 154, 0.78)";
+    ctx.strokeStyle = `rgba(${rgb}, 0.78)`;
 
     for (const [from, to] of STICK_BONES) {
       const a = joints[from];
@@ -88,9 +96,18 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
       ctx.arc(joint.x * width, joint.y * height, radius, 0, Math.PI * 2);
       ctx.fillStyle =
         name.endsWith("wrist") || name === "nose"
-          ? "rgba(61, 255, 154, 0.95)"
+          ? `rgba(${rgb}, 0.95)`
           : "rgba(232, 242, 236, 0.88)";
       ctx.fill();
+    }
+
+    const tag = usable(nose) ? nose : Object.values(joints).find((joint) => usable(joint));
+    if (label && tag) {
+      ctx.font = '700 14px "Bebas Neue", "Arial Narrow", sans-serif';
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+      ctx.fillStyle = `rgba(${rgb}, 0.92)`;
+      ctx.fillText(label.toUpperCase(), tag.x * width, tag.y * height - 12);
     }
   }
 
@@ -143,12 +160,24 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
   /**
    * @param {GameState} state
    */
-  function drawMarker(state) {
-    const x = state.marker.x * width;
-    const y = state.marker.y * height;
-    const pulse = 0.5 + 0.5 * Math.sin(state.elapsed * 4);
+  function drawMarkers(state) {
     const missed = state.phase === "between" || state.phase === "over";
-    const color = missed ? "255, 107, 107" : "61, 255, 154";
+    const markers = state.markers?.length ? state.markers : [{ id: "p1", x: state.marker.x, y: state.marker.y }];
+    markers.forEach((marker, index) => {
+      const color = missed ? "255, 107, 107" : PLAYER_RGB[index % PLAYER_RGB.length];
+      drawMarker(marker, color, state.elapsed);
+    });
+  }
+
+  /**
+   * @param {{ x: number, y: number }} marker
+   * @param {string} color
+   * @param {number} elapsed
+   */
+  function drawMarker(marker, color, elapsed) {
+    const x = marker.x * width;
+    const y = marker.y * height;
+    const pulse = 0.5 + 0.5 * Math.sin(elapsed * 4);
 
     ctx.beginPath();
     ctx.arc(x, y, 28 + pulse * 10, 0, Math.PI * 2);

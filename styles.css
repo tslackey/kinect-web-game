@@ -321,11 +321,19 @@ body.is-between .camera-invite {
   align-items: center;
 }
 
-.camera-feed {
+.camera-feeds {
   position: fixed;
   right: 1rem;
   bottom: 1rem;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  pointer-events: none;
+}
+
+.camera-feed {
+  display: none;
   width: min(28vw, 220px);
   aspect-ratio: 4 / 3;
   object-fit: cover;
@@ -334,12 +342,14 @@ body.is-between .camera-invite {
   border-radius: 10px;
   transform: scaleX(-1);
   box-shadow: 0 12px 40px var(--shadow);
-  opacity: 0;
-  pointer-events: none;
 }
 
 .camera-feed.is-live {
-  opacity: 1;
+  display: block;
+}
+
+.camera-feed-b.is-live {
+  border-color: rgba(56, 180, 255, 0.45);
 }
 
 @keyframes grid-drift {
@@ -403,10 +413,13 @@ body.is-between .camera-invite {
     text-align: center;
   }
 
-  .camera-feed {
-    width: min(42vw, 160px);
+  .camera-feeds {
     right: 0.75rem;
     bottom: 0.75rem;
+  }
+
+  .camera-feed {
+    width: min(42vw, 160px);
   }
 }
 

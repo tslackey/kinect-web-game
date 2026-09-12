@@ -1,16 +1,14 @@
 /**
- * Input facade: webcam pose, else pointer / keyboard stand-ins.
- * game/ and render/ only see the PoseSample — they do not care which adapter
- * produced it.
+ * Input facade: up to two webcam streams, else pointer / keyboard stand-ins.
+ * game/ and render/ only see PoseSample.poses — one map per person.
  */
 
 import { classifyCameraError, peekCameraPermission, CAMERA_COPY } from "./camera-status.js";
-import { clamp01, landmarksToJoints } from "./joints.js";
+import { landmarksToJoints } from "./joints.js";
+import { assembleSample, pickSecondDeviceId } from "./poses.js";
 
-const IDLE_SOURCE = "idle";
-const MOUSE_SOURCE = "mouse";
-const KEYBOARD_SOURCE = "keyboard";
-const WEBCAM_SOURCE = "webcam";
+export { assembleSample, pickSecondDeviceId, pointerToPose, posesFromSample } from "./poses.js";
+
 const KEY_STEP = 0.05;
 
 const TASKS_VISION = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21";
@@ -25,47 +23,39 @@ const POSE_MODEL =
  */
 
 /**
- * @typedef {object} PoseSample
- * @property {"idle" | "mouse" | "keyboard" | "webcam"} source
- * @property {Record<string, Joint>} joints
- * @property {number} timestamp
+ * @typedef {import("./poses.js").PoseSample} PoseSample
+ * @typedef {import("./poses.js").PoseMap} PoseMap
  */
 
 /**
  * @param {{
  *   target?: EventTarget,
  *   video?: HTMLVideoElement | null,
+ *   video2?: HTMLVideoElement | null,
  *   peekPermission?: (() => Promise<"granted" | "denied" | "prompt" | "unknown">) | null,
  * }} [options]
  */
 export function createInput({
   target = typeof window !== "undefined" ? window : undefined,
   video = null,
+  video2 = null,
   peekPermission,
 } = {}) {
   if (!target) {
     throw new Error("createInput needs an EventTarget.");
   }
 
-  /** @type {Joint | null} */
-  let pointer = null;
+  /** @type {Map<number, Joint>} */
+  const pointers = new Map();
   /** @type {Joint | null} */
   let keys = null;
-  /** @type {Record<string, Joint> | null} */
-  let webcamJoints = null;
-  /** @type {import("./camera-status.js").CameraStatus} */
-  let cameraStatus = "prompt";
-  let cameraMessage = CAMERA_COPY.prompt;
   /** @type {"granted" | "denied" | "prompt" | "unknown"} */
   let permission = "unknown";
-  /** @type {MediaStream | null} */
-  let stream = null;
-  /** @type {{ detectForVideo: Function, close?: Function } | null} */
-  let landmarker = null;
-  let lastDetectAt = 0;
-  /** @type {HTMLVideoElement | null} */
-  let videoEl =
-    typeof HTMLVideoElement !== "undefined" && video instanceof HTMLVideoElement ? video : null;
+  let videoDeviceCount = 0;
+  let starting = false;
+
+  /** @type {ReturnType<typeof makeSlot>[]} */
+  const slots = [makeSlot(video), makeSlot(video2)];
 
   /**
    * @param {PointerEvent} event
@@ -74,11 +64,12 @@ export function createInput({
     const view = typeof window !== "undefined" ? window : null;
     const width = view?.innerWidth || 1;
     const height = view?.innerHeight || 1;
-    pointer = {
+    const pointerId = typeof event.pointerId === "number" ? event.pointerId : 0;
+    pointers.set(pointerId, {
       x: Math.min(1, Math.max(0, event.clientX / width)),
       y: Math.min(1, Math.max(0, event.clientY / height)),
       confidence: 1,
-    };
+    });
   }
 
   /**
@@ -88,10 +79,10 @@ export function createInput({
     const delta = keyDelta(event.key);
     if (!delta) return;
 
-    const origin = keys ?? pointer ?? { x: 0.5, y: 0.5, confidence: 1 };
+    const origin = keys ?? { x: 0.5, y: 0.5, confidence: 1 };
     keys = {
-      x: clamp01(origin.x + delta.x),
-      y: clamp01(origin.y + delta.y),
+      x: clampKey(origin.x + delta.x),
+      y: clampKey(origin.y + delta.y),
       confidence: 1,
     };
   }
@@ -105,13 +96,12 @@ export function createInput({
     void Promise.resolve()
       .then(() => peek())
       .then((state) => {
-        if (cameraStatus !== "prompt") return;
+        if (slots[0].status !== "prompt") return;
         permission = state;
         if (state === "denied") {
-          cameraStatus = "denied";
-          cameraMessage = CAMERA_COPY.denied;
+          slots[0].status = "denied";
         } else if (state === "granted") {
-          cameraMessage = CAMERA_COPY.granted;
+          slots[0].grantedPeek = true;
         }
       })
       .catch(() => {
@@ -119,52 +109,29 @@ export function createInput({
       });
   }
 
-  async function startCamera() {
-    if (cameraStatus === "pending" || cameraStatus === "loading" || cameraStatus === "ready") {
-      return;
-    }
+  /**
+   * Start the next camera slot. First click is player 1. If another
+   * video device exists, the same click also tries player 2. A second
+   * click (or startCamera(1)) is the explicit second webcam.
+   *
+   * @param {number} [slotIndex]
+   */
+  async function startCamera(slotIndex) {
+    const index = Number.isInteger(slotIndex) ? slotIndex : nextSlotIndex();
+    if (index < 0 || index > 1) return;
+    if (starting) return;
 
-    cameraStatus = "pending";
-    cameraMessage = CAMERA_COPY.pending;
-
+    starting = true;
     try {
-      if (!navigator.mediaDevices?.getUserMedia) {
-        cameraStatus = "unavailable";
-        cameraMessage = "This browser context has no camera API. The pointer still steers.";
-        return;
+      await startSlot(index);
+      if (index === 0 && slots[0].status === "ready") {
+        await refreshDeviceCount();
+        if (pickSecondId() && slots[1].status !== "ready") {
+          await startSlot(1);
+        }
       }
-
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
-        audio: false,
-      });
-
-      const el = ensureVideo();
-      el.srcObject = stream;
-      el.muted = true;
-      el.playsInline = true;
-      el.classList.add("is-live");
-      await el.play();
-
-      cameraStatus = "loading";
-      cameraMessage = CAMERA_COPY.loading;
-
-      try {
-        landmarker = await loadPoseLandmarker();
-        lastDetectAt = 0;
-        cameraStatus = "ready";
-        cameraMessage = CAMERA_COPY.ready;
-        permission = "granted";
-      } catch {
-        cameraStatus = "error";
-        cameraMessage = "Camera is on, but the pose model failed to load. The pointer still works.";
-      }
-    } catch (error) {
-      stopStream();
-      const classified = classifyCameraError(error);
-      cameraStatus = classified.status;
-      cameraMessage = classified.message;
-      if (classified.status === "denied") permission = "denied";
+    } finally {
+      starting = false;
     }
   }
 
@@ -172,41 +139,28 @@ export function createInput({
   function sample() {
     const timestamp = performance.now();
     refreshWebcamJoints(timestamp);
-
-    if (webcamJoints && Object.keys(webcamJoints).length > 0) {
-      return {
-        source: WEBCAM_SOURCE,
-        joints: webcamJoints,
-        timestamp,
-      };
-    }
-
-    if (pointer) {
-      return {
-        source: MOUSE_SOURCE,
-        joints: { pointer: { ...pointer } },
-        timestamp,
-      };
-    }
-
-    if (keys) {
-      return {
-        source: KEYBOARD_SOURCE,
-        joints: { pointer: { ...keys } },
-        timestamp,
-      };
-    }
-
-    return { source: IDLE_SOURCE, joints: {}, timestamp };
+    return assembleSample({
+      webcamPoses: slots.map((slot) => (slot.status === "ready" ? slot.joints : null)),
+      pointers: [...pointers.values()],
+      keys,
+      timestamp,
+    });
   }
 
   function getStatus() {
+    const readyCount = slots.filter((slot) => slot.status === "ready").length;
+    const message = statusMessage();
     return {
-      camera: cameraStatus,
-      message: cameraMessage,
-      cameraMessage,
+      camera: slots[0].status,
+      camera2: slots[1].status,
+      camerasReady: readyCount,
+      deviceCount: videoDeviceCount,
+      message,
+      cameraMessage: message,
       permission,
-      jointCount: webcamJoints ? Object.keys(webcamJoints).length : 0,
+      jointCount: slots[0].joints ? Object.keys(slots[0].joints).length : 0,
+      poseCount: readyCount,
+      starting,
     };
   }
 
@@ -214,59 +168,223 @@ export function createInput({
     target.removeEventListener("pointermove", onPointer);
     target.removeEventListener("pointerdown", onPointer);
     target.removeEventListener("keydown", onKeyDown);
-    stopStream();
-    try {
-      landmarker?.close?.();
-    } catch {
-      // ignore
+    for (const slot of slots) {
+      stopSlot(slot);
     }
-    landmarker = null;
   }
 
   /**
    * @param {number} now
    */
   function refreshWebcamJoints(now) {
-    if (cameraStatus !== "ready" || !landmarker || !videoEl) return;
-    if (videoEl.readyState < 2 || videoEl.videoWidth < 16) return;
-    if (now - lastDetectAt < 33) return;
+    for (let i = 0; i < slots.length; i += 1) {
+      const slot = slots[i];
+      if (slot.status !== "ready" || !slot.landmarker || !slot.video) continue;
+      if (slot.video.readyState < 2 || slot.video.videoWidth < 16) continue;
+      if (now - slot.lastDetectAt < 33) continue;
+
+      try {
+        const result = slot.landmarker.detectForVideo(slot.video, Math.floor(now) + i);
+        slot.lastDetectAt = now;
+        const pose = result?.landmarks?.[0];
+        if (pose?.length) {
+          slot.joints = landmarksToJoints(pose);
+        }
+      } catch {
+        // A bad frame must not tear down the tick loop.
+      }
+    }
+  }
+
+  /**
+   * @param {number} index
+   */
+  async function startSlot(index) {
+    const slot = slots[index];
+    if (slot.status === "pending" || slot.status === "loading" || slot.status === "ready") {
+      return;
+    }
+
+    slot.status = "pending";
 
     try {
-      const result = landmarker.detectForVideo(videoEl, Math.floor(now));
-      lastDetectAt = now;
-      const pose = result?.landmarks?.[0];
-      if (pose?.length) {
-        webcamJoints = landmarksToJoints(pose);
+      if (!navigator.mediaDevices?.getUserMedia) {
+        slot.status = "unavailable";
+        return;
       }
+
+      const constraints = await videoConstraintsFor(index);
+      if (!constraints) {
+        slot.status = "unavailable";
+        return;
+      }
+
+      slot.stream = await navigator.mediaDevices.getUserMedia({
+        video: constraints,
+        audio: false,
+      });
+
+      const el = ensureVideo(slot, index);
+      el.srcObject = slot.stream;
+      el.muted = true;
+      el.playsInline = true;
+      el.classList.add("is-live");
+      await el.play();
+
+      slot.status = "loading";
+
+      try {
+        slot.landmarker = await loadPoseLandmarker();
+        slot.lastDetectAt = 0;
+        slot.status = "ready";
+        permission = "granted";
+        await refreshDeviceCount();
+      } catch {
+        slot.status = "error";
+        slot.modelError = true;
+      }
+    } catch (error) {
+      stopSlot(slot);
+      const classified = classifyCameraError(error);
+      slot.status = classified.status;
+      slot.errorMessage = classified.message;
+      if (classified.status === "denied") permission = "denied";
+    }
+  }
+
+  /**
+   * @param {number} index
+   */
+  async function videoConstraintsFor(index) {
+    const size = { width: { ideal: 640 }, height: { ideal: 480 } };
+    if (index === 0) {
+      return { facingMode: "user", ...size };
+    }
+
+    await refreshDeviceCount();
+    const firstId = slots[0].stream?.getVideoTracks?.()[0]?.getSettings?.()?.deviceId;
+    const deviceId = pickSecondId(firstId);
+    if (!deviceId) return null;
+    return { deviceId: { exact: deviceId }, ...size };
+  }
+
+  /**
+   * @param {string | undefined} firstId
+   */
+  function pickSecondId(firstId) {
+    const fromStream = firstId ?? slots[0].stream?.getVideoTracks?.()[0]?.getSettings?.()?.deviceId;
+    return pickSecondDeviceId(lastDevices, fromStream);
+  }
+
+  /** @type {Array<{ kind?: string, deviceId?: string }>} */
+  let lastDevices = [];
+
+  async function refreshDeviceCount() {
+    try {
+      const devices = await navigator.mediaDevices?.enumerateDevices?.();
+      if (!Array.isArray(devices)) return;
+      lastDevices = devices;
+      videoDeviceCount = devices.filter((device) => device.kind === "videoinput").length;
     } catch {
-      // A bad frame must not tear down the tick loop.
+      // Device lists are best-effort. Solo play still works.
     }
   }
 
-  function ensureVideo() {
-    if (videoEl) return videoEl;
-    videoEl = document.createElement("video");
-    videoEl.setAttribute("playsinline", "");
-    videoEl.muted = true;
-    videoEl.autoplay = true;
-    videoEl.className = "camera-feed";
-    document.body.appendChild(videoEl);
-    return videoEl;
+  function nextSlotIndex() {
+    if (slots[0].status !== "ready" && slots[0].status !== "loading" && slots[0].status !== "pending") {
+      return 0;
+    }
+    if (slots[1].status !== "ready" && slots[1].status !== "loading" && slots[1].status !== "pending") {
+      return 1;
+    }
+    return -1;
   }
 
-  function stopStream() {
-    if (!stream) return;
-    for (const track of stream.getTracks()) {
-      track.stop();
+  function statusMessage() {
+    const [first, second] = slots;
+    if (first.status === "ready" && second.status === "ready") return CAMERA_COPY.readyTwo;
+    if (first.status === "ready") {
+      if (videoDeviceCount >= 2 && second.status !== "denied") return CAMERA_COPY.readyOneMore;
+      return CAMERA_COPY.ready;
     }
-    stream = null;
-    if (videoEl) {
-      videoEl.srcObject = null;
-      videoEl.classList.remove("is-live");
+    if (first.modelError) {
+      return "Camera is on, but the pose model failed to load. The pointer still works.";
     }
+    if (first.status === "pending") return CAMERA_COPY.pending;
+    if (first.status === "loading") return CAMERA_COPY.loading;
+    if (first.status === "denied") return first.errorMessage ?? CAMERA_COPY.denied;
+    if (first.status === "unavailable") {
+      return first.errorMessage ?? CAMERA_COPY.unavailable;
+    }
+    if (first.status === "error") return first.errorMessage ?? CAMERA_COPY.error;
+    if (first.grantedPeek || permission === "granted") return CAMERA_COPY.granted;
+    return CAMERA_COPY.prompt;
   }
 
   return { sample, startCamera, getStatus, dispose };
+}
+
+/**
+ * @param {HTMLVideoElement | null} video
+ */
+function makeSlot(video) {
+  return {
+    video: isVideo(video) ? video : null,
+    stream: /** @type {MediaStream | null} */ (null),
+    landmarker: /** @type {{ detectForVideo: Function, close?: Function } | null} */ (null),
+    joints: /** @type {Record<string, import("./index.js").Joint> | null} */ (null),
+    status: /** @type {import("./camera-status.js").CameraStatus} */ ("prompt"),
+    lastDetectAt: 0,
+    grantedPeek: false,
+    modelError: false,
+    errorMessage: /** @type {string | null} */ (null),
+  };
+}
+
+/**
+ * @param {ReturnType<typeof makeSlot>} slot
+ * @param {number} index
+ */
+function ensureVideo(slot, index) {
+  if (slot.video) return slot.video;
+  const el = document.createElement("video");
+  el.setAttribute("playsinline", "");
+  el.muted = true;
+  el.autoplay = true;
+  el.className = index === 1 ? "camera-feed camera-feed-b" : "camera-feed";
+  document.body.appendChild(el);
+  slot.video = el;
+  return el;
+}
+
+/**
+ * @param {ReturnType<typeof makeSlot>} slot
+ */
+function stopSlot(slot) {
+  if (slot.stream) {
+    for (const track of slot.stream.getTracks()) {
+      track.stop();
+    }
+    slot.stream = null;
+  }
+  if (slot.video) {
+    slot.video.srcObject = null;
+    slot.video.classList.remove("is-live");
+  }
+  try {
+    slot.landmarker?.close?.();
+  } catch {
+    // ignore
+  }
+  slot.landmarker = null;
+  slot.joints = null;
+}
+
+/**
+ * @param {unknown} video
+ */
+function isVideo(video) {
+  return typeof HTMLVideoElement !== "undefined" && video instanceof HTMLVideoElement;
 }
 
 /**
@@ -281,15 +399,34 @@ function keyDelta(key) {
   return null;
 }
 
-async function loadPoseLandmarker() {
-  const module = await import(`${TASKS_VISION}/vision_bundle.mjs`);
-  const FilesetResolver = module.FilesetResolver;
-  const PoseLandmarker = module.PoseLandmarker;
-  if (!FilesetResolver || !PoseLandmarker) {
-    throw new Error("MediaPipe PoseLandmarker export was missing.");
-  }
+/**
+ * @param {number} value
+ */
+function clampKey(value) {
+  return Math.min(1, Math.max(0, value));
+}
 
-  const vision = await FilesetResolver.forVisionTasks(`${TASKS_VISION}/wasm`);
+/** @type {Promise<unknown> | null} */
+let visionPromise = null;
+
+async function loadVision() {
+  if (!visionPromise) {
+    visionPromise = (async () => {
+      const module = await import(`${TASKS_VISION}/vision_bundle.mjs`);
+      const FilesetResolver = module.FilesetResolver;
+      const PoseLandmarker = module.PoseLandmarker;
+      if (!FilesetResolver || !PoseLandmarker) {
+        throw new Error("MediaPipe PoseLandmarker export was missing.");
+      }
+      const vision = await FilesetResolver.forVisionTasks(`${TASKS_VISION}/wasm`);
+      return { PoseLandmarker, vision };
+    })();
+  }
+  return visionPromise;
+}
+
+async function loadPoseLandmarker() {
+  const { PoseLandmarker, vision } = await loadVision();
   const options = {
     runningMode: "VIDEO",
     numPoses: 1,
