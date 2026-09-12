@@ -4,7 +4,7 @@
  * produced it.
  */
 
-import { classifyCameraError, CAMERA_COPY } from "./camera-status.js";
+import { classifyCameraError, peekCameraPermission, CAMERA_COPY } from "./camera-status.js";
 import { clamp01, landmarksToJoints } from "./joints.js";
 
 const IDLE_SOURCE = "idle";
@@ -35,11 +35,13 @@ const POSE_MODEL =
  * @param {{
  *   target?: EventTarget,
  *   video?: HTMLVideoElement | null,
+ *   peekPermission?: (() => Promise<"granted" | "denied" | "prompt" | "unknown">) | null,
  * }} [options]
  */
 export function createInput({
   target = typeof window !== "undefined" ? window : undefined,
   video = null,
+  peekPermission,
 } = {}) {
   if (!target) {
     throw new Error("createInput needs an EventTarget.");
@@ -54,6 +56,8 @@ export function createInput({
   /** @type {import("./camera-status.js").CameraStatus} */
   let cameraStatus = "prompt";
   let cameraMessage = CAMERA_COPY.prompt;
+  /** @type {"granted" | "denied" | "prompt" | "unknown"} */
+  let permission = "unknown";
   /** @type {MediaStream | null} */
   let stream = null;
   /** @type {{ detectForVideo: Function, close?: Function } | null} */
@@ -96,6 +100,25 @@ export function createInput({
   target.addEventListener("pointerdown", onPointer);
   target.addEventListener("keydown", onKeyDown);
 
+  const peek = peekPermission === undefined ? peekCameraPermission : peekPermission;
+  if (peek) {
+    void Promise.resolve()
+      .then(() => peek())
+      .then((state) => {
+        if (cameraStatus !== "prompt") return;
+        permission = state;
+        if (state === "denied") {
+          cameraStatus = "denied";
+          cameraMessage = CAMERA_COPY.denied;
+        } else if (state === "granted") {
+          cameraMessage = CAMERA_COPY.granted;
+        }
+      })
+      .catch(() => {
+        // A failed peek must not change the allow-camera prompt.
+      });
+  }
+
   async function startCamera() {
     if (cameraStatus === "pending" || cameraStatus === "loading" || cameraStatus === "ready") {
       return;
@@ -131,6 +154,7 @@ export function createInput({
         lastDetectAt = 0;
         cameraStatus = "ready";
         cameraMessage = CAMERA_COPY.ready;
+        permission = "granted";
       } catch {
         cameraStatus = "error";
         cameraMessage = "Camera is on, but the pose model failed to load. The pointer still works.";
@@ -140,6 +164,7 @@ export function createInput({
       const classified = classifyCameraError(error);
       cameraStatus = classified.status;
       cameraMessage = classified.message;
+      if (classified.status === "denied") permission = "denied";
     }
   }
 
@@ -180,6 +205,7 @@ export function createInput({
       camera: cameraStatus,
       message: cameraMessage,
       cameraMessage,
+      permission,
       jointCount: webcamJoints ? Object.keys(webcamJoints).length : 0,
     };
   }

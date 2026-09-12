@@ -54,6 +54,17 @@ const DRIFT_SPAN = 0.045;
  * @property {Target} target
  * @property {number | null} timeLeft Seconds left on the current orb, or null while waiting.
  * @property {number | null} holdLeft Seconds left in the between-round pause.
+ * @property {Flash | null} flash Latest hit / miss / game-over cue for juice. Not a mechanic.
+ */
+
+/**
+ * @typedef {object} Flash
+ * @property {number} id
+ * @property {"hit" | "miss" | "over"} kind
+ * @property {number} x
+ * @property {number} y
+ * @property {number} score
+ * @property {number} at Elapsed seconds when the cue fired.
  */
 
 /**
@@ -82,6 +93,7 @@ export function driftScaleForRound(round) {
 export function createGame({ random = Math.random, rounds = ROUND_COUNT } = {}) {
   const sessionRounds = Math.max(1, Math.floor(rounds) || ROUND_COUNT);
   let nextTargetId = 1;
+  let nextFlashId = 1;
 
   /** @type {GameState} */
   const state = {
@@ -100,6 +112,7 @@ export function createGame({ random = Math.random, rounds = ROUND_COUNT } = {}) 
     target: makeTarget(random, nextTargetId++, [], null, 1),
     timeLeft: null,
     holdLeft: null,
+    flash: null,
   };
 
   /**
@@ -139,6 +152,7 @@ export function createGame({ random = Math.random, rounds = ROUND_COUNT } = {}) 
       state.roundHits += 1;
       state.phase = "playing";
       state.timeLeft = state.lifetime;
+      emitFlash("hit", state.target.x, state.target.y);
       state.target = makeTarget(random, nextTargetId++, strikers, state.target, state.driftScale);
       return state;
     }
@@ -162,14 +176,17 @@ export function createGame({ random = Math.random, rounds = ROUND_COUNT } = {}) 
       return state;
     }
     nextTargetId = 1;
+    nextFlashId = 1;
     state.elapsed = 0;
     state.score = 0;
+    state.flash = null;
     beginRound(1);
     return state;
   }
 
   function reset() {
     nextTargetId = 1;
+    nextFlashId = 1;
     state.elapsed = 0;
     state.ticks = 0;
     state.phase = "start";
@@ -181,6 +198,7 @@ export function createGame({ random = Math.random, rounds = ROUND_COUNT } = {}) 
     state.target = makeTarget(random, nextTargetId++, [], null, state.driftScale);
     state.timeLeft = null;
     state.holdLeft = null;
+    state.flash = null;
     return state;
   }
 
@@ -203,10 +221,28 @@ export function createGame({ random = Math.random, rounds = ROUND_COUNT } = {}) 
     if (state.round >= state.rounds) {
       state.phase = "over";
       state.holdLeft = null;
+      emitFlash("over", state.target.x, state.target.y);
       return;
     }
     state.phase = "between";
     state.holdLeft = ROUND_PAUSE;
+    emitFlash("miss", state.target.x, state.target.y);
+  }
+
+  /**
+   * @param {Flash["kind"]} kind
+   * @param {number} x
+   * @param {number} y
+   */
+  function emitFlash(kind, x, y) {
+    state.flash = {
+      id: nextFlashId++,
+      kind,
+      x,
+      y,
+      score: state.score,
+      at: state.elapsed,
+    };
   }
 
   return { tick, getState, start, reset };

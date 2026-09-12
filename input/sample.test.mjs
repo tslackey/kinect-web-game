@@ -60,4 +60,26 @@ assert(verb.getState().inputSource === "mouse", "game should see the mouse sourc
 hitInput.dispose();
 keysInput.dispose();
 
+const peekTarget = new EventTarget();
+const peeked = createInput({
+  target: peekTarget,
+  peekPermission: async () => "denied",
+});
+await new Promise((resolve) => setTimeout(resolve, 0));
+assert(peeked.getStatus().camera === "denied", "a denied peek should surface before getUserMedia");
+assert(peeked.getStatus().permission === "denied", "status should remember the denied peek");
+assert(/keyboard/i.test(peeked.getStatus().message), "denied peek copy should mention the keyboard");
+peeked.dispose();
+
+const grantedTarget = new EventTarget();
+const granted = createInput({
+  target: grantedTarget,
+  peekPermission: async () => "granted",
+});
+await new Promise((resolve) => setTimeout(resolve, 0));
+assert(granted.getStatus().camera === "prompt", "a granted peek still waits for a click to start the camera");
+assert(granted.getStatus().permission === "granted", "status should remember the granted peek");
+assert(granted.getStatus().message === CAMERA_COPY.granted, "granted peek should use the start-camera copy");
+granted.dispose();
+
 console.log("input/sample.test.mjs passed");

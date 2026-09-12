@@ -1,30 +1,32 @@
 # Kinect Web Game
 
-Shareable GitHub Pages motion arcade. Play with a webcam. Mouse and
-keyboard are stand-ins for tests and for when the camera is off.
+A motion arcade you can send someone. Open the link, allow the camera, play.
 
-One verb: hit floating orbs with your hands. A hit adds a point. Miss the
-timer and the round ends. A session is start → 3 rounds → game over → play
-again. Later rounds shave a little orb time and drift a bit faster.
+**Play:** [https://tslackey.github.io/kinect-web-game/](https://tslackey.github.io/kinect-web-game/)
 
-## Play
+1. Open that URL.
+2. Click **Allow camera**. Hands stay on-device. Nothing is uploaded.
+3. Click **Play**. Hit the orbs with either hand.
 
-Open [https://tslackey.github.io/kinect-web-game/](https://tslackey.github.io/kinect-web-game/).
-Click **Allow camera**, then **Play**, and reach for the orb. If the camera
-is blocked, the pointer still plays.
+If the camera is blocked, click **Play without camera**. The pointer and
+keyboard still play. A session is 3 rounds. Miss an orb and the round ends.
+
+Sound is optional. Use **Sound on** / **Sound off**.
 
 ## Local preview
+
+Same game, served by Vite on port 8080. Vite is the local server only.
 
 ```bash
 npm install
 npm run dev
 ```
 
-Then visit [http://localhost:8080](http://localhost:8080). Vite serves the
-repo root on port 8080. Click **Allow camera**, then **Play**.
+Then visit [http://localhost:8080](http://localhost:8080). Allow the camera,
+then play.
 
-`npm test` runs the existing `node --test` suite (mouse and keyboard
-stand-ins; no sensor host).
+`npm test` runs the `node --test` suite (mouse and keyboard stand-ins; no
+camera hardware).
 
 `npm run preview` serves the same port for a production-style check.
 
@@ -34,17 +36,20 @@ stand-ins; no sensor host).
 | --- | --- |
 | `input/` | Pose sample. Webcam when the camera is live; else mouse or keyboard. |
 | `game/` | Owns session state and `tick(dt)`. Start, rounds, score, game over. |
-| `render/` | Draws the stick figure, orb, and marker to `#motion-field`. |
-| `main.js` | Wires the animation frame loop, camera, and Play. |
+| `render/` | Draws the stick figure, orb, marker, and hit flashes. |
+| `feel/` | Optional synthesized hit / miss audio. |
+| `main.js` | Wires the loop, camera prompt, Play, and sound toggle. |
 
 ## GitHub Pages
 
-Pushes to `main` deploy via [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml).
+Pushes to `main` deploy the **static repo root** via
+[`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml).
+There is no Vite build step. Pages publishes `index.html` and the ES modules
+as-is.
 
 1. In the repo on GitHub: **Settings → Pages**
 2. Under **Build and deployment**, set **Source** to **GitHub Actions**
 3. After the workflow runs, the site is at:
    `https://tslackey.github.io/kinect-web-game/`
 
-The pose library and pose model load from a CDN at runtime. Vite is
-dev-only; Pages still publishes the repo root as static files.
+The pose library and pose model load from a CDN at runtime.

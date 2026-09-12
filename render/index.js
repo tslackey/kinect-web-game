@@ -13,8 +13,9 @@ import { TARGET_LIFETIME } from "../game/index.js";
 
 /**
  * @param {HTMLCanvasElement} canvas
+ * @param {{ reducedMotion?: boolean }} [options]
  */
-export function createRenderer(canvas) {
+export function createRenderer(canvas, { reducedMotion = false } = {}) {
   const ctx = canvas.getContext("2d");
   if (!ctx) {
     throw new Error("2D canvas context is not available.");
@@ -37,11 +38,13 @@ export function createRenderer(canvas) {
    */
   function draw(state) {
     ctx.clearRect(0, 0, width, height);
+    drawFlashVeil(state);
     drawSkeleton(state.pose?.joints);
     if (state.phase !== "start") {
       drawTarget(state);
     }
     drawMarker(state);
+    drawFlash(state);
   }
 
   /**
@@ -167,7 +170,77 @@ export function createRenderer(canvas) {
     ctx.fill();
   }
 
+  /**
+   * @param {GameState} state
+   */
+  function drawFlashVeil(state) {
+    const flash = state.flash;
+    if (!flash) return;
+    const age = state.elapsed - flash.at;
+    const window = flash.kind === "hit" ? 0.14 : 0.22;
+    if (age < 0 || age > window) return;
+    const fade = 1 - age / window;
+    const color =
+      flash.kind === "hit" ? "61, 255, 154" : flash.kind === "over" ? "255, 107, 107" : "255, 168, 110";
+    const strength = reducedMotion ? 0.04 : flash.kind === "hit" ? 0.14 : 0.1;
+    ctx.fillStyle = `rgba(${color}, ${strength * fade})`;
+    ctx.fillRect(0, 0, width, height);
+  }
+
+  /**
+   * @param {GameState} state
+   */
+  function drawFlash(state) {
+    const flash = state.flash;
+    if (!flash) return;
+    const age = state.elapsed - flash.at;
+    if (age < 0 || age > 0.55) return;
+
+    const t = age / 0.55;
+    const fade = 1 - t;
+    const x = flash.x * width;
+    const y = flash.y * height;
+    const hit = flash.kind === "hit";
+    const color = hit ? "61, 255, 154" : "255, 107, 107";
+    const ring = reducedMotion ? 28 : 22 + t * 92;
+
+    ctx.beginPath();
+    ctx.arc(x, y, ring, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(${color}, ${0.15 + fade * 0.75})`;
+    ctx.lineWidth = reducedMotion ? 3 : Math.max(1.5, 7 * fade);
+    ctx.stroke();
+
+    if (hit && !reducedMotion) {
+      for (let i = 0; i < 8; i += 1) {
+        const seed = flash.id * 17 + i * 41;
+        const angle = unit(seed) * Math.PI * 2;
+        const dist = (18 + unit(seed + 3) * 36) * (0.35 + t);
+        ctx.beginPath();
+        ctx.arc(x + Math.cos(angle) * dist, y + Math.sin(angle) * dist, 2.4 * fade, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(232, 242, 236, ${fade})`;
+        ctx.fill();
+      }
+    }
+
+    if (hit) {
+      const lift = reducedMotion ? 18 : 16 + t * 42;
+      ctx.font = `700 ${Math.round(Math.min(width, height) * 0.05)}px "Bebas Neue", "Arial Narrow", sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = `rgba(61, 255, 154, ${fade})`;
+      ctx.fillText("+1", x, y - lift);
+    }
+  }
+
   return { resize, draw };
+}
+
+/**
+ * @param {number} seed
+ */
+function unit(seed) {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
 }
 
 /**
