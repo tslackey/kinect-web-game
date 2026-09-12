@@ -6,7 +6,7 @@
 
 import { STICK_BONES } from "../input/joints.js";
 import { posesFromSample } from "../input/poses.js";
-import { TARGET_LIFETIME } from "../game/index.js";
+import { HIT_RADIUS, TARGET_LIFETIME } from "../game/index.js";
 import { FACET, FACET_RGB, FACET_STEPS, PLAYER_RGB, hexToRgb } from "../theme/facet.js";
 
 /**
@@ -182,30 +182,42 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
   function drawPlant(plant, { grown, missed, gated }) {
     const x = plant.x * width;
     const y = plant.y * height;
-    const scale = grown ? 1.45 : 0.78;
+    const scale = grown ? 2.1 : 1.25;
     const alpha = gated ? 0.55 : missed ? 0.5 : 1;
     const stem = missed ? FACET.coral : FACET.moss;
     const leaf = missed ? FACET_STEPS.coralBone : FACET_STEPS.mossBone;
     const bloom = missed ? FACET.coral : FACET.lilac;
+    const zone = HIT_RADIUS * Math.min(width, height);
 
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.strokeStyle = stem;
-    ctx.lineWidth = grown ? 5 : 3.5;
-    ctx.lineCap = "round";
+    const ring = hexVertices(x, y, zone);
     ctx.beginPath();
-    ctx.moveTo(x, y + 18 * scale);
-    ctx.lineTo(x, y - 22 * scale);
+    ring.forEach((point, index) => {
+      if (index === 0) ctx.moveTo(point[0], point[1]);
+      else ctx.lineTo(point[0], point[1]);
+    });
+    ctx.closePath();
+    ctx.strokeStyle = `rgba(${missed ? FACET_RGB.coral : FACET_RGB.moss}, ${gated ? 0.25 : 0.55})`;
+    ctx.lineWidth = 2;
     ctx.stroke();
 
-    fillDiamond(ctx, x - 12 * scale, y - 6 * scale, 7 * scale, leaf);
-    fillDiamond(ctx, x + 13 * scale, y - 10 * scale, 7 * scale, leaf);
+    ctx.strokeStyle = stem;
+    ctx.lineWidth = grown ? 6 : 4.5;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(x, y + 22 * scale);
+    ctx.lineTo(x, y - 26 * scale);
+    ctx.stroke();
+
+    fillDiamond(ctx, x - 16 * scale, y - 4 * scale, 9 * scale, leaf);
+    fillDiamond(ctx, x + 17 * scale, y - 10 * scale, 9 * scale, leaf);
     if (grown) {
-      fillDiamond(ctx, x - 16 * scale, y - 22 * scale, 8 * scale, leaf);
-      fillDiamond(ctx, x + 16 * scale, y - 26 * scale, 8 * scale, leaf);
-      fillDiamond(ctx, x, y - 34 * scale, 9 * scale, bloom);
+      fillDiamond(ctx, x - 20 * scale, y - 24 * scale, 10 * scale, leaf);
+      fillDiamond(ctx, x + 20 * scale, y - 28 * scale, 10 * scale, leaf);
+      fillDiamond(ctx, x, y - 40 * scale, 12 * scale, bloom);
     } else {
-      fillDiamond(ctx, x, y - 24 * scale, 5 * scale, bloom);
+      fillDiamond(ctx, x, y - 28 * scale, 7 * scale, bloom);
     }
     ctx.restore();
   }
@@ -221,48 +233,47 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
     const body = missed ? FACET.coral : held ? FACET.ember : FACET.lilac;
     const lip = missed ? FACET_STEPS.coralBone : FACET_STEPS.emberBone;
     const spout = missed ? FACET.coral : FACET.sky;
+    const zone = HIT_RADIUS * Math.min(width, height);
 
     ctx.save();
     ctx.globalAlpha = alpha;
+    const ring = hexVertices(x, y, zone);
     ctx.beginPath();
-    ctx.moveTo(x - 16, y - 6);
-    ctx.lineTo(x + 14, y - 6);
-    ctx.lineTo(x + 11, y + 16);
-    ctx.lineTo(x - 13, y + 16);
+    ring.forEach((point, index) => {
+      if (index === 0) ctx.moveTo(point[0], point[1]);
+      else ctx.lineTo(point[0], point[1]);
+    });
+    ctx.closePath();
+    ctx.strokeStyle = `rgba(${missed ? FACET_RGB.coral : held ? FACET_RGB.ember : FACET_RGB.lilac}, ${held ? 0.85 : gated ? 0.28 : 0.7})`;
+    ctx.lineWidth = held ? 3 : 2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x - 22, y - 8);
+    ctx.lineTo(x + 18, y - 8);
+    ctx.lineTo(x + 15, y + 22);
+    ctx.lineTo(x - 18, y + 22);
     ctx.closePath();
     ctx.fillStyle = body;
     ctx.fill();
 
     ctx.beginPath();
-    ctx.moveTo(x - 18, y - 10);
-    ctx.lineTo(x + 16, y - 10);
-    ctx.lineTo(x + 16, y - 4);
-    ctx.lineTo(x - 18, y - 4);
+    ctx.moveTo(x - 26, y - 14);
+    ctx.lineTo(x + 22, y - 14);
+    ctx.lineTo(x + 22, y - 5);
+    ctx.lineTo(x - 26, y - 5);
     ctx.closePath();
     ctx.fillStyle = lip;
     ctx.fill();
 
     ctx.beginPath();
-    ctx.moveTo(x + 14, y - 8);
-    ctx.quadraticCurveTo(x + 28, y - 14, x + 30, y + 2);
-    ctx.lineTo(x + 24, y + 2);
-    ctx.quadraticCurveTo(x + 22, y - 6, x + 14, y - 2);
+    ctx.moveTo(x + 18, y - 10);
+    ctx.quadraticCurveTo(x + 38, y - 18, x + 42, y + 4);
+    ctx.lineTo(x + 34, y + 4);
+    ctx.quadraticCurveTo(x + 30, y - 8, x + 18, y - 2);
     ctx.closePath();
     ctx.fillStyle = spout;
     ctx.fill();
-
-    if (held) {
-      const ring = hexVertices(x, y, 26);
-      ctx.beginPath();
-      ring.forEach((point, index) => {
-        if (index === 0) ctx.moveTo(point[0], point[1]);
-        else ctx.lineTo(point[0], point[1]);
-      });
-      ctx.closePath();
-      ctx.strokeStyle = `rgba(${FACET_RGB.ember}, 0.7)`;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
     ctx.restore();
   }
 
