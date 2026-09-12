@@ -81,32 +81,28 @@ body {
   inset: 0;
   width: 100%;
   height: 100%;
-  opacity: 0.7;
 }
 
-.hero {
+.hud {
   position: relative;
   z-index: 1;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: flex-start;
-  gap: 1rem;
-  padding: clamp(1.5rem, 5vw, 4rem);
-  max-width: 52rem;
+  gap: 0.65rem;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  max-width: 36rem;
 }
 
 .brand {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(3.2rem, 10vw, 6.5rem);
+  font-size: clamp(2rem, 6vw, 3.2rem);
   letter-spacing: 0.04em;
   line-height: 0.9;
   text-transform: uppercase;
   color: var(--ink);
   text-shadow: 0 0 40px rgba(61, 255, 154, 0.25);
-  animation: rise 700ms ease-out both;
 }
 
 h1 {
@@ -117,7 +113,6 @@ h1 {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
-  animation: rise 700ms ease-out 80ms both;
 }
 
 .lede {
@@ -126,15 +121,6 @@ h1 {
   font-size: clamp(1rem, 2.2vw, 1.15rem);
   line-height: 1.55;
   color: var(--muted);
-  animation: rise 700ms ease-out 160ms both;
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-  animation: rise 700ms ease-out 240ms both;
 }
 
 .btn {
@@ -161,16 +147,6 @@ h1 {
   transform: translateY(0);
 }
 
-.btn.primary {
-  background: var(--accent);
-  color: #052015;
-  box-shadow: 0 10px 30px rgba(61, 255, 154, 0.2);
-}
-
-.btn.primary:hover {
-  background: #6dffb2;
-}
-
 .btn.ghost {
   background: transparent;
   color: var(--ink);
@@ -183,22 +159,11 @@ h1 {
 }
 
 .status {
-  margin: 0.25rem 0 0;
+  margin: 0.15rem 0 0.35rem;
   min-height: 1.25rem;
   font-size: 0.9rem;
-  color: var(--accent-dim);
-  animation: rise 700ms ease-out 320ms both;
-}
-
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
 }
 
 @keyframes grid-drift {
@@ -231,17 +196,11 @@ h1 {
 }
 
 @media (max-width: 640px) {
-  .hero {
-    justify-content: flex-end;
-    padding-bottom: 12vh;
-  }
-
-  .actions {
-    width: 100%;
+  .hud {
+    max-width: none;
   }
 
   .btn {
-    flex: 1 1 auto;
     text-align: center;
   }
 }
