@@ -7,10 +7,11 @@ import { createAudio } from "./feel/audio.js";
 const canvas = document.getElementById("motion-field");
 const statusEl = document.getElementById("status");
 const cameraInvite = document.getElementById("camera-invite");
-const cameraKicker = document.getElementById("camera-kicker");
+const cameraKicker = document.getElementById("camera-kicker-text") ?? document.getElementById("camera-kicker");
 const cameraCopy = document.getElementById("camera-copy");
 const startBtn = document.getElementById("start-camera");
 const playBtn = document.getElementById("play");
+const playLabel = document.getElementById("play-label");
 const soundBtn = document.getElementById("toggle-sound");
 const headline = document.getElementById("headline");
 const lede = document.getElementById("lede");
@@ -183,9 +184,10 @@ function updateHud(state) {
     playBtn.hidden = !atGate;
     playBtn.classList.toggle("primary", atGate && (cameraReady || cam.camera !== "prompt" || state.phase === "over"));
     playBtn.classList.toggle("ghost", state.phase === "start" && cam.camera === "prompt");
-    if (state.phase === "over") playBtn.textContent = "Play again";
-    else if (cameraReady) playBtn.textContent = "Play";
-    else playBtn.textContent = "Play without camera";
+    const playText =
+      state.phase === "over" ? "Play again" : cameraReady ? "Play" : "Play without camera";
+    if (playLabel) playLabel.textContent = playText;
+    else playBtn.textContent = playText;
   }
 
   if (video instanceof HTMLVideoElement) {

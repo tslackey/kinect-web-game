@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Player">
+  <polygon fill="#ff9e64" points="32,4 20,24 44,24"/>
+  <polygon fill="#5b77b4" points="32,28 10,60 32,60"/>
+  <polygon fill="#7aa2f7" points="32,28 54,60 32,60"/>
+</svg>

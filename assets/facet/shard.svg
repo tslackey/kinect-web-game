@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet shard">
+  <!-- 128 grid. Light from upper-left. Flat fills only. -->
+  <polygon fill="#ff9e64" points="64,8 16,52 112,52"/>
+  <polygon fill="#7aa2f7" points="16,52 112,52 64,70"/>
+  <polygon fill="#9ece6a" points="16,52 28,120 64,70"/>
+  <polygon fill="#5b77b4" points="28,120 100,120 64,70"/>
+  <polygon fill="#bb9af7" points="112,52 100,120 64,70"/>
+</svg>
