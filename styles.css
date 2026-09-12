@@ -61,7 +61,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  height: min(42vh, 340px);
+  height: min(26vh, 220px);
   background-image: url("./assets/facet/terrain.svg");
   background-repeat: no-repeat;
   background-position: center bottom;
