@@ -90,6 +90,8 @@ function updateHud(state) {
   if (startBtn instanceof HTMLButtonElement) {
     const busy = cam.camera === "pending" || cam.camera === "loading";
     startBtn.disabled = busy || cam.camera === "ready";
+    startBtn.classList.toggle("primary", !failed);
+    startBtn.classList.toggle("ghost", failed);
     if (cam.camera === "ready") startBtn.textContent = "Camera on";
     else if (busy) startBtn.textContent = "Starting…";
     else if (cam.camera === "prompt") startBtn.textContent = "Allow camera";
@@ -98,6 +100,8 @@ function updateHud(state) {
 
   if (tryAgainBtn instanceof HTMLButtonElement) {
     tryAgainBtn.hidden = !failed;
+    tryAgainBtn.classList.toggle("primary", failed);
+    tryAgainBtn.classList.toggle("ghost", !failed);
   }
 
   if (video instanceof HTMLVideoElement) {
