@@ -36,13 +36,21 @@ function drawFrame() {
   ctx.clearRect(0, 0, width, height);
 
   if (pulse > 0) {
-    const radius = (1 - pulse) * Math.max(width, height) * 0.55;
+    const originX = width * 0.35;
+    const originY = height * 0.42;
+    const maxRadius = Math.max(width, height) * 0.7;
+    const radius = (1 - pulse) * maxRadius;
     ctx.beginPath();
-    ctx.arc(width * 0.35, height * 0.42, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(61, 255, 154, ${pulse * 0.45})`;
+    ctx.arc(originX, originY, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(61, 255, 154, ${0.15 + pulse * 0.7})`;
+    ctx.lineWidth = 3 + pulse * 4;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(originX, originY, Math.max(0, radius - 28), 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(110, 230, 255, ${pulse * 0.35})`;
     ctx.lineWidth = 2;
     ctx.stroke();
-    pulse = Math.max(0, pulse - 0.02);
+    pulse = Math.max(0, pulse - 0.016);
   }
 
   for (const point of points) {
