@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Kinect Web Game — hit floating orbs with your hands."
+      content="Kinect Web Game — hit floating orbs with your hands. Open, allow camera, play."
     />
     <title>Kinect Web Game</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -16,7 +16,7 @@
     />
     <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body>
+  <body class="is-start is-camera-prompt">
     <div class="atmosphere" aria-hidden="true">
       <div class="grid"></div>
       <div class="glow glow-a"></div>
@@ -28,27 +28,38 @@
       <p class="brand">Kinect Web Game</p>
       <h1 id="headline">Hit the orbs</h1>
       <p class="lede" id="lede">
-        3 rounds. Hit orbs with your hands. Miss one and the round ends.
-        The pointer works if the camera is off.
+        Open, allow the camera, play. 3 rounds. Hit orbs with your hands.
+        Pointer and keyboard work if the camera is off.
       </p>
-      <p class="scoreline" id="scoreline" aria-live="polite" hidden>Round 1 · Score 0</p>
-      <p class="status" id="status" role="status">Press Play when you are ready.</p>
-      <div class="camera-panel">
+      <div class="scoreboard" id="scoreboard" hidden>
+        <p class="scoreline" id="scoreline" aria-live="polite">
+          <span class="score-kicker">Score</span>
+          <strong class="score-value" id="score-value">0</strong>
+        </p>
+        <p class="roundline" id="roundline">Round 1 of 3</p>
+      </div>
+      <p class="status" id="status" role="status">Allow the camera, then press Play.</p>
+      <section class="camera-invite" id="camera-invite" aria-label="Camera">
+        <p class="camera-kicker" id="camera-kicker">First visit</p>
         <p class="camera-copy" id="camera-copy">
-          Allow the camera to track your joints on-device. Nothing is uploaded.
+          Allow the camera to track your hands on-device. Nothing is uploaded.
+          Pointer and keyboard still play if you skip or the camera is blocked.
         </p>
         <div class="actions">
           <button type="button" class="btn primary" id="start-camera">
             Allow camera
           </button>
-          <button type="button" class="btn primary" id="play">Play</button>
+          <button type="button" class="btn ghost" id="play">Play without camera</button>
+          <button type="button" class="btn ghost" id="toggle-sound" aria-pressed="true">
+            Sound on
+          </button>
           <a
             class="btn ghost"
             href="https://github.com/tslackey/kinect-web-game"
             >View on GitHub</a
           >
         </div>
-      </div>
+      </section>
     </header>
 
     <video
