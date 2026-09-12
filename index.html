@@ -29,7 +29,8 @@
       <h1 id="headline">Hit the orbs</h1>
       <p class="lede">
         Reach with either hand. Miss one and the attempt ends. The pointer
-        works if the camera is off.
+        works if the camera is off. A Kinectron host can drive the same
+        joints.
       </p>
       <p class="scoreline" id="scoreline" aria-live="polite">Score 0</p>
       <p class="status" id="status" role="status">Reach for the orb</p>
@@ -40,6 +41,9 @@
         <div class="actions">
           <button type="button" class="btn primary" id="start-camera">
             Allow camera
+          </button>
+          <button type="button" class="btn ghost" id="connect-kinect">
+            Connect Kinect
           </button>
           <button type="button" class="btn ghost" id="try-again" hidden>
             Try again

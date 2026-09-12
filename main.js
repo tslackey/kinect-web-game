@@ -6,6 +6,7 @@ const canvas = document.getElementById("motion-field");
 const statusEl = document.getElementById("status");
 const cameraCopy = document.getElementById("camera-copy");
 const startBtn = document.getElementById("start-camera");
+const kinectBtn = document.getElementById("connect-kinect");
 const tryAgainBtn = document.getElementById("try-again");
 const headline = document.getElementById("headline");
 const scoreline = document.getElementById("scoreline");
@@ -27,6 +28,13 @@ let lastHudAt = 0;
 if (startBtn instanceof HTMLButtonElement) {
   startBtn.addEventListener("click", () => {
     input.startCamera();
+    updateHud(game.getState());
+  });
+}
+
+if (kinectBtn instanceof HTMLButtonElement) {
+  kinectBtn.addEventListener("click", () => {
+    input.startKinect();
     updateHud(game.getState());
   });
 }
@@ -89,13 +97,28 @@ function updateHud(state) {
 
   if (startBtn instanceof HTMLButtonElement) {
     const busy = cam.camera === "pending" || cam.camera === "loading";
+    const kinectLive = cam.kinect === "live";
     startBtn.disabled = busy || cam.camera === "ready";
-    startBtn.classList.toggle("primary", !failed);
-    startBtn.classList.toggle("ghost", failed);
+    startBtn.classList.toggle("primary", !failed && !kinectLive);
+    startBtn.classList.toggle("ghost", failed || kinectLive);
     if (cam.camera === "ready") startBtn.textContent = "Camera on";
     else if (busy) startBtn.textContent = "Starting…";
     else if (cam.camera === "prompt") startBtn.textContent = "Allow camera";
     else startBtn.textContent = "Try camera again";
+  }
+
+  if (kinectBtn instanceof HTMLButtonElement) {
+    const kinectBusy = cam.kinect === "connecting";
+    const kinectLive = cam.kinect === "live" || cam.kinect === "ready";
+    kinectBtn.disabled = kinectBusy || kinectLive;
+    kinectBtn.classList.toggle("primary", kinectLive && !failed);
+    kinectBtn.classList.toggle("ghost", !kinectLive || failed);
+    if (cam.kinect === "live") kinectBtn.textContent = "Kinect on";
+    else if (cam.kinect === "ready") kinectBtn.textContent = "Kinect ready";
+    else if (kinectBusy) kinectBtn.textContent = "Looking for Kinect…";
+    else if (cam.kinect === "missing" || cam.kinect === "error") {
+      kinectBtn.textContent = "Try Kinect again";
+    } else kinectBtn.textContent = "Connect Kinect";
   }
 
   if (tryAgainBtn instanceof HTMLButtonElement) {

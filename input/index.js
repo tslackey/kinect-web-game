@@ -1,14 +1,17 @@
 /**
- * Input adapter: webcam pose when allowed, mouse pointer as fallback.
- * A Kinect adapter can later replace this module and keep the same sample shape.
+ * Input facade: Kinect (when a host is live), else webcam pose, else mouse.
+ * game/ and render/ only see the PoseSample — they do not care which adapter
+ * produced it.
  */
 
 import { classifyCameraError, CAMERA_COPY } from "./camera-status.js";
+import { createKinectAdapter } from "./kinect.js";
 import { landmarksToJoints } from "./joints.js";
 
 const IDLE_SOURCE = "idle";
 const MOUSE_SOURCE = "mouse";
 const WEBCAM_SOURCE = "webcam";
+const KINECT_SOURCE = "kinect";
 
 const TASKS_VISION = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21";
 const POSE_MODEL =
@@ -23,15 +26,31 @@ const POSE_MODEL =
 
 /**
  * @typedef {object} PoseSample
- * @property {"idle" | "mouse" | "webcam"} source
+ * @property {"idle" | "mouse" | "webcam" | "kinect"} source
  * @property {Record<string, Joint>} joints
  * @property {number} timestamp
  */
 
 /**
- * @param {{ target?: EventTarget, video?: HTMLVideoElement | null }} [options]
+ * @param {{
+ *   target?: EventTarget,
+ *   video?: HTMLVideoElement | null,
+ *   search?: string,
+ *   protocol?: string,
+ *   loadKinectron?: Function,
+ *   autoKinect?: boolean,
+ *   now?: () => number,
+ * }} [options]
  */
-export function createInput({ target = window, video = null } = {}) {
+export function createInput({
+  target = window,
+  video = null,
+  search,
+  protocol,
+  loadKinectron,
+  autoKinect,
+  now,
+} = {}) {
   /** @type {Joint | null} */
   let pointer = null;
   /** @type {Record<string, Joint> | null} */
@@ -45,7 +64,20 @@ export function createInput({ target = window, video = null } = {}) {
   let landmarker = null;
   let lastDetectAt = 0;
   /** @type {HTMLVideoElement | null} */
-  let videoEl = video instanceof HTMLVideoElement ? video : null;
+  let videoEl =
+    typeof HTMLVideoElement !== "undefined" && video instanceof HTMLVideoElement ? video : null;
+
+  const kinect = createKinectAdapter({
+    search: search ?? (typeof window !== "undefined" ? window.location.search : ""),
+    protocol: protocol ?? (typeof window !== "undefined" ? window.location.protocol : "https:"),
+    loadClient: loadKinectron,
+    now,
+  });
+  const shouldAutoKinect = autoKinect ?? kinect.config.auto;
+  let announceKinect = false;
+  if (shouldAutoKinect) {
+    void kinect.start();
+  }
 
   /**
    * @param {PointerEvent} event
@@ -115,6 +147,15 @@ export function createInput({ target = window, video = null } = {}) {
     const timestamp = performance.now();
     refreshWebcamJoints(timestamp);
 
+    const kinectJoints = kinect.getJoints(timestamp);
+    if (kinectJoints && Object.keys(kinectJoints).length > 0) {
+      return {
+        source: KINECT_SOURCE,
+        joints: kinectJoints,
+        timestamp,
+      };
+    }
+
     if (webcamJoints && Object.keys(webcamJoints).length > 0) {
       return {
         source: WEBCAM_SOURCE,
@@ -135,16 +176,40 @@ export function createInput({ target = window, video = null } = {}) {
   }
 
   function getStatus() {
+    const kinectStatus = kinect.getStatus();
+    const kinectActive = kinectStatus.kinect === "live" || kinectStatus.kinect === "ready";
+    const showKinect = kinectActive || announceKinect;
     return {
       camera: cameraStatus,
-      message: cameraMessage,
-      jointCount: webcamJoints ? Object.keys(webcamJoints).length : 0,
+      kinect: kinectStatus.kinect,
+      kinectHost: kinectStatus.host,
+      message: showKinect ? kinectStatus.message : cameraMessage,
+      cameraMessage,
+      kinectMessage: kinectStatus.message,
+      jointCount: kinectActive
+        ? kinectStatus.jointCount
+        : webcamJoints
+          ? Object.keys(webcamJoints).length
+          : 0,
     };
+  }
+
+  function startKinect() {
+    announceKinect = true;
+    return kinect.start();
+  }
+
+  /**
+   * @param {unknown} frame
+   */
+  function ingestKinectFrame(frame) {
+    kinect.ingest(frame);
   }
 
   function dispose() {
     target.removeEventListener("pointermove", onPointer);
     target.removeEventListener("pointerdown", onPointer);
+    kinect.stop();
     stopStream();
     try {
       landmarker?.close?.();
@@ -197,7 +262,7 @@ export function createInput({ target = window, video = null } = {}) {
     }
   }
 
-  return { sample, startCamera, getStatus, dispose };
+  return { sample, startCamera, startKinect, ingestKinectFrame, getStatus, dispose };
 }
 
 async function loadPoseLandmarker() {
