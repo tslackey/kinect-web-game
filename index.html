@@ -24,24 +24,19 @@
       <canvas id="motion-field" width="960" height="540"></canvas>
     </div>
 
-    <main class="hero">
+    <header class="hud">
       <p class="brand">Kinect Web Game</p>
-      <h1>Move. Capture. Play.</h1>
+      <h1>Input → game → render</h1>
       <p class="lede">
-        A lightweight browser canvas for experimenting with motion-driven play.
-        More coming soon.
+        The tick loop is live. The marker orbits on its own; move the pointer to
+        steer it. Webcam and Kinect come later behind this same input stub.
       </p>
-      <div class="actions">
-        <button type="button" id="pulse-btn" class="btn primary">
-          Pulse the field
-        </button>
-        <a class="btn ghost" href="https://github.com/tslackey/kinect-web-game"
-          >View on GitHub</a
-        >
-      </div>
-      <p class="status" id="status" role="status">Ready.</p>
-    </main>
+      <p class="status" id="status" role="status">Starting loop…</p>
+      <a class="btn ghost" href="https://github.com/tslackey/kinect-web-game"
+        >View on GitHub</a
+      >
+    </header>
 
-    <script src="./app.js" defer></script>
+    <script type="module" src="./main.js"></script>
   </body>
 </html>
