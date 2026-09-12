@@ -1,4 +1,4 @@
-import { createGame } from "../game/index.js";
+import { PROMPT_DURATION, createGame } from "../game/index.js";
 import { createInput } from "./index.js";
 import { CAMERA_COPY } from "./camera-status.js";
 
@@ -52,6 +52,10 @@ assert(steered.poses[0].joints.pointer.y > 0.5, "ArrowDown should nudge the poin
 
 const verb = createGame({ random: () => 0.55 });
 verb.start();
+const promptSteps = Math.ceil(PROMPT_DURATION / (1 / 60)) + 2;
+for (let i = 0; i < promptSteps; i += 1) {
+  verb.tick(1 / 60, { source: "idle", poses: [], timestamp: 0 });
+}
 const orb = verb.getState().target;
 const hitTarget = new EventTarget();
 const hitInput = createInput({ target: hitTarget });

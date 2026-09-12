@@ -131,7 +131,8 @@ h1 {
   margin: 0.2rem 0 0;
 }
 
-.scoreboard[hidden] {
+.scoreboard[hidden],
+.btn[hidden] {
   display: none;
 }
 

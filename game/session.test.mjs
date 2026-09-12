@@ -1,9 +1,9 @@
 import {
+  GAME_COUNT,
+  PROMPT_DURATION,
+  RESULT_DURATION,
   createGame,
-  ROUND_COUNT,
-  ROUND_PAUSE,
-  lifetimeForRound,
-  driftScaleForRound,
+  lifetimeForGame,
 } from "./index.js";
 
 function assert(condition, message) {
@@ -23,6 +23,21 @@ function cyclingRandom(values) {
   };
 }
 
+function drain(game, seconds, pose = sample({})) {
+  const steps = Math.ceil(seconds / (1 / 60)) + 2;
+  for (let i = 0; i < steps; i += 1) {
+    game.tick(1 / 60, pose);
+  }
+}
+
+function skipPrompt(game, pose = sample({})) {
+  drain(game, PROMPT_DURATION, pose);
+}
+
+function skipResult(game, pose = sample({})) {
+  drain(game, RESULT_DURATION, pose);
+}
+
 function hitCurrent(game) {
   const orb = game.getState().target;
   game.tick(1 / 60, sample({ left_wrist: { x: orb.x, y: orb.y, confidence: 1 } }));
@@ -37,76 +52,86 @@ function missCurrent(game) {
 
 const landed = createGame({ random: cyclingRandom([0.2, 0.35, 0.8, 0.15, 0.4, 0.6]) });
 assert(landed.getState().phase === "start", "a new game should wait on the start screen");
-assert(landed.getState().round === 1, "the start screen is round 1");
-assert(landed.getState().rounds === ROUND_COUNT, "default session is three rounds");
+assert(landed.getState().game === 1, "the start screen is game 1");
+assert(landed.getState().games === GAME_COUNT, "default session is a short run of games");
+assert(landed.getState().round === undefined, "the session is games, not 3 rounds of one orb");
 
 landed.start();
-assert(landed.getState().phase === "waiting", "Play should open round 1");
-assert(landed.getState().lifetime === lifetimeForRound(1), "round 1 uses the base orb timer");
-assert(landed.getState().driftScale === driftScaleForRound(1), "round 1 uses the base drift");
+assert(landed.getState().phase === "prompt", "Play should flash a prompt, not open a live round");
+assert(landed.getState().prompt === "Hit orb", "the first game should keep today's orb prompt");
+assert(landed.getState().timeLeft === null, "the prompt beat has no play timer");
+assert(landed.getState().lifetime === lifetimeForGame(1), "game 1 uses the base orb timer");
+
+const promptedOrb = { ...landed.getState().target };
+hitCurrent(landed);
+assert(landed.getState().phase === "prompt", "hits during the prompt should not count");
+assert(landed.getState().score === 0, "the prompt should not score");
+
+skipPrompt(landed);
+assert(landed.getState().phase === "playing", "the prompt should hand off to one short game");
+assert(landed.getState().timeLeft != null, "play should start the timer immediately");
+assert(landed.getState().target.id === promptedOrb.id, "the same orb should stay for the live game");
 
 hitCurrent(landed);
-assert(landed.getState().score === 1, "the first hit still scores");
-assert(landed.getState().roundHits === 1, "round hits should track the current round");
-assert(landed.getState().phase === "playing", "a hit should start the orb timer");
+assert(landed.getState().score === 1, "one hit should win the orb game");
+assert(landed.getState().phase === "result", "a win should resolve, not spawn another orb");
+assert(landed.getState().result === "win", "the result should be a win");
+assert(landed.getState().target.id === promptedOrb.id, "a win should not start a new orb in the same game");
 
+skipResult(landed);
+assert(landed.getState().phase === "prompt", "next should start after a win, with a new prompt");
+assert(landed.getState().game === 2, "the second game should follow the first");
+assert(landed.getState().score === 1, "session score should carry into the next game");
+assert(landed.getState().result === null, "a new game should clear the last result");
+assert(landed.getState().lifetime === lifetimeForGame(2), "later games can shave a little time");
+
+skipPrompt(landed);
 missCurrent(landed);
-assert(landed.getState().phase === "between", "a miss in round 1 should pause before round 2");
-assert(landed.getState().score === 1, "session score should survive the miss");
-assert(Math.abs((landed.getState().holdLeft ?? 0) - ROUND_PAUSE) < 0.05, "the pause should start full");
+assert(landed.getState().phase === "result", "a timeout should resolve as a miss, then next");
+assert(landed.getState().result === "fail", "timeout is the fail path");
+assert(landed.getState().score === 1, "a miss should keep the session score");
 
-const pauseSteps = Math.ceil(ROUND_PAUSE / (1 / 60)) + 2;
-for (let i = 0; i < pauseSteps; i += 1) {
-  landed.tick(1 / 60, sample({}));
-}
-assert(landed.getState().phase === "waiting", "the next round should wait for a first hit");
-assert(landed.getState().round === 2, "round 2 should follow the pause");
-assert(landed.getState().roundHits === 0, "a new round should clear round hits");
-assert(landed.getState().score === 1, "session score should carry into the next round");
-assert(landed.getState().lifetime === lifetimeForRound(2), "round 2 should shave a little orb time");
-assert(landed.getState().driftScale === driftScaleForRound(2), "round 2 should drift a little faster");
-assert(landed.getState().lifetime < lifetimeForRound(1), "later rounds must be slightly harder");
+skipResult(landed);
+assert(landed.getState().phase === "prompt", "a miss should still start the next game");
+assert(landed.getState().game === 3, "the third game should follow a miss");
 
+skipPrompt(landed);
 hitCurrent(landed);
-missCurrent(landed);
-for (let i = 0; i < pauseSteps; i += 1) {
-  landed.tick(1 / 60, sample({}));
-}
-assert(landed.getState().round === 3, "the third miss-cycle should reach the last round");
-assert(landed.getState().lifetime === lifetimeForRound(3), "round 3 should use the last difficulty step");
-
-hitCurrent(landed);
-missCurrent(landed);
-assert(landed.getState().phase === "over", "a miss in the last round should be game over");
-assert(landed.getState().score === 3, "game over should keep the session score");
+assert(landed.getState().score === 2, "a later win should still score");
+skipResult(landed);
+assert(landed.getState().phase === "over", "the last game should end the session");
+assert(landed.getState().score === 2, "game over should keep the session score");
 
 const overOrb = { ...landed.getState().target };
 landed.tick(1 / 60, sample({ left_wrist: { x: overOrb.x, y: overOrb.y, confidence: 1 } }));
-assert(landed.getState().score === 3, "game over should ignore further hits");
+assert(landed.getState().score === 2, "game over should ignore further hits");
 assert(landed.getState().phase === "over", "game over should stay until retry");
 
 landed.start();
-assert(landed.getState().phase === "waiting", "Play again should start a new session");
+assert(landed.getState().phase === "prompt", "Play again should start a new session");
 assert(landed.getState().score === 0, "Play again should clear the score");
-assert(landed.getState().round === 1, "Play again should return to round 1");
-assert(landed.getState().lifetime === lifetimeForRound(1), "a new session should reset difficulty");
+assert(landed.getState().game === 1, "Play again should return to the first game");
+assert(landed.getState().lifetime === lifetimeForGame(1), "a new session should reset difficulty");
 
 const short = createGame({
   random: cyclingRandom([0.25, 0.3, 0.7, 0.2, 0.5, 0.4]),
-  rounds: 1,
+  games: 1,
 });
 short.start();
+skipPrompt(short);
 hitCurrent(short);
-missCurrent(short);
-assert(short.getState().phase === "over", "a one-round session should end on the first miss");
+assert(short.getState().phase === "result", "a one-game session still shows the result beat");
+skipResult(short);
+assert(short.getState().phase === "over", "a one-game session should end after that game");
 
 short.reset();
 assert(short.getState().phase === "start", "reset should show the start screen again");
 short.start();
+skipPrompt(short);
 hitCurrent(short);
 assert(short.getState().score === 1, "retry should be able to score again");
 short.start();
-assert(short.getState().phase === "playing", "start during a live round should be a no-op");
-assert(short.getState().score === 1, "a no-op start should not reset a live round");
+assert(short.getState().phase === "result", "start during a live session should be a no-op");
+assert(short.getState().score === 1, "a no-op start should not reset a live game");
 
 console.log("game/session.test.mjs passed");

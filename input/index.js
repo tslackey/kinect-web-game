@@ -110,26 +110,19 @@ export function createInput({
   }
 
   /**
-   * Start the next camera slot. First click is player 1. If another
-   * video device exists, the same click also tries player 2. A second
-   * click (or startCamera(1)) is the explicit second webcam.
+   * Start a camera slot. Play uses one webcam. Extra slots stay in the
+   * input module for later tracking work — they are not a second player.
    *
    * @param {number} [slotIndex]
    */
   async function startCamera(slotIndex) {
-    const index = Number.isInteger(slotIndex) ? slotIndex : nextSlotIndex();
+    const index = Number.isInteger(slotIndex) ? slotIndex : 0;
     if (index < 0 || index > 1) return;
     if (starting) return;
 
     starting = true;
     try {
       await startSlot(index);
-      if (index === 0 && slots[0].status === "ready") {
-        await refreshDeviceCount();
-        if (pickSecondId() && slots[1].status !== "ready") {
-          await startSlot(1);
-        }
-      }
     } finally {
       starting = false;
     }
@@ -140,11 +133,22 @@ export function createInput({
     const timestamp = performance.now();
     refreshWebcamJoints(timestamp);
     return assembleSample({
-      webcamPoses: slots.map((slot) => (slot.status === "ready" ? slot.joints : null)),
+      webcamPoses: webcamPosesFromPrimary(),
       pointers: [...pointers.values()],
       keys,
       timestamp,
     });
+  }
+
+  /**
+   * Play reads pose maps from the first live webcam only.
+   * Two people share that stream when the landmarker returns two maps.
+   */
+  function webcamPosesFromPrimary() {
+    const primary = slots[0];
+    if (primary.status !== "ready") return [];
+    if (primary.poseMaps.length > 0) return primary.poseMaps;
+    return primary.joints ? [primary.joints] : [];
   }
 
   function getStatus() {
@@ -186,9 +190,17 @@ export function createInput({
       try {
         const result = slot.landmarker.detectForVideo(slot.video, Math.floor(now) + i);
         slot.lastDetectAt = now;
-        const pose = result?.landmarks?.[0];
-        if (pose?.length) {
-          slot.joints = landmarksToJoints(pose);
+        const poses = result?.landmarks;
+        if (Array.isArray(poses) && poses.length) {
+          /** @type {Record<string, import("./index.js").Joint>[]} */
+          const maps = [];
+          for (let p = 0; p < Math.min(2, poses.length); p += 1) {
+            if (poses[p]?.length) maps.push(landmarksToJoints(poses[p]));
+          }
+          if (maps.length) {
+            slot.poseMaps = maps;
+            slot.joints = maps[0];
+          }
         }
       } catch {
         // A bad frame must not tear down the tick loop.
@@ -301,12 +313,8 @@ export function createInput({
   }
 
   function statusMessage() {
-    const [first, second] = slots;
-    if (first.status === "ready" && second.status === "ready") return CAMERA_COPY.readyTwo;
-    if (first.status === "ready") {
-      if (videoDeviceCount >= 2 && second.status !== "denied") return CAMERA_COPY.readyOneMore;
-      return CAMERA_COPY.ready;
-    }
+    const [first] = slots;
+    if (first.status === "ready") return CAMERA_COPY.ready;
     if (first.modelError) {
       return "Camera is on, but the pose model failed to load. The pointer still works.";
     }
@@ -333,6 +341,7 @@ function makeSlot(video) {
     stream: /** @type {MediaStream | null} */ (null),
     landmarker: /** @type {{ detectForVideo: Function, close?: Function } | null} */ (null),
     joints: /** @type {Record<string, import("./index.js").Joint> | null} */ (null),
+    poseMaps: /** @type {Record<string, import("./index.js").Joint>[]} */ ([]),
     status: /** @type {import("./camera-status.js").CameraStatus} */ ("prompt"),
     lastDetectAt: 0,
     grantedPeek: false,
@@ -378,6 +387,7 @@ function stopSlot(slot) {
   }
   slot.landmarker = null;
   slot.joints = null;
+  slot.poseMaps = [];
 }
 
 /**
@@ -429,7 +439,7 @@ async function loadPoseLandmarker() {
   const { PoseLandmarker, vision } = await loadVision();
   const options = {
     runningMode: "VIDEO",
-    numPoses: 1,
+    numPoses: 2,
     baseOptions: {
       modelAssetPath: POSE_MODEL,
       delegate: "GPU",

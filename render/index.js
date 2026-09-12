@@ -116,8 +116,8 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
     const x = target.x * width;
     const y = target.y * height;
     const pulse = 0.5 + 0.5 * Math.sin(elapsed * 5);
-    const gated = phase === "start" || phase === "over";
-    const missed = phase === "between" || phase === "over";
+    const gated = phase === "start" || phase === "over" || phase === "prompt";
+    const missed = phase === "over" || (phase === "result" && state.result === "fail");
     const limit = lifetime ?? TARGET_LIFETIME;
     const remaining = phase === "playing" && timeLeft != null ? timeLeft / limit : 1;
     const palette = missed ? coralCrystal() : remaining < 0.35 ? emberCrystal() : mossCrystal();
@@ -158,7 +158,7 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
    * @param {GameState} state
    */
   function drawMarkers(state) {
-    const missed = state.phase === "between" || state.phase === "over";
+    const missed = state.phase === "over" || (state.phase === "result" && state.result === "fail");
     const markers = state.markers?.length ? state.markers : [{ id: "p1", x: state.marker.x, y: state.marker.y }];
     markers.forEach((marker, index) => {
       const color = missed ? FACET_RGB.coral : PLAYER_RGB[index % PLAYER_RGB.length];

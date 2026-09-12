@@ -101,26 +101,18 @@ function frame(now) {
 function updateHud(state) {
   const cam = input.getStatus();
   const atGate = state.phase === "start" || state.phase === "over";
-  const missed = state.phase === "between" || state.phase === "over";
-  const cameraReady = cam.camerasReady > 0 || cam.camera === "ready";
-  const cameraBusy =
-    cam.starting ||
-    cam.camera === "pending" ||
-    cam.camera === "loading" ||
-    cam.camera2 === "pending" ||
-    cam.camera2 === "loading";
-  const twoLive = cam.camerasReady >= 2;
-  const offerSecond =
-    cam.camera === "ready" && !twoLive && cam.deviceCount >= 2 && cam.camera2 !== "denied";
+  const live = state.phase === "prompt" || state.phase === "playing";
+  const missed = state.phase === "over" || (state.phase === "result" && state.result === "fail");
+  const cameraReady = cam.camera === "ready" || cam.camerasReady > 0;
+  const cameraBusy = cam.starting || cam.camera === "pending" || cam.camera === "loading";
 
   document.body.classList.toggle("is-start", state.phase === "start");
-  document.body.classList.toggle("is-playing", state.phase === "waiting" || state.phase === "playing");
-  document.body.classList.toggle("is-between", state.phase === "between");
+  document.body.classList.toggle("is-playing", live);
+  document.body.classList.toggle("is-between", state.phase === "result");
   document.body.classList.toggle("is-over", state.phase === "over");
   document.body.classList.toggle("is-camera-prompt", cam.camera === "prompt");
   document.body.classList.toggle("is-camera-denied", cam.camera === "denied" || cam.camera === "unavailable" || cam.camera === "error");
   document.body.classList.toggle("is-camera-ready", cameraReady || cam.camera === "loading");
-  document.body.classList.toggle("is-two-cameras", twoLive);
 
   if (headline) {
     headline.textContent = headlineFor(state);
@@ -167,14 +159,12 @@ function updateHud(state) {
   }
 
   if (startBtn instanceof HTMLButtonElement) {
-    startBtn.hidden = cameraReady && !offerSecond;
+    startBtn.hidden = cameraReady;
     startBtn.disabled = cameraBusy;
-    const offerCamera = cam.camera === "prompt" || cameraBusy || offerSecond;
+    const offerCamera = cam.camera === "prompt" || cameraBusy;
     startBtn.classList.toggle("primary", offerCamera && !missed);
     startBtn.classList.toggle("ghost", !offerCamera || missed);
     if (cameraBusy) startBtn.textContent = "Starting…";
-    else if (offerSecond && cam.camera2 === "error") startBtn.textContent = "Try second camera again";
-    else if (offerSecond) startBtn.textContent = "Allow second camera";
     else if (cam.camera === "prompt" && cam.permission === "granted") startBtn.textContent = "Start camera";
     else if (cam.camera === "prompt") startBtn.textContent = "Allow camera";
     else startBtn.textContent = "Try camera again";
@@ -204,8 +194,9 @@ function updateHud(state) {
  */
 function headlineFor(state) {
   if (state.phase === "over") return "Game over";
-  if (state.phase === "between") return `Round ${state.round} over`;
-  if (state.phase === "waiting" || state.phase === "playing") return `Round ${state.round}`;
+  if (state.phase === "result" && state.result === "fail") return "Miss";
+  if (state.phase === "result" && state.result === "win") return "Nice";
+  if (state.phase === "prompt" || state.phase === "playing") return state.prompt || "Hit orb";
   return "Hit the orbs";
 }
 
@@ -214,20 +205,25 @@ function headlineFor(state) {
  */
 function ledeFor(state) {
   if (state.phase === "over") {
-    return "Session over. Play again for another 3 rounds.";
+    return "Session over. Play again for another short run.";
   }
-  if (state.phase === "between") {
-    return "Missed that one. The next round is a little quicker.";
+  if (state.phase === "result" && state.result === "win") {
+    return state.game >= state.games ? "Got it. Session wrapping up." : "Got it. Next game incoming.";
   }
-  return "Open, allow a camera, play. A second webcam is a second player. 3 rounds. Hit orbs with your hands. Pointer and keyboard stand in if a camera is off.";
+  if (state.phase === "result") {
+    return state.game >= state.games ? "Timed out. Session wrapping up." : "Timed out. Next game incoming.";
+  }
+  if (state.phase === "prompt") return "Get ready.";
+  if (state.phase === "playing") return "One hit. Timer is live.";
+  return "Open, allow the camera, play. A prompt, then one short game, then the next. Pointer and keyboard still play if the camera is off.";
 }
 
 /**
  * @param {import("./game/index.js").GameState} state
  */
 function roundlineFor(state) {
-  if (state.phase === "over") return `${state.score} hit${state.score === 1 ? "" : "s"} · ${state.rounds} rounds`;
-  return `Round ${state.round} of ${state.rounds}`;
+  if (state.phase === "over") return `${state.score} hit${state.score === 1 ? "" : "s"} · ${state.games} games`;
+  return `Game ${state.game} of ${state.games}`;
 }
 
 /**
@@ -236,23 +232,22 @@ function roundlineFor(state) {
  */
 function statusFor(state, cam) {
   if (state.phase === "over") {
-    return `${state.score} hit${state.score === 1 ? "" : "s"} across ${state.rounds} rounds.`;
+    return `${state.score} hit${state.score === 1 ? "" : "s"} across ${state.games} games.`;
   }
-  if (state.phase === "between") {
-    const hits = `${state.roundHits} hit${state.roundHits === 1 ? "" : "s"} this round`;
-    return `${hits}. Round ${state.round + 1} next.`;
+  if (state.phase === "result" && state.result === "win") {
+    return state.game >= state.games ? "Nice. Session complete." : `Nice. Game ${state.game + 1} next.`;
+  }
+  if (state.phase === "result") {
+    return state.game >= state.games ? "Miss. Session complete." : `Miss. Game ${state.game + 1} next.`;
   }
   if (state.phase === "playing" && state.timeLeft != null) {
-    return `Round ${state.round} of ${state.rounds} · ${state.timeLeft.toFixed(1)}s left`;
+    return `Game ${state.game} of ${state.games} · ${state.timeLeft.toFixed(1)}s left`;
   }
-  if (state.phase === "waiting") {
-    if (cam.camerasReady >= 2) {
-      return `Round ${state.round} of ${state.rounds}. Both players, reach for the orb.`;
-    }
+  if (state.phase === "prompt") {
     if (cam.camera !== "ready") {
-      return `Round ${state.round} of ${state.rounds}. Pointer and keyboard work. You can still allow the camera.`;
+      return `Game ${state.game} of ${state.games}. ${state.prompt}. Pointer and keyboard work.`;
     }
-    return `Round ${state.round} of ${state.rounds}. Reach for the orb.`;
+    return `Game ${state.game} of ${state.games}. ${state.prompt}.`;
   }
   if (cam.camera === "denied" || cam.camera === "unavailable" || cam.camera === "error") {
     return "Camera is off. Press Play to use the pointer or keyboard.";
@@ -265,7 +260,6 @@ function statusFor(state, cam) {
  * @param {import("./game/index.js").GameState} state
  */
 function cameraKickerFor(cam, state) {
-  if (cam.camerasReady >= 2) return "Two cameras live";
   if (cam.camera === "ready") return "Camera live";
   if (cam.camera === "loading" || cam.camera === "pending") return "Camera";
   if (cam.camera === "denied") return "Camera blocked";

@@ -1,4 +1,4 @@
-import { createGame, listSampleStrikers } from "./index.js";
+import { PROMPT_DURATION, createGame, listSampleStrikers } from "./index.js";
 import { assembleSample } from "../input/poses.js";
 
 function assert(condition, message) {
@@ -12,6 +12,17 @@ function cyclingRandom(values) {
     i += 1;
     return value;
   };
+}
+
+function drain(game, seconds, pose) {
+  const steps = Math.ceil(seconds / (1 / 60)) + 2;
+  for (let i = 0; i < steps; i += 1) {
+    game.tick(1 / 60, pose ?? { source: "idle", poses: [], timestamp: 0 });
+  }
+}
+
+function skipPrompt(game) {
+  drain(game, PROMPT_DURATION);
 }
 
 function twoPoses(p1Joints, p2Joints, source = "webcam") {
@@ -35,6 +46,7 @@ assert(strikers.length === 2, "each pose map contributes its own hands");
 
 const scored = createGame({ random: cyclingRandom([0.2, 0.4, 0.1, 0.2, 0.7, 0.6]) });
 scored.start();
+skipPrompt(scored);
 const orb = scored.getState().target;
 scored.tick(
   1 / 60,
@@ -43,12 +55,13 @@ scored.tick(
     { right_wrist: { x: orb.x, y: orb.y, confidence: 1 } },
   ),
 );
-assert(scored.getState().score === 1, "player 2 can hit the shared orb");
-assert(scored.getState().phase === "playing", "a player-2 hit still starts the attempt");
+assert(scored.getState().score === 1, "the second pose map can hit the shared orb");
+assert(scored.getState().phase === "result", "a second-map hit still wins the game");
 assert(scored.getState().markers.length === 2, "two pose maps should drive two markers");
 
 const solo = createGame({ random: cyclingRandom([0.65, 0.55, 0.2, 0.25]) });
 solo.start();
+skipPrompt(solo);
 const soloOrb = solo.getState().target;
 solo.tick(1 / 60, {
   source: "webcam",
@@ -66,6 +79,7 @@ assert(solo.getState().markers.length === 1, "solo play keeps a single marker");
 
 const pointers = createGame({ random: cyclingRandom([0.3, 0.35, 0.8, 0.2]) });
 pointers.start();
+skipPrompt(pointers);
 const pointerOrb = pointers.getState().target;
 const standins = assembleSample({
   pointers: [
@@ -80,6 +94,7 @@ assert(pointers.getState().inputSource === "mouse", "two pointers still report m
 
 const firstThenSecond = createGame({ random: cyclingRandom([0.15, 0.2, 0.85, 0.8, 0.4, 0.5]) });
 firstThenSecond.start();
+skipPrompt(firstThenSecond);
 const firstOrb = firstThenSecond.getState().target;
 firstThenSecond.tick(
   1 / 60,
@@ -88,6 +103,6 @@ firstThenSecond.tick(
     { left_wrist: { x: 0.02, y: 0.98, confidence: 1 } },
   ),
 );
-assert(firstThenSecond.getState().score === 1, "player 1 can still hit when player 2 is present");
+assert(firstThenSecond.getState().score === 1, "the first pose map can still hit when a second map is present");
 
 console.log("game/two-player.test.mjs passed");
