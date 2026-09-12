@@ -146,6 +146,7 @@ assert(routed.getStatus().kinect === "live", "getStatus should expose the kinect
 assert(routed.getStatus().jointCount >= 2, "status joint count should include Kinect wrists");
 
 const verb = createGame({ random: () => 0.55 });
+verb.start();
 const orb = verb.getState().target;
 routed.ingestKinectFrame({
   bodies: [

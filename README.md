@@ -3,9 +3,10 @@
 Shareable GitHub Pages motion arcade. Webcam first; Kinect is a second
 adapter behind the same `input` → `game` → `render` spine.
 
-Slice 4 is one verb: hit floating orbs with your hands. A hit adds a point.
-Miss the timer and the attempt ends. Slice 5 adds a Kinectron input adapter
-only — gameplay is unchanged.
+One verb: hit floating orbs with your hands. A hit adds a point. Miss the
+timer and the round ends. A session is start → 3 rounds → game over → play
+again. Later rounds shave a little orb time and drift a bit faster. Kinect
+is a second input adapter behind the same spine.
 
 ## Local preview
 
@@ -15,8 +16,9 @@ Serve the repo root (ES modules and `getUserMedia` need a local server):
 python3 -m http.server 8080
 ```
 
-Then visit [http://localhost:8080](http://localhost:8080). Click **Allow camera**,
-then reach for the orb. If the camera is blocked, the pointer still plays.
+Then visit [http://localhost:8080](http://localhost:8080). Click **Play**, then
+reach for the orb. **Allow camera** if you want body tracking; if it is
+blocked, the pointer still plays.
 
 A Kinect is optional. With no host running, webcam and pointer keep working.
 
@@ -68,9 +70,9 @@ public address as `?kinect=`.
 | --- | --- |
 | `input/` | Pose sample. Kinectron when a host is live; else webcam; else mouse. |
 | `input/kinect.js` | Kinectron client. Maps Azure / v2 bodies onto the webcam joint names. |
-| `game/` | Owns state and `tick(dt)`. Hands / pointer hit orbs; score or fail. |
+| `game/` | Owns session state and `tick(dt)`. Start, rounds, score, game over. |
 | `render/` | Draws the stick figure, orb, and marker to `#motion-field`. |
-| `main.js` | Wires the animation frame loop, camera, Kinect, and try-again. |
+| `main.js` | Wires the animation frame loop, camera, Kinect, and Play. |
 
 ## GitHub Pages
 

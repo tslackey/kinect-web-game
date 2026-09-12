@@ -27,13 +27,13 @@
     <header class="hud">
       <p class="brand">Kinect Web Game</p>
       <h1 id="headline">Hit the orbs</h1>
-      <p class="lede">
-        Reach with either hand. Miss one and the attempt ends. The pointer
-        works if the camera is off. A Kinectron host can drive the same
-        joints.
+      <p class="lede" id="lede">
+        3 rounds. Hit orbs with your hands. Miss one and the round ends.
+        The pointer works if the camera is off. A Kinectron host can drive
+        the same joints.
       </p>
-      <p class="scoreline" id="scoreline" aria-live="polite">Score 0</p>
-      <p class="status" id="status" role="status">Reach for the orb</p>
+      <p class="scoreline" id="scoreline" aria-live="polite" hidden>Round 1 · Score 0</p>
+      <p class="status" id="status" role="status">Press Play when you are ready.</p>
       <div class="camera-panel">
         <p class="camera-copy" id="camera-copy">
           Allow the camera to track your joints on-device. Nothing is uploaded.
@@ -42,11 +42,9 @@
           <button type="button" class="btn primary" id="start-camera">
             Allow camera
           </button>
+          <button type="button" class="btn primary" id="play">Play</button>
           <button type="button" class="btn ghost" id="connect-kinect">
             Connect Kinect
-          </button>
-          <button type="button" class="btn ghost" id="try-again" hidden>
-            Try again
           </button>
           <a
             class="btn ghost"

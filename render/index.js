@@ -93,21 +93,23 @@ export function createRenderer(canvas) {
    * @param {GameState} state
    */
   function drawTarget(state) {
-    const { target, phase, timeLeft, elapsed } = state;
+    const { target, phase, timeLeft, elapsed, lifetime } = state;
     const x = target.x * width;
     const y = target.y * height;
     const pulse = 0.5 + 0.5 * Math.sin(elapsed * 5);
-    const failed = phase === "failed";
-    const remaining = phase === "playing" && timeLeft != null ? timeLeft / TARGET_LIFETIME : 1;
-    const hue = failed ? [255, 107, 107] : remaining < 0.35 ? [255, 196, 84] : [61, 255, 154];
+    const gated = phase === "start" || phase === "over";
+    const missed = phase === "between" || phase === "over";
+    const limit = lifetime ?? TARGET_LIFETIME;
+    const remaining = phase === "playing" && timeLeft != null ? timeLeft / limit : 1;
+    const hue = missed ? [255, 107, 107] : remaining < 0.35 ? [255, 196, 84] : [61, 255, 154];
     const [r, g, b] = hue;
-    const alpha = failed ? 0.45 : 0.85 + pulse * 0.15;
+    const alpha = gated ? 0.22 : missed ? 0.45 : 0.85 + pulse * 0.15;
 
     const ringX = Math.min(width, height) * 0.055;
     const ringY = ringX;
     ctx.beginPath();
     ctx.ellipse(x, y, ringX, ringY, 0, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${failed ? 0.16 : 0.22 + pulse * 0.14})`;
+    ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${gated || missed ? 0.16 : 0.22 + pulse * 0.14})`;
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 7]);
     ctx.stroke();
@@ -115,7 +117,7 @@ export function createRenderer(canvas) {
 
     ctx.beginPath();
     ctx.arc(x, y, 36, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0, remaining));
-    ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${failed ? 0.28 : 0.9})`;
+    ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${gated || missed ? 0.28 : 0.9})`;
     ctx.lineWidth = 4;
     ctx.stroke();
 
@@ -129,7 +131,7 @@ export function createRenderer(canvas) {
 
     ctx.beginPath();
     ctx.arc(x, y, 6, 0, Math.PI * 2);
-    ctx.fillStyle = failed ? "rgba(20, 8, 8, 0.85)" : "#052015";
+    ctx.fillStyle = missed ? "rgba(20, 8, 8, 0.85)" : "#052015";
     ctx.fill();
   }
 
@@ -140,8 +142,8 @@ export function createRenderer(canvas) {
     const x = state.marker.x * width;
     const y = state.marker.y * height;
     const pulse = 0.5 + 0.5 * Math.sin(state.elapsed * 4);
-    const failed = state.phase === "failed";
-    const color = failed ? "255, 107, 107" : "61, 255, 154";
+    const missed = state.phase === "between" || state.phase === "over";
+    const color = missed ? "255, 107, 107" : "61, 255, 154";
 
     ctx.beginPath();
     ctx.arc(x, y, 28 + pulse * 10, 0, Math.PI * 2);

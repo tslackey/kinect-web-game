@@ -1,6 +1,7 @@
 /**
  * Game state owner. One verb: hands (or the pointer) hit a floating orb.
- * A hit increments score. Letting the timer run out ends the attempt.
+ * A session is start → rounds → game over. A hit increments score.
+ * Letting the orb timer run out ends the round.
  */
 
 /**
@@ -10,6 +11,10 @@
 
 export const HIT_RADIUS = 0.13;
 export const TARGET_LIFETIME = 3.6;
+export const LIFETIME_STEP = 0.4;
+export const DRIFT_BOOST = 0.25;
+export const ROUND_COUNT = 3;
+export const ROUND_PAUSE = 1.75;
 export const STRIKER_NAMES = ["left_wrist", "right_wrist", "pointer"];
 
 const FIELD = { x0: 0.46, x1: 0.88, y0: 0.28, y1: 0.76 };
@@ -34,26 +39,48 @@ const DRIFT_SPAN = 0.045;
 
 /**
  * @typedef {object} GameState
- * @property {number} elapsed Seconds since the current attempt started.
+ * @property {number} elapsed Seconds since the current session started.
  * @property {number} ticks
  * @property {string} inputSource
  * @property {Marker} marker
  * @property {PoseSample | null} pose
- * @property {"waiting" | "playing" | "failed"} phase
+ * @property {"start" | "waiting" | "playing" | "between" | "over"} phase
  * @property {number} score
+ * @property {number} round 1-based round index.
+ * @property {number} rounds
+ * @property {number} roundHits Hits landed in the current round.
+ * @property {number} lifetime Seconds the current orb stays hittable.
+ * @property {number} driftScale
  * @property {Target} target
  * @property {number | null} timeLeft Seconds left on the current orb, or null while waiting.
+ * @property {number | null} holdLeft Seconds left in the between-round pause.
  */
 
 /**
- * @param {{ random?: () => number }} [options]
+ * @param {number} round
+ */
+export function lifetimeForRound(round) {
+  return Math.max(1.6, TARGET_LIFETIME - Math.max(0, round - 1) * LIFETIME_STEP);
+}
+
+/**
+ * @param {number} round
+ */
+export function driftScaleForRound(round) {
+  return 1 + Math.max(0, round - 1) * DRIFT_BOOST;
+}
+
+/**
+ * @param {{ random?: () => number, rounds?: number }} [options]
  * @returns {{
  *   tick: (dt: number, sample: PoseSample) => GameState,
  *   getState: () => GameState,
+ *   start: () => GameState,
  *   reset: () => GameState,
  * }}
  */
-export function createGame({ random = Math.random } = {}) {
+export function createGame({ random = Math.random, rounds = ROUND_COUNT } = {}) {
+  const sessionRounds = Math.max(1, Math.floor(rounds) || ROUND_COUNT);
   let nextTargetId = 1;
 
   /** @type {GameState} */
@@ -63,10 +90,16 @@ export function createGame({ random = Math.random } = {}) {
     inputSource: "idle",
     marker: { x: 0.5, y: 0.5 },
     pose: null,
-    phase: "waiting",
+    phase: "start",
     score: 0,
-    target: makeTarget(random, nextTargetId++, [], null),
+    round: 1,
+    rounds: sessionRounds,
+    roundHits: 0,
+    lifetime: TARGET_LIFETIME,
+    driftScale: 1,
+    target: makeTarget(random, nextTargetId++, [], null, 1),
     timeLeft: null,
+    holdLeft: null,
   };
 
   /**
@@ -86,7 +119,16 @@ export function createGame({ random = Math.random } = {}) {
     state.marker.x += (aim.x - state.marker.x) * follow;
     state.marker.y += (aim.y - state.marker.y) * follow;
 
-    if (state.phase === "failed") {
+    if (state.phase === "start" || state.phase === "over") {
+      driftTarget(state.target, step);
+      return state;
+    }
+
+    if (state.phase === "between") {
+      state.holdLeft = Math.max(0, (state.holdLeft ?? ROUND_PAUSE) - step);
+      if (state.holdLeft <= 0) {
+        beginRound(state.round + 1);
+      }
       return state;
     }
 
@@ -94,17 +136,17 @@ export function createGame({ random = Math.random } = {}) {
 
     if (hitsTarget(strikers, state.target)) {
       state.score += 1;
+      state.roundHits += 1;
       state.phase = "playing";
-      state.timeLeft = TARGET_LIFETIME;
-      state.target = makeTarget(random, nextTargetId++, strikers, state.target);
+      state.timeLeft = state.lifetime;
+      state.target = makeTarget(random, nextTargetId++, strikers, state.target, state.driftScale);
       return state;
     }
 
     if (state.phase === "playing") {
-      state.timeLeft = Math.max(0, (state.timeLeft ?? TARGET_LIFETIME) - step);
+      state.timeLeft = Math.max(0, (state.timeLeft ?? state.lifetime) - step);
       if (state.timeLeft <= 0) {
-        state.phase = "failed";
-        state.timeLeft = 0;
+        endRound();
       }
     }
 
@@ -115,18 +157,59 @@ export function createGame({ random = Math.random } = {}) {
     return state;
   }
 
+  function start() {
+    if (state.phase !== "start" && state.phase !== "over") {
+      return state;
+    }
+    nextTargetId = 1;
+    state.elapsed = 0;
+    state.score = 0;
+    beginRound(1);
+    return state;
+  }
+
   function reset() {
     nextTargetId = 1;
     state.elapsed = 0;
     state.ticks = 0;
-    state.phase = "waiting";
+    state.phase = "start";
     state.score = 0;
-    state.target = makeTarget(random, nextTargetId++, [], null);
+    state.round = 1;
+    state.roundHits = 0;
+    state.lifetime = lifetimeForRound(1);
+    state.driftScale = driftScaleForRound(1);
+    state.target = makeTarget(random, nextTargetId++, [], null, state.driftScale);
     state.timeLeft = null;
+    state.holdLeft = null;
     return state;
   }
 
-  return { tick, getState, reset };
+  /**
+   * @param {number} round
+   */
+  function beginRound(round) {
+    state.round = round;
+    state.roundHits = 0;
+    state.phase = "waiting";
+    state.lifetime = lifetimeForRound(round);
+    state.driftScale = driftScaleForRound(round);
+    state.target = makeTarget(random, nextTargetId++, [], null, state.driftScale);
+    state.timeLeft = null;
+    state.holdLeft = null;
+  }
+
+  function endRound() {
+    state.timeLeft = 0;
+    if (state.round >= state.rounds) {
+      state.phase = "over";
+      state.holdLeft = null;
+      return;
+    }
+    state.phase = "between";
+    state.holdLeft = ROUND_PAUSE;
+  }
+
+  return { tick, getState, start, reset };
 }
 
 /**
@@ -204,9 +287,10 @@ function idleAim(elapsed) {
  * @param {number} id
  * @param {Joint[]} strikers
  * @param {Target | null} avoid
+ * @param {number} [driftScale]
  * @returns {Target}
  */
-function makeTarget(random, id, strikers, avoid) {
+function makeTarget(random, id, strikers, avoid, driftScale = 1) {
   let x = lerp(FIELD.x0, FIELD.x1, random());
   let y = lerp(FIELD.y0, FIELD.y1, random());
 
@@ -220,7 +304,7 @@ function makeTarget(random, id, strikers, avoid) {
   }
 
   const angle = random() * Math.PI * 2;
-  const speed = DRIFT_MIN + random() * DRIFT_SPAN;
+  const speed = (DRIFT_MIN + random() * DRIFT_SPAN) * driftScale;
   return {
     id,
     x,
