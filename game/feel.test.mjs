@@ -1,4 +1,4 @@
-import { HIT_RADIUS, PROMPT_DURATION, RESULT_DURATION, createGame } from "./index.js";
+import { HIT_RADIUS, ORB_HIT, PROMPT_DURATION, RESULT_DURATION, createGame } from "./index.js";
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -47,6 +47,7 @@ function missCurrent(game) {
 const game = createGame({
   random: cyclingRandom([0.2, 0.35, 0.8, 0.15, 0.4, 0.6]),
   games: 2,
+  pack: [ORB_HIT],
 });
 
 assert(game.getState().flash === null, "the start screen has no flash");

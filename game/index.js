@@ -2,7 +2,7 @@
  * Game state owner. A session is a short sequence of microgames:
  * prompt → one game on a short timer → win or fail → next.
  *
- * Today's orb-hit is the first playable game so the loop is real.
+ * Water the plant is game 1. Orb-hit stays in the pack.
  * Either pose map on the sample can score — one webcam, up to two bodies.
  */
 
@@ -15,7 +15,8 @@ import {
   isPlayOutcome,
   sequenceFromPack,
 } from "./microgame.js";
-import { ORB_HIT, driftOrb, driftScaleForGame, lifetimeForGame } from "./orb.js";
+import { ORB_HIT, driftOrb, driftScaleForGame } from "./orb.js";
+import { WATER_PLANT } from "./plant.js";
 
 /**
  * @typedef {import("../input/index.js").PoseSample} PoseSample
@@ -36,7 +37,14 @@ export {
   isPlayOutcome,
   sequenceFromPack,
 } from "./microgame.js";
-export { HIT_RADIUS, STRIKER_NAMES, hitsTarget, listSampleStrikers, listStrikers } from "./hit.js";
+export {
+  HIT_RADIUS,
+  STRIKER_NAMES,
+  hitsTarget,
+  listIdentifiedStrikers,
+  listSampleStrikers,
+  listStrikers,
+} from "./hit.js";
 export {
   DRIFT_BOOST,
   LIFETIME_STEP,
@@ -47,6 +55,16 @@ export {
   lifetimeForGame,
   makeTarget,
 } from "./orb.js";
+export {
+  PICKUP_DWELL,
+  PLANT_DURATION,
+  POUR_DWELL,
+  WATER_PLANT,
+  layoutPlant,
+} from "./plant.js";
+
+/** Default session pack. Water the plant first; orb-hit stays in the run. */
+export const DEFAULT_PACK = [WATER_PLANT, ORB_HIT];
 
 /**
  * @typedef {object} Marker
@@ -73,6 +91,7 @@ export {
  * @property {number} lifetime Seconds the current game stays playable.
  * @property {number} driftScale
  * @property {Target} target
+ * @property {import("./plant.js").WaterScene | null} [scene] Live plant/pot slice, or null for orb games.
  * @property {number | null} timeLeft Seconds left on the live game, or null during prompt.
  * @property {number | null} holdLeft Seconds left in the prompt or result beat.
  * @property {Flash | null} flash Latest hit / miss / game-over cue for juice. Not a mechanic.
@@ -102,8 +121,9 @@ export {
  * }}
  */
 export function createGame({ random = Math.random, games = GAME_COUNT, pack } = {}) {
-  const sequence = sequenceFromPack(pack, games, ORB_HIT);
+  const sequence = sequenceFromPack(pack ?? DEFAULT_PACK, games, WATER_PLANT);
   const sessionGames = sequence.length;
+  const first = sequence[0] ?? WATER_PLANT;
   let nextFlashId = 1;
   /** @type {MicrogamePlay | null} */
   let current = null;
@@ -120,10 +140,10 @@ export function createGame({ random = Math.random, games = GAME_COUNT, pack } = 
     score: 0,
     game: 1,
     games: sessionGames,
-    prompt: ORB_HIT.prompt,
+    prompt: first.prompt,
     gameId: null,
     result: null,
-    lifetime: lifetimeForGame(1),
+    lifetime: first.duration,
     driftScale: driftScaleForGame(1),
     target: {
       id: 0,
@@ -132,6 +152,7 @@ export function createGame({ random = Math.random, games = GAME_COUNT, pack } = 
       vx: 0,
       vy: 0,
     },
+    scene: null,
     timeLeft: null,
     holdLeft: null,
     flash: null,
@@ -210,11 +231,12 @@ export function createGame({ random = Math.random, games = GAME_COUNT, pack } = 
     state.phase = "start";
     state.score = 0;
     state.game = 1;
-    state.prompt = ORB_HIT.prompt;
+    state.prompt = first.prompt;
     state.gameId = null;
     state.result = null;
-    state.lifetime = lifetimeForGame(1);
+    state.lifetime = first.duration;
     state.driftScale = driftScaleForGame(1);
+    state.scene = null;
     state.timeLeft = null;
     state.holdLeft = null;
     state.flash = null;
@@ -226,7 +248,7 @@ export function createGame({ random = Math.random, games = GAME_COUNT, pack } = 
    * @param {number} index
    */
   function beginGame(index) {
-    const def = sequence[index - 1] ?? ORB_HIT;
+    const def = sequence[index - 1] ?? first;
     current = def.create({ random, index, duration: def.duration });
     current.start();
     state.game = index;
@@ -282,6 +304,7 @@ export function createGame({ random = Math.random, games = GAME_COUNT, pack } = 
     if (view.target) state.target = view.target;
     if (view.lifetime != null) state.lifetime = view.lifetime;
     if (view.driftScale != null) state.driftScale = view.driftScale;
+    state.scene = view.scene ?? null;
     if (state.phase === "playing" && view.timeLeft !== undefined) {
       state.timeLeft = view.timeLeft;
     }

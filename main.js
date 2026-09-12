@@ -196,8 +196,8 @@ function headlineFor(state) {
   if (state.phase === "over") return "Game over";
   if (state.phase === "result" && state.result === "fail") return "Miss";
   if (state.phase === "result" && state.result === "win") return "Nice";
-  if (state.phase === "prompt" || state.phase === "playing") return state.prompt || "Hit orb";
-  return "Hit the orbs";
+  if (state.phase === "prompt" || state.phase === "playing") return state.prompt || "Water plant";
+  return "Short games";
 }
 
 /**
@@ -214,8 +214,11 @@ function ledeFor(state) {
     return state.game >= state.games ? "Timed out. Session wrapping up." : "Timed out. Next game incoming.";
   }
   if (state.phase === "prompt") return "Get ready.";
-  if (state.phase === "playing") return "One hit. Timer is live.";
-  return "Open, allow the camera, play. A prompt, then one short game, then the next. Pointer and keyboard still play if the camera is off.";
+  if (state.phase === "playing") {
+    if (state.gameId === "water-plant") return "Hover the pot, carry it over the plant.";
+    return "One hit. Timer is live.";
+  }
+  return "Open, allow the camera, play. Water the plant or hit the orb. Pointer and keyboard still play if the camera is off.";
 }
 
 /**

@@ -1,4 +1,4 @@
-import { PROMPT_DURATION, createGame } from "../game/index.js";
+import { ORB_HIT, PROMPT_DURATION, createGame } from "../game/index.js";
 import { createInput } from "./index.js";
 import { CAMERA_COPY } from "./camera-status.js";
 
@@ -50,7 +50,7 @@ assert(steered.poses.length === 1, "keyboard alone is still solo");
 assert(steered.poses[0].joints.pointer.x > 0.5, "ArrowRight should nudge the pointer right");
 assert(steered.poses[0].joints.pointer.y > 0.5, "ArrowDown should nudge the pointer down");
 
-const verb = createGame({ random: () => 0.55 });
+const verb = createGame({ random: () => 0.55, pack: [ORB_HIT] });
 verb.start();
 const promptSteps = Math.ceil(PROMPT_DURATION / (1 / 60)) + 2;
 for (let i = 0; i < promptSteps; i += 1) {
