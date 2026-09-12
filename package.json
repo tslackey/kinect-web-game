@@ -1,0 +1,13 @@
+{
+  "name": "kinect-web-game",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "preview": "vite preview",
+    "test": "node --test game/*.test.mjs input/*.test.mjs"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5"
+  }
+}
