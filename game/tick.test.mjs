@@ -27,4 +27,22 @@ assert(steered.x > 0.8, "marker should follow the pointer on x");
 assert(steered.y < 0.35, "marker should follow the pointer on y");
 assert(game.getState().inputSource === "mouse", "source should reflect input");
 
+const poseGame = createGame();
+for (let i = 0; i < 90; i += 1) {
+  poseGame.tick(1 / 60, {
+    source: "webcam",
+    joints: {
+      nose: { x: 0.2, y: 0.72, confidence: 0.94 },
+      left_wrist: { x: 0.15, y: 0.4, confidence: 0.9 },
+    },
+    timestamp: i,
+  });
+}
+
+const followed = poseGame.getState();
+assert(followed.inputSource === "webcam", "source should reflect webcam");
+assert(followed.marker.x < 0.35, "marker should follow the nose on x");
+assert(followed.marker.y > 0.55, "marker should follow the nose on y");
+assert(followed.pose?.joints.nose?.x === 0.2, "game should keep webcam joints");
+
 console.log("game/tick.test.mjs passed");

@@ -26,16 +26,37 @@
 
     <header class="hud">
       <p class="brand">Kinect Web Game</p>
-      <h1>Input → game → render</h1>
+      <h1>The page sees you</h1>
       <p class="lede">
-        The tick loop is live. The marker orbits on its own; move the pointer to
-        steer it. Webcam and Kinect come later behind this same input stub.
+        Allow the camera, then move. Joints feed game state and draw on the
+        canvas. If the camera is blocked, the pointer still steers the marker.
+        Kinect can later use this same input shape.
       </p>
       <p class="status" id="status" role="status">Starting loop…</p>
-      <a class="btn ghost" href="https://github.com/tslackey/kinect-web-game"
-        >View on GitHub</a
-      >
+      <div class="camera-panel">
+        <p class="camera-copy" id="camera-copy">
+          Allow the camera to track your joints on-device. Nothing is uploaded.
+        </p>
+        <div class="actions">
+          <button type="button" class="btn primary" id="start-camera">
+            Allow camera
+          </button>
+          <a
+            class="btn ghost"
+            href="https://github.com/tslackey/kinect-web-game"
+            >View on GitHub</a
+          >
+        </div>
+      </div>
     </header>
+
+    <video
+      id="camera-feed"
+      class="camera-feed"
+      playsinline
+      muted
+      autoplay
+    ></video>
 
     <script type="module" src="./main.js"></script>
   </body>
