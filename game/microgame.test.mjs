@@ -4,6 +4,7 @@ import {
   ORB_HIT,
   PROMPT_DURATION,
   RESULT_DURATION,
+  WATER_PLANT,
   createGame,
   defineMicrogame,
   isMicrogameDef,
@@ -30,6 +31,9 @@ assert(isMicrogameDef(ORB_HIT), "the orb game should satisfy the contract");
 assert(ORB_HIT.prompt.length > 0, "a microgame must ship a prompt");
 assert(ORB_HIT.duration > 0, "a microgame must ship a duration");
 assert(typeof ORB_HIT.create === "function", "a microgame must ship create()");
+assert(isMicrogameDef(WATER_PLANT), "water the plant should satisfy the contract");
+assert(WATER_PLANT.prompt === "Water plant", "the plant prompt stays at two words");
+assert(WATER_PLANT.duration >= 5 && WATER_PLANT.duration <= 6, "plant duration should be about 5–6s");
 
 const play = ORB_HIT.create({ random: () => 0.4, index: 1, duration: ORB_HIT.duration });
 play.start();

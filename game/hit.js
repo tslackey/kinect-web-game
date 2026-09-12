@@ -41,6 +41,44 @@ export function listSampleStrikers(sample) {
 }
 
 /**
+ * Same strikers, tagged so a sticky carry can follow one hand.
+ * Either body in the sample can pick / pour.
+ *
+ * @typedef {object} IdentifiedStriker
+ * @property {string} id
+ * @property {string} poseId
+ * @property {string} name
+ * @property {number} x
+ * @property {number} y
+ * @property {number} confidence
+ */
+
+/**
+ * @param {PoseSample | null | undefined} sample
+ * @returns {IdentifiedStriker[]}
+ */
+export function listIdentifiedStrikers(sample) {
+  /** @type {IdentifiedStriker[]} */
+  const strikers = [];
+  for (const pose of posesFromSample(sample)) {
+    for (const name of STRIKER_NAMES) {
+      const joint = pose.joints[name];
+      if (usable(joint) && (joint.confidence ?? 1) >= 0.4) {
+        strikers.push({
+          id: `${pose.id}:${name}`,
+          poseId: pose.id,
+          name,
+          x: joint.x,
+          y: joint.y,
+          confidence: joint.confidence ?? 1,
+        });
+      }
+    }
+  }
+  return strikers;
+}
+
+/**
  * @param {Joint[]} strikers
  * @param {{ x: number, y: number }} target
  */

@@ -1,6 +1,7 @@
 import {
   createGame,
   HIT_RADIUS,
+  ORB_HIT,
   PROMPT_DURATION,
   RESULT_DURATION,
   TARGET_LIFETIME,
@@ -49,13 +50,13 @@ assert(
   "low-confidence wrists should not strike",
 );
 
-const gated = createGame({ random: cyclingRandom([0.2, 0.4, 0.1, 0.2]) });
+const gated = createGame({ random: cyclingRandom([0.2, 0.4, 0.1, 0.2]), pack: [ORB_HIT] });
 const gatedOrb = { ...gated.getState().target };
 gated.tick(1 / 60, sample({ left_wrist: { x: gatedOrb.x, y: gatedOrb.y, confidence: 0.95 } }));
 assert(gated.getState().phase === "start", "the start screen should ignore hits");
 assert(gated.getState().score === 0, "the start screen should not score");
 
-const waiting = createGame({ random: cyclingRandom([0.2, 0.4, 0.1, 0.2]) });
+const waiting = createGame({ random: cyclingRandom([0.2, 0.4, 0.1, 0.2]), pack: [ORB_HIT] });
 waiting.start();
 const firstTarget = { ...waiting.getState().target };
 for (let i = 0; i < 30; i += 1) {
@@ -69,7 +70,10 @@ assert(
   "the waiting orb should float",
 );
 
-const scored = createGame({ random: cyclingRandom([0.15, 0.2, 0.85, 0.8, 0.3, 0.4, 0.1, 0.2]) });
+const scored = createGame({
+  random: cyclingRandom([0.15, 0.2, 0.85, 0.8, 0.3, 0.4, 0.1, 0.2]),
+  pack: [ORB_HIT],
+});
 scored.start();
 skipPrompt(scored);
 const orb = scored.getState().target;
@@ -83,7 +87,10 @@ assert(
   "the scored orb should stay under the hand",
 );
 
-const pointerGame = createGame({ random: cyclingRandom([0.7, 0.6, 0.2, 0.25, 0.4, 0.5]) });
+const pointerGame = createGame({
+  random: cyclingRandom([0.7, 0.6, 0.2, 0.25, 0.4, 0.5]),
+  pack: [ORB_HIT],
+});
 pointerGame.start();
 skipPrompt(pointerGame);
 const pointerOrb = pointerGame.getState().target;
@@ -91,7 +98,7 @@ pointerGame.tick(1 / 60, sample({ pointer: { x: pointerOrb.x, y: pointerOrb.y, c
 assert(pointerGame.getState().score === 1, "pointer should be able to hit");
 assert(pointerGame.getState().inputSource === "mouse", "mouse source should pass through");
 
-const keysGame = createGame({ random: cyclingRandom([0.4, 0.45, 0.2, 0.25]) });
+const keysGame = createGame({ random: cyclingRandom([0.4, 0.45, 0.2, 0.25]), pack: [ORB_HIT] });
 keysGame.start();
 skipPrompt(keysGame);
 const keyOrb = keysGame.getState().target;
@@ -106,7 +113,10 @@ keysGame.tick(
 assert(keysGame.getState().score === 1, "keyboard stand-in should be able to hit");
 assert(keysGame.getState().inputSource === "keyboard", "keyboard source should pass through");
 
-const missed = createGame({ random: cyclingRandom([0.3, 0.3, 0.8, 0.7, 0.2, 0.9]) });
+const missed = createGame({
+  random: cyclingRandom([0.3, 0.3, 0.8, 0.7, 0.2, 0.9]),
+  pack: [ORB_HIT],
+});
 missed.start();
 skipPrompt(missed);
 assert(missed.getState().phase === "playing", "play should be live after the prompt");

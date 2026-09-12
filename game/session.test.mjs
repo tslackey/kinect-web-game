@@ -1,7 +1,9 @@
 import {
   GAME_COUNT,
+  ORB_HIT,
   PROMPT_DURATION,
   RESULT_DURATION,
+  WATER_PLANT,
   createGame,
   lifetimeForGame,
 } from "./index.js";
@@ -50,7 +52,10 @@ function missCurrent(game) {
   }
 }
 
-const landed = createGame({ random: cyclingRandom([0.2, 0.35, 0.8, 0.15, 0.4, 0.6]) });
+const landed = createGame({
+  random: cyclingRandom([0.2, 0.35, 0.8, 0.15, 0.4, 0.6]),
+  pack: [ORB_HIT],
+});
 assert(landed.getState().phase === "start", "a new game should wait on the start screen");
 assert(landed.getState().game === 1, "the start screen is game 1");
 assert(landed.getState().games === GAME_COUNT, "default session is a short run of games");
@@ -116,6 +121,7 @@ assert(landed.getState().lifetime === lifetimeForGame(1), "a new session should 
 const short = createGame({
   random: cyclingRandom([0.25, 0.3, 0.7, 0.2, 0.5, 0.4]),
   games: 1,
+  pack: [ORB_HIT],
 });
 short.start();
 skipPrompt(short);
@@ -133,5 +139,11 @@ assert(short.getState().score === 1, "retry should be able to score again");
 short.start();
 assert(short.getState().phase === "result", "start during a live session should be a no-op");
 assert(short.getState().score === 1, "a no-op start should not reset a live game");
+
+const mixed = createGame({ random: () => 0.2 });
+mixed.start();
+assert(mixed.getState().prompt === WATER_PLANT.prompt, "the default pack should open on Water plant");
+assert(mixed.getState().gameId === "water-plant", "Water the plant is game 1");
+assert(mixed.getState().scene?.kind === "water-plant", "the plant scene should be on the session view");
 
 console.log("game/session.test.mjs passed");

@@ -1,4 +1,4 @@
-import { PROMPT_DURATION, createGame, listSampleStrikers } from "./index.js";
+import { ORB_HIT, PROMPT_DURATION, createGame, listSampleStrikers } from "./index.js";
 import { assembleSample } from "../input/poses.js";
 
 function assert(condition, message) {
@@ -44,7 +44,10 @@ const strikers = listSampleStrikers(
 );
 assert(strikers.length === 2, "each pose map contributes its own hands");
 
-const scored = createGame({ random: cyclingRandom([0.2, 0.4, 0.1, 0.2, 0.7, 0.6]) });
+const scored = createGame({
+  random: cyclingRandom([0.2, 0.4, 0.1, 0.2, 0.7, 0.6]),
+  pack: [ORB_HIT],
+});
 scored.start();
 skipPrompt(scored);
 const orb = scored.getState().target;
@@ -59,7 +62,7 @@ assert(scored.getState().score === 1, "the second pose map can hit the shared or
 assert(scored.getState().phase === "result", "a second-map hit still wins the game");
 assert(scored.getState().markers.length === 2, "two pose maps should drive two markers");
 
-const solo = createGame({ random: cyclingRandom([0.65, 0.55, 0.2, 0.25]) });
+const solo = createGame({ random: cyclingRandom([0.65, 0.55, 0.2, 0.25]), pack: [ORB_HIT] });
 solo.start();
 skipPrompt(solo);
 const soloOrb = solo.getState().target;
@@ -77,7 +80,7 @@ solo.tick(1 / 60, {
 assert(solo.getState().score === 1, "one camera / one pose map still plays solo");
 assert(solo.getState().markers.length === 1, "solo play keeps a single marker");
 
-const pointers = createGame({ random: cyclingRandom([0.3, 0.35, 0.8, 0.2]) });
+const pointers = createGame({ random: cyclingRandom([0.3, 0.35, 0.8, 0.2]), pack: [ORB_HIT] });
 pointers.start();
 skipPrompt(pointers);
 const pointerOrb = pointers.getState().target;
@@ -92,7 +95,10 @@ pointers.tick(1 / 60, standins);
 assert(pointers.getState().score === 1, "the second test pointer should score");
 assert(pointers.getState().inputSource === "mouse", "two pointers still report mouse");
 
-const firstThenSecond = createGame({ random: cyclingRandom([0.15, 0.2, 0.85, 0.8, 0.4, 0.5]) });
+const firstThenSecond = createGame({
+  random: cyclingRandom([0.15, 0.2, 0.85, 0.8, 0.4, 0.5]),
+  pack: [ORB_HIT],
+});
 firstThenSecond.start();
 skipPrompt(firstThenSecond);
 const firstOrb = firstThenSecond.getState().target;
