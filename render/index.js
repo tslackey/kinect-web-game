@@ -1,9 +1,13 @@
 /**
  * Draws the current game state onto the existing canvas.
+ * Webcam joints become a stick figure; the marker still shows game aim.
  */
+
+import { STICK_BONES } from "../input/joints.js";
 
 /**
  * @typedef {import("../game/index.js").GameState} GameState
+ * @typedef {import("../input/index.js").Joint} Joint
  */
 
 /**
@@ -32,7 +36,61 @@ export function createRenderer(canvas) {
    */
   function draw(state) {
     ctx.clearRect(0, 0, width, height);
+    drawSkeleton(state.pose?.joints);
+    drawMarker(state);
+  }
 
+  /**
+   * @param {Record<string, Joint> | undefined | null} joints
+   */
+  function drawSkeleton(joints) {
+    if (!joints) return;
+
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = "rgba(61, 255, 154, 0.78)";
+
+    for (const [from, to] of STICK_BONES) {
+      const a = joints[from];
+      const b = joints[to];
+      if (!usable(a) || !usable(b)) continue;
+      ctx.beginPath();
+      ctx.moveTo(a.x * width, a.y * height);
+      ctx.lineTo(b.x * width, b.y * height);
+      ctx.stroke();
+    }
+
+    const nose = joints.nose;
+    const leftShoulder = joints.left_shoulder;
+    const rightShoulder = joints.right_shoulder;
+    if (usable(nose) && usable(leftShoulder) && usable(rightShoulder)) {
+      ctx.beginPath();
+      ctx.moveTo(nose.x * width, nose.y * height);
+      ctx.lineTo(
+        ((leftShoulder.x + rightShoulder.x) / 2) * width,
+        ((leftShoulder.y + rightShoulder.y) / 2) * height,
+      );
+      ctx.stroke();
+    }
+
+    for (const [name, joint] of Object.entries(joints)) {
+      if (name === "pointer" || !usable(joint)) continue;
+      const radius = name === "nose" || name.endsWith("wrist") ? 7 : 4.5;
+      ctx.beginPath();
+      ctx.arc(joint.x * width, joint.y * height, radius, 0, Math.PI * 2);
+      ctx.fillStyle =
+        name.endsWith("wrist") || name === "nose"
+          ? "rgba(61, 255, 154, 0.95)"
+          : "rgba(232, 242, 236, 0.88)";
+      ctx.fill();
+    }
+  }
+
+  /**
+   * @param {GameState} state
+   */
+  function drawMarker(state) {
     const x = state.marker.x * width;
     const y = state.marker.y * height;
     const pulse = 0.5 + 0.5 * Math.sin(state.elapsed * 4);
@@ -58,4 +116,11 @@ export function createRenderer(canvas) {
   }
 
   return { resize, draw };
+}
+
+/**
+ * @param {Joint | undefined} joint
+ */
+function usable(joint) {
+  return Boolean(joint && Number.isFinite(joint.x) && Number.isFinite(joint.y));
 }

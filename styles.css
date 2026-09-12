@@ -147,6 +147,22 @@ h1 {
   transform: translateY(0);
 }
 
+.btn.primary {
+  background: var(--accent);
+  color: #052015;
+  border-color: var(--accent);
+}
+
+.btn.primary:hover {
+  background: #62ffad;
+}
+
+.btn.primary:disabled {
+  cursor: default;
+  transform: none;
+  opacity: 0.72;
+}
+
 .btn.ghost {
   background: transparent;
   color: var(--ink);
@@ -164,6 +180,49 @@ h1 {
   font-size: 0.9rem;
   font-variant-numeric: tabular-nums;
   color: var(--accent);
+}
+
+.camera-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.camera-copy {
+  margin: 0;
+  max-width: 32rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.camera-feed {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 2;
+  width: min(28vw, 220px);
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: #050807;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  transform: scaleX(-1);
+  box-shadow: 0 12px 40px var(--shadow);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.camera-feed.is-live {
+  opacity: 1;
 }
 
 @keyframes grid-drift {
@@ -202,6 +261,12 @@ h1 {
 
   .btn {
     text-align: center;
+  }
+
+  .camera-feed {
+    width: min(42vw, 160px);
+    right: 0.75rem;
+    bottom: 0.75rem;
   }
 }
 
