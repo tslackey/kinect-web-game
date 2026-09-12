@@ -12,7 +12,7 @@ export const HIT_RADIUS = 0.13;
 export const TARGET_LIFETIME = 3.6;
 export const STRIKER_NAMES = ["left_wrist", "right_wrist", "pointer"];
 
-const FIELD = { x0: 0.28, x1: 0.84, y0: 0.3, y1: 0.74 };
+const FIELD = { x0: 0.46, x1: 0.88, y0: 0.28, y1: 0.76 };
 const SPAWN_CLEARANCE = 0.22;
 const DRIFT_MIN = 0.035;
 const DRIFT_SPAN = 0.045;

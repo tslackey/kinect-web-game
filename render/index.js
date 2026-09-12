@@ -4,7 +4,7 @@
  */
 
 import { STICK_BONES } from "../input/joints.js";
-import { HIT_RADIUS, TARGET_LIFETIME } from "../game/index.js";
+import { TARGET_LIFETIME } from "../game/index.js";
 
 /**
  * @typedef {import("../game/index.js").GameState} GameState
@@ -103,11 +103,13 @@ export function createRenderer(canvas) {
     const [r, g, b] = hue;
     const alpha = failed ? 0.45 : 0.85 + pulse * 0.15;
 
+    const ringX = Math.min(width, height) * 0.055;
+    const ringY = ringX;
     ctx.beginPath();
-    ctx.ellipse(x, y, HIT_RADIUS * width, HIT_RADIUS * height, 0, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${failed ? 0.16 : 0.2 + pulse * 0.12})`;
+    ctx.ellipse(x, y, ringX, ringY, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${failed ? 0.16 : 0.22 + pulse * 0.14})`;
     ctx.lineWidth = 2;
-    ctx.setLineDash([6, 8]);
+    ctx.setLineDash([5, 7]);
     ctx.stroke();
     ctx.setLineDash([]);
 
