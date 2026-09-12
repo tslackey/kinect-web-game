@@ -150,7 +150,7 @@ function headlineFor(state) {
  */
 function ledeFor(state) {
   if (state.phase === "over") {
-    return "Session over. Play again for another 3 rounds. Same verb — hit orbs, miss ends the round.";
+    return "Session over. Play again for another 3 rounds.";
   }
   if (state.phase === "between") {
     return "Missed that one. The next round is a little quicker.";

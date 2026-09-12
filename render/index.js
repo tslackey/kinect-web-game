@@ -38,7 +38,9 @@ export function createRenderer(canvas) {
   function draw(state) {
     ctx.clearRect(0, 0, width, height);
     drawSkeleton(state.pose?.joints);
-    drawTarget(state);
+    if (state.phase !== "start") {
+      drawTarget(state);
+    }
     drawMarker(state);
   }
 
