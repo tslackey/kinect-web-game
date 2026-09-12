@@ -33,8 +33,8 @@ if (startBtn instanceof HTMLButtonElement) {
 }
 
 if (kinectBtn instanceof HTMLButtonElement) {
-  kinectBtn.addEventListener("click", () => {
-    input.startKinect();
+  kinectBtn.addEventListener("click", async () => {
+    await input.startKinect();
     updateHud(game.getState());
   });
 }
