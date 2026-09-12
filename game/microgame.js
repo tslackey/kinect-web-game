@@ -8,8 +8,8 @@
  */
 
 export const GAME_COUNT = 3;
-export const PROMPT_DURATION = 0.8;
-export const RESULT_DURATION = 0.65;
+export const PROMPT_DURATION = 1.05;
+export const RESULT_DURATION = 0.9;
 
 /** @type {readonly MicrogameOutcome[]} */
 export const MICROGAME_OUTCOMES = Object.freeze(["playing", "win", "fail"]);
