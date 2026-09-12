@@ -1,4 +1,5 @@
 import {
+  FEED_PET,
   GAME_COUNT,
   ORB_HIT,
   PROMPT_DURATION,
@@ -145,5 +146,11 @@ mixed.start();
 assert(mixed.getState().prompt === WATER_PLANT.prompt, "the default pack should open on Water plant");
 assert(mixed.getState().gameId === "water-plant", "Water the plant is game 1");
 assert(mixed.getState().scene?.kind === "water-plant", "the plant scene should be on the session view");
+
+const petOnly = createGame({ random: () => 0.2, pack: [FEED_PET], games: 1 });
+petOnly.start();
+assert(petOnly.getState().prompt === FEED_PET.prompt, "a pet-only pack should flash Feed pet");
+assert(petOnly.getState().gameId === "feed-pet", "Feed the pet is a pack entry");
+assert(petOnly.getState().scene?.kind === "feed-pet", "the pet scene should be on the session view");
 
 console.log("game/session.test.mjs passed");
