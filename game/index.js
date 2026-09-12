@@ -1,30 +1,52 @@
 /**
- * Game state owner. One verb: hands (or the pointer) hit a floating orb.
- * A session is start → rounds → game over. A hit increments score.
- * Letting the orb timer run out ends the round.
- * Either pose map can score — same orb, two bodies.
+ * Game state owner. A session is a short sequence of microgames:
+ * prompt → one game on a short timer → win or fail → next.
+ *
+ * Today's orb-hit is the first playable game so the loop is real.
+ * Either pose map on the sample can score — one webcam, up to two bodies.
  */
 
 import { posesFromSample } from "../input/poses.js";
+import { listStrikers } from "./hit.js";
+import {
+  GAME_COUNT,
+  PROMPT_DURATION,
+  RESULT_DURATION,
+  isPlayOutcome,
+  sequenceFromPack,
+} from "./microgame.js";
+import { ORB_HIT, driftOrb, driftScaleForGame, lifetimeForGame } from "./orb.js";
 
 /**
  * @typedef {import("../input/index.js").PoseSample} PoseSample
  * @typedef {import("../input/index.js").Joint} Joint
  * @typedef {import("../input/poses.js").PoseMap} PoseMap
+ * @typedef {import("./microgame.js").MicrogameDef} MicrogameDef
+ * @typedef {import("./microgame.js").MicrogamePlay} MicrogamePlay
+ * @typedef {import("./orb.js").Target} Target
  */
 
-export const HIT_RADIUS = 0.13;
-export const TARGET_LIFETIME = 3.6;
-export const LIFETIME_STEP = 0.4;
-export const DRIFT_BOOST = 0.25;
-export const ROUND_COUNT = 3;
-export const ROUND_PAUSE = 1.75;
-export const STRIKER_NAMES = ["left_wrist", "right_wrist", "pointer"];
-
-const FIELD = { x0: 0.46, x1: 0.88, y0: 0.28, y1: 0.76 };
-const SPAWN_CLEARANCE = 0.22;
-const DRIFT_MIN = 0.035;
-const DRIFT_SPAN = 0.045;
+export {
+  GAME_COUNT,
+  MICROGAME_OUTCOMES,
+  PROMPT_DURATION,
+  RESULT_DURATION,
+  defineMicrogame,
+  isMicrogameDef,
+  isPlayOutcome,
+  sequenceFromPack,
+} from "./microgame.js";
+export { HIT_RADIUS, STRIKER_NAMES, hitsTarget, listSampleStrikers, listStrikers } from "./hit.js";
+export {
+  DRIFT_BOOST,
+  LIFETIME_STEP,
+  ORB_HIT,
+  TARGET_LIFETIME,
+  driftOrb,
+  driftScaleForGame,
+  lifetimeForGame,
+  makeTarget,
+} from "./orb.js";
 
 /**
  * @typedef {object} Marker
@@ -34,32 +56,25 @@ const DRIFT_SPAN = 0.045;
  */
 
 /**
- * @typedef {object} Target
- * @property {number} id
- * @property {number} x
- * @property {number} y
- * @property {number} vx
- * @property {number} vy
- */
-
-/**
  * @typedef {object} GameState
  * @property {number} elapsed Seconds since the current session started.
  * @property {number} ticks
  * @property {string} inputSource
  * @property {Marker} marker
- * @property {Marker[]} markers One aim per pose map when two people are live.
+ * @property {Marker[]} markers One aim per pose map when two people are in frame.
  * @property {PoseSample | null} pose
- * @property {"start" | "waiting" | "playing" | "between" | "over"} phase
+ * @property {"start" | "prompt" | "playing" | "result" | "over"} phase
  * @property {number} score
- * @property {number} round 1-based round index.
- * @property {number} rounds
- * @property {number} roundHits Hits landed in the current round.
- * @property {number} lifetime Seconds the current orb stays hittable.
+ * @property {number} game 1-based microgame index.
+ * @property {number} games
+ * @property {string} prompt On-screen cue for the current game.
+ * @property {string | null} gameId
+ * @property {"win" | "fail" | null} result Outcome of the current game, if resolved.
+ * @property {number} lifetime Seconds the current game stays playable.
  * @property {number} driftScale
  * @property {Target} target
- * @property {number | null} timeLeft Seconds left on the current orb, or null while waiting.
- * @property {number | null} holdLeft Seconds left in the between-round pause.
+ * @property {number | null} timeLeft Seconds left on the live game, or null during prompt.
+ * @property {number | null} holdLeft Seconds left in the prompt or result beat.
  * @property {Flash | null} flash Latest hit / miss / game-over cue for juice. Not a mechanic.
  */
 
@@ -74,21 +89,11 @@ const DRIFT_SPAN = 0.045;
  */
 
 /**
- * @param {number} round
- */
-export function lifetimeForRound(round) {
-  return Math.max(1.6, TARGET_LIFETIME - Math.max(0, round - 1) * LIFETIME_STEP);
-}
-
-/**
- * @param {number} round
- */
-export function driftScaleForRound(round) {
-  return 1 + Math.max(0, round - 1) * DRIFT_BOOST;
-}
-
-/**
- * @param {{ random?: () => number, rounds?: number }} [options]
+ * @param {{
+ *   random?: () => number,
+ *   games?: number,
+ *   pack?: MicrogameDef[],
+ * }} [options]
  * @returns {{
  *   tick: (dt: number, sample: PoseSample) => GameState,
  *   getState: () => GameState,
@@ -96,10 +101,12 @@ export function driftScaleForRound(round) {
  *   reset: () => GameState,
  * }}
  */
-export function createGame({ random = Math.random, rounds = ROUND_COUNT } = {}) {
-  const sessionRounds = Math.max(1, Math.floor(rounds) || ROUND_COUNT);
-  let nextTargetId = 1;
+export function createGame({ random = Math.random, games = GAME_COUNT, pack } = {}) {
+  const sequence = sequenceFromPack(pack, games, ORB_HIT);
+  const sessionGames = sequence.length;
   let nextFlashId = 1;
+  /** @type {MicrogamePlay | null} */
+  let current = null;
 
   /** @type {GameState} */
   const state = {
@@ -111,12 +118,20 @@ export function createGame({ random = Math.random, rounds = ROUND_COUNT } = {}) 
     pose: null,
     phase: "start",
     score: 0,
-    round: 1,
-    rounds: sessionRounds,
-    roundHits: 0,
-    lifetime: TARGET_LIFETIME,
-    driftScale: 1,
-    target: makeTarget(random, nextTargetId++, [], null, 1),
+    game: 1,
+    games: sessionGames,
+    prompt: ORB_HIT.prompt,
+    gameId: null,
+    result: null,
+    lifetime: lifetimeForGame(1),
+    driftScale: driftScaleForGame(1),
+    target: {
+      id: 0,
+      x: 0.67,
+      y: 0.52,
+      vx: 0,
+      vy: 0,
+    },
     timeLeft: null,
     holdLeft: null,
     flash: null,
@@ -134,39 +149,37 @@ export function createGame({ random = Math.random, rounds = ROUND_COUNT } = {}) 
     state.inputSource = sample?.source ?? "idle";
 
     const poses = posesFromSample(sample);
-    const strikers = listSampleStrikers(sample);
     const follow = 1 - Math.exp(-step * 8);
     followMarkers(state, poses, follow);
 
     if (state.phase === "start" || state.phase === "over") {
-      driftTarget(state.target, step);
+      driftOrb(state.target, step);
       return state;
     }
 
-    if (state.phase === "between") {
-      state.holdLeft = Math.max(0, (state.holdLeft ?? ROUND_PAUSE) - step);
+    if (state.phase === "prompt") {
+      driftOrb(state.target, step);
+      state.holdLeft = Math.max(0, (state.holdLeft ?? PROMPT_DURATION) - step);
       if (state.holdLeft <= 0) {
-        beginRound(state.round + 1);
+        beginPlay();
       }
       return state;
     }
 
-    driftTarget(state.target, step);
-
-    if (hitsTarget(strikers, state.target)) {
-      state.score += 1;
-      state.roundHits += 1;
-      state.phase = "playing";
-      state.timeLeft = state.lifetime;
-      emitFlash("hit", state.target.x, state.target.y);
-      state.target = makeTarget(random, nextTargetId++, strikers, state.target, state.driftScale);
+    if (state.phase === "result") {
+      driftOrb(state.target, step);
+      state.holdLeft = Math.max(0, (state.holdLeft ?? RESULT_DURATION) - step);
+      if (state.holdLeft <= 0) {
+        advanceAfterResult();
+      }
       return state;
     }
 
-    if (state.phase === "playing") {
-      state.timeLeft = Math.max(0, (state.timeLeft ?? state.lifetime) - step);
-      if (state.timeLeft <= 0) {
-        endRound();
+    if (state.phase === "playing" && current) {
+      const outcome = current.tick(step, sample);
+      syncView();
+      if (isPlayOutcome(outcome) && outcome !== "playing") {
+        resolveGame(outcome);
       }
     }
 
@@ -181,27 +194,27 @@ export function createGame({ random = Math.random, rounds = ROUND_COUNT } = {}) 
     if (state.phase !== "start" && state.phase !== "over") {
       return state;
     }
-    nextTargetId = 1;
     nextFlashId = 1;
     state.elapsed = 0;
     state.score = 0;
     state.flash = null;
-    beginRound(1);
+    beginGame(1);
     return state;
   }
 
   function reset() {
-    nextTargetId = 1;
+    current = null;
     nextFlashId = 1;
     state.elapsed = 0;
     state.ticks = 0;
     state.phase = "start";
     state.score = 0;
-    state.round = 1;
-    state.roundHits = 0;
-    state.lifetime = lifetimeForRound(1);
-    state.driftScale = driftScaleForRound(1);
-    state.target = makeTarget(random, nextTargetId++, [], null, state.driftScale);
+    state.game = 1;
+    state.prompt = ORB_HIT.prompt;
+    state.gameId = null;
+    state.result = null;
+    state.lifetime = lifetimeForGame(1);
+    state.driftScale = driftScaleForGame(1);
     state.timeLeft = null;
     state.holdLeft = null;
     state.flash = null;
@@ -210,30 +223,68 @@ export function createGame({ random = Math.random, rounds = ROUND_COUNT } = {}) 
   }
 
   /**
-   * @param {number} round
+   * @param {number} index
    */
-  function beginRound(round) {
-    state.round = round;
-    state.roundHits = 0;
-    state.phase = "waiting";
-    state.lifetime = lifetimeForRound(round);
-    state.driftScale = driftScaleForRound(round);
-    state.target = makeTarget(random, nextTargetId++, [], null, state.driftScale);
+  function beginGame(index) {
+    const def = sequence[index - 1] ?? ORB_HIT;
+    current = def.create({ random, index, duration: def.duration });
+    current.start();
+    state.game = index;
+    state.phase = "prompt";
+    state.prompt = def.prompt;
+    state.gameId = def.id;
+    state.result = null;
     state.timeLeft = null;
-    state.holdLeft = null;
+    state.holdLeft = PROMPT_DURATION;
+    syncView();
+    state.timeLeft = null;
   }
 
-  function endRound() {
-    state.timeLeft = 0;
-    if (state.round >= state.rounds) {
-      state.phase = "over";
-      state.holdLeft = null;
-      emitFlash("over", state.target.x, state.target.y);
+  function beginPlay() {
+    state.phase = "playing";
+    state.holdLeft = null;
+    syncView();
+    if (state.timeLeft == null) {
+      state.timeLeft = state.lifetime;
+    }
+  }
+
+  /**
+   * @param {"win" | "fail"} outcome
+   */
+  function resolveGame(outcome) {
+    state.result = outcome;
+    state.phase = "result";
+    state.holdLeft = RESULT_DURATION;
+    if (outcome === "win") {
+      state.score += 1;
+      emitFlash("hit", state.target.x, state.target.y);
       return;
     }
-    state.phase = "between";
-    state.holdLeft = ROUND_PAUSE;
     emitFlash("miss", state.target.x, state.target.y);
+  }
+
+  function advanceAfterResult() {
+    if (state.game >= state.games) {
+      state.phase = "over";
+      state.holdLeft = null;
+      if (state.result === "fail") {
+        emitFlash("over", state.target.x, state.target.y);
+      }
+      return;
+    }
+    beginGame(state.game + 1);
+  }
+
+  function syncView() {
+    if (!current) return;
+    const view = current.getView();
+    if (view.target) state.target = view.target;
+    if (view.lifetime != null) state.lifetime = view.lifetime;
+    if (view.driftScale != null) state.driftScale = view.driftScale;
+    if (state.phase === "playing" && view.timeLeft !== undefined) {
+      state.timeLeft = view.timeLeft;
+    }
   }
 
   /**
@@ -253,41 +304,6 @@ export function createGame({ random = Math.random, rounds = ROUND_COUNT } = {}) 
   }
 
   return { tick, getState, start, reset };
-}
-
-/**
- * @param {Record<string, Joint> | undefined} joints
- * @returns {Joint[]}
- */
-export function listStrikers(joints) {
-  if (!joints) return [];
-  /** @type {Joint[]} */
-  const strikers = [];
-  for (const name of STRIKER_NAMES) {
-    const joint = joints[name];
-    if (usable(joint) && (joint.confidence ?? 1) >= 0.4) {
-      strikers.push(joint);
-    }
-  }
-  return strikers;
-}
-
-/**
- * Hands from every pose map. Two people share the same orb.
- *
- * @param {PoseSample | null | undefined} sample
- * @returns {Joint[]}
- */
-export function listSampleStrikers(sample) {
-  return posesFromSample(sample).flatMap((pose) => listStrikers(pose.joints));
-}
-
-/**
- * @param {Joint[]} strikers
- * @param {Target} target
- */
-export function hitsTarget(strikers, target) {
-  return strikers.some((joint) => Math.hypot(joint.x - target.x, joint.y - target.y) <= HIT_RADIUS);
 }
 
 /**
@@ -370,76 +386,8 @@ function idleAim(elapsed) {
 }
 
 /**
- * @param {() => number} random
- * @param {number} id
- * @param {Joint[]} strikers
- * @param {Target | null} avoid
- * @param {number} [driftScale]
- * @returns {Target}
- */
-function makeTarget(random, id, strikers, avoid, driftScale = 1) {
-  let x = lerp(FIELD.x0, FIELD.x1, random());
-  let y = lerp(FIELD.y0, FIELD.y1, random());
-
-  for (let attempt = 0; attempt < 12; attempt += 1) {
-    const clear = [...strikers, avoid].every(
-      (point) => !point || Math.hypot(point.x - x, point.y - y) >= SPAWN_CLEARANCE,
-    );
-    if (clear) break;
-    x = lerp(FIELD.x0, FIELD.x1, random());
-    y = lerp(FIELD.y0, FIELD.y1, random());
-  }
-
-  const angle = random() * Math.PI * 2;
-  const speed = (DRIFT_MIN + random() * DRIFT_SPAN) * driftScale;
-  return {
-    id,
-    x,
-    y,
-    vx: Math.cos(angle) * speed,
-    vy: Math.sin(angle) * speed,
-  };
-}
-
-/**
- * @param {Target} target
- * @param {number} step
- */
-function driftTarget(target, step) {
-  target.x += target.vx * step;
-  target.y += target.vy * step;
-
-  if (target.x < FIELD.x0 || target.x > FIELD.x1) {
-    target.vx *= -1;
-    target.x = clamp(target.x, FIELD.x0, FIELD.x1);
-  }
-  if (target.y < FIELD.y0 || target.y > FIELD.y1) {
-    target.vy *= -1;
-    target.y = clamp(target.y, FIELD.y0, FIELD.y1);
-  }
-}
-
-/**
  * @param {Joint | null | undefined} joint
  */
 function usable(joint) {
   return Boolean(joint && Number.isFinite(joint.x) && Number.isFinite(joint.y));
-}
-
-/**
- * @param {number} a
- * @param {number} b
- * @param {number} t
- */
-function lerp(a, b, t) {
-  return a + (b - a) * t;
-}
-
-/**
- * @param {number} value
- * @param {number} min
- * @param {number} max
- */
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
 }

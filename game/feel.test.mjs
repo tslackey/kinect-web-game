@@ -1,4 +1,4 @@
-import { createGame, HIT_RADIUS, ROUND_PAUSE } from "./index.js";
+import { HIT_RADIUS, PROMPT_DURATION, RESULT_DURATION, createGame } from "./index.js";
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -17,6 +17,21 @@ function cyclingRandom(values) {
   };
 }
 
+function drain(game, seconds, pose = sample({})) {
+  const steps = Math.ceil(seconds / (1 / 60)) + 2;
+  for (let i = 0; i < steps; i += 1) {
+    game.tick(1 / 60, pose);
+  }
+}
+
+function skipPrompt(game) {
+  drain(game, PROMPT_DURATION);
+}
+
+function skipResult(game) {
+  drain(game, RESULT_DURATION);
+}
+
 function hitCurrent(game) {
   const orb = game.getState().target;
   game.tick(1 / 60, sample({ left_wrist: { x: orb.x, y: orb.y, confidence: 1 } }));
@@ -31,14 +46,16 @@ function missCurrent(game) {
 
 const game = createGame({
   random: cyclingRandom([0.2, 0.35, 0.8, 0.15, 0.4, 0.6]),
-  rounds: 2,
+  games: 2,
 });
 
 assert(game.getState().flash === null, "the start screen has no flash");
 
 game.start();
 assert(game.getState().flash === null, "Play should not invent a flash");
+assert(game.getState().phase === "prompt", "Play should open on the prompt, not a hit");
 
+skipPrompt(game);
 const firstOrb = { ...game.getState().target };
 hitCurrent(game);
 const hitFlash = game.getState().flash;
@@ -48,31 +65,29 @@ assert(
   Math.hypot(hitFlash.x - firstOrb.x, hitFlash.y - firstOrb.y) <= HIT_RADIUS,
   "the hit flash should sit on the orb that scored",
 );
-assert(game.getState().phase === "playing", "juice must not change the hit verb");
+assert(game.getState().phase === "result", "juice must not skip the result beat");
 assert(game.getState().score === 1, "juice must not change the score");
 
 const hitId = hitFlash.id;
 game.tick(1 / 60, sample({ nose: { x: 0.05, y: 0.05, confidence: 1 } }));
 assert(game.getState().flash?.id === hitId, "an idle tick should leave the last flash in place");
 
+skipResult(game);
+assert(game.getState().game === 2, "the session should still advance after a hit flash");
+assert(game.getState().phase === "prompt", "next game should prompt after the win juice");
+
+skipPrompt(game);
 missCurrent(game);
 const missFlash = game.getState().flash;
-assert(missFlash?.kind === "miss", "a timed-out round should emit a miss flash");
+assert(missFlash?.kind === "miss", "a timed-out game should emit a miss flash");
 assert(missFlash.id !== hitId, "each cue should get a new flash id");
-assert(game.getState().phase === "between", "a miss flash must not skip the between-round pause");
+assert(game.getState().phase === "result", "a miss flash must not skip the result beat");
 assert(game.getState().score === 1, "a miss flash must not change the score");
 
-const pauseSteps = Math.ceil(ROUND_PAUSE / (1 / 60)) + 2;
-for (let i = 0; i < pauseSteps; i += 1) {
-  game.tick(1 / 60, sample({}));
-}
-assert(game.getState().round === 2, "the session should still advance after a miss flash");
-
-hitCurrent(game);
-missCurrent(game);
+skipResult(game);
 assert(game.getState().phase === "over", "the last miss should still be game over");
-assert(game.getState().flash?.kind === "over", "game over should emit an over flash");
-assert(game.getState().score === 2, "game-over juice must keep the session score");
+assert(game.getState().flash?.kind === "over", "game over should emit an over flash after the last miss");
+assert(game.getState().score === 1, "game-over juice must keep the session score");
 
 game.start();
 assert(game.getState().flash === null, "Play again should clear the last flash");

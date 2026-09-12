@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Kinect Web Game — hit floating orbs with your hands. One or two webcams. Open, allow camera, play."
+      content="Kinect Web Game — short motion games from one webcam. Open, allow camera, play."
     />
     <title>Kinect Web Game</title>
     <link rel="icon" href="./assets/facet/shard.svg" type="image/svg+xml" />
@@ -37,9 +37,8 @@
       </p>
       <h1 id="headline">Hit the orbs</h1>
       <p class="lede" id="lede">
-        Open, allow a camera, play. A second webcam is a second player.
-        3 rounds. Hit orbs with your hands. Pointer and keyboard stand in
-        if a camera is off.
+        Open, allow the camera, play. A prompt, then one short game, then
+        the next. Pointer and keyboard still play if the camera is off.
       </p>
       <div class="scoreboard" id="scoreboard" hidden>
         <div class="score-head">
@@ -55,7 +54,7 @@
             <strong class="score-value" id="score-value">0</strong>
           </p>
         </div>
-        <p class="roundline" id="roundline">Round 1 of 3</p>
+        <p class="roundline" id="roundline">Game 1 of 3</p>
       </div>
       <p class="status" id="status" role="status">Allow the camera, then press Play.</p>
       <section class="camera-invite" id="camera-invite" aria-label="Camera">
@@ -70,9 +69,9 @@
           <span id="camera-kicker-text">First visit</span>
         </p>
         <p class="camera-copy" id="camera-copy">
-          Allow the camera to track your hands on-device. A second webcam is
-          a second player. Nothing is uploaded. Pointer and keyboard still
-          play if you skip or the camera is blocked.
+          Allow the camera to track your hands on-device. Nothing is
+          uploaded. Pointer and keyboard still play if you skip or the
+          camera is blocked.
         </p>
         <div class="actions">
           <button type="button" class="btn primary" id="start-camera">

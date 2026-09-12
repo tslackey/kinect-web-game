@@ -1,6 +1,8 @@
 import {
   createGame,
   HIT_RADIUS,
+  PROMPT_DURATION,
+  RESULT_DURATION,
   TARGET_LIFETIME,
   hitsTarget,
   listStrikers,
@@ -21,6 +23,17 @@ function cyclingRandom(values) {
     i += 1;
     return value;
   };
+}
+
+function drain(game, seconds, pose = sample({})) {
+  const steps = Math.ceil(seconds / (1 / 60)) + 2;
+  for (let i = 0; i < steps; i += 1) {
+    game.tick(1 / 60, pose);
+  }
+}
+
+function skipPrompt(game, pose = sample({})) {
+  drain(game, PROMPT_DURATION, pose);
 }
 
 assert(hitsTarget([{ x: 0.5, y: 0.5, confidence: 1 }], { id: 1, x: 0.5, y: 0.5, vx: 0, vy: 0 }), "exact overlap is a hit");
@@ -45,12 +58,12 @@ assert(gated.getState().score === 0, "the start screen should not score");
 const waiting = createGame({ random: cyclingRandom([0.2, 0.4, 0.1, 0.2]) });
 waiting.start();
 const firstTarget = { ...waiting.getState().target };
-for (let i = 0; i < 240; i += 1) {
+for (let i = 0; i < 30; i += 1) {
   waiting.tick(1 / 60, sample({}));
 }
-assert(waiting.getState().phase === "waiting", "idle time should not fail the attempt");
+assert(waiting.getState().phase === "prompt", "idle time during the prompt should not fail");
 assert(waiting.getState().score === 0, "idle time should not score");
-assert(waiting.getState().timeLeft === null, "waiting orbs have no timer");
+assert(waiting.getState().timeLeft === null, "prompt orbs have no play timer");
 assert(
   Math.hypot(waiting.getState().target.x - firstTarget.x, waiting.getState().target.y - firstTarget.y) > 0.001,
   "the waiting orb should float",
@@ -58,41 +71,64 @@ assert(
 
 const scored = createGame({ random: cyclingRandom([0.15, 0.2, 0.85, 0.8, 0.3, 0.4, 0.1, 0.2]) });
 scored.start();
+skipPrompt(scored);
 const orb = scored.getState().target;
 scored.tick(1 / 60, sample({ left_wrist: { x: orb.x, y: orb.y, confidence: 0.95 } }));
-assert(scored.getState().score === 1, "a hand on the orb should score");
-assert(scored.getState().phase === "playing", "first hit starts the attempt");
-assert(scored.getState().target.id !== orb.id, "a hit should spawn a new orb");
-assert(Math.abs((scored.getState().timeLeft ?? 0) - TARGET_LIFETIME) < 1e-9, "a hit should refresh the timer");
+assert(scored.getState().score === 1, "a hand on the orb should win the game");
+assert(scored.getState().phase === "result", "one hit ends the microgame");
+assert(scored.getState().result === "win", "a hit is a win, not another orb");
+assert(scored.getState().target.id === orb.id, "a win should leave the orb that scored");
 assert(
-  Math.hypot(scored.getState().target.x - orb.x, scored.getState().target.y - orb.y) > HIT_RADIUS * 0.5,
-  "the next orb should not sit on the last hit",
+  Math.hypot(scored.getState().target.x - orb.x, scored.getState().target.y - orb.y) <= HIT_RADIUS,
+  "the scored orb should stay under the hand",
 );
 
 const pointerGame = createGame({ random: cyclingRandom([0.7, 0.6, 0.2, 0.25, 0.4, 0.5]) });
 pointerGame.start();
+skipPrompt(pointerGame);
 const pointerOrb = pointerGame.getState().target;
 pointerGame.tick(1 / 60, sample({ pointer: { x: pointerOrb.x, y: pointerOrb.y, confidence: 1 } }, "mouse"));
 assert(pointerGame.getState().score === 1, "pointer should be able to hit");
 assert(pointerGame.getState().inputSource === "mouse", "mouse source should pass through");
 
+const keysGame = createGame({ random: cyclingRandom([0.4, 0.45, 0.2, 0.25]) });
+keysGame.start();
+skipPrompt(keysGame);
+const keyOrb = keysGame.getState().target;
+keysGame.tick(
+  1 / 60,
+  {
+    source: "keyboard",
+    poses: [{ id: "p1", source: "keyboard", joints: { pointer: { x: keyOrb.x, y: keyOrb.y, confidence: 1 } } }],
+    timestamp: 0,
+  },
+);
+assert(keysGame.getState().score === 1, "keyboard stand-in should be able to hit");
+assert(keysGame.getState().inputSource === "keyboard", "keyboard source should pass through");
+
 const missed = createGame({ random: cyclingRandom([0.3, 0.3, 0.8, 0.7, 0.2, 0.9]) });
 missed.start();
-const startOrb = missed.getState().target;
-missed.tick(1 / 60, sample({ right_wrist: { x: startOrb.x, y: startOrb.y, confidence: 1 } }));
-assert(missed.getState().phase === "playing", "setup hit should start play");
+skipPrompt(missed);
+assert(missed.getState().phase === "playing", "play should be live after the prompt");
+assert(Math.abs((missed.getState().timeLeft ?? 0) - TARGET_LIFETIME) < 0.05, "the orb timer starts with the game");
 const playingOrb = missed.getState().target;
+missed.tick(1 / 60, sample({ nose: { x: 0.05, y: 0.05, confidence: 1 } }));
+assert(missed.getState().phase === "playing", "a far pose is not a wrong-gesture fail");
 for (let i = 0; i < 240; i += 1) {
   missed.tick(1 / 60, sample({ nose: { x: 0.05, y: 0.05, confidence: 1 } }));
 }
-assert(missed.getState().phase === "between", "timeout without a hit should end the round");
-assert(missed.getState().score === 1, "a miss should keep the score");
-assert(missed.getState().timeLeft === 0, "a missed round shows an empty timer");
+assert(missed.getState().phase === "result", "timeout without a hit should miss the game");
+assert(missed.getState().result === "fail", "timeout is a fail");
+assert(missed.getState().score === 0, "a miss before any win should keep score at 0");
+assert(missed.getState().timeLeft === 0, "a missed game shows an empty timer");
 assert(missed.getState().target.id === playingOrb.id, "a miss should leave the last orb");
 
 missed.tick(1 / 60, sample({ right_wrist: { x: missed.getState().target.x, y: missed.getState().target.y, confidence: 1 } }));
-assert(missed.getState().score === 1, "hits after a miss should not score");
-assert(missed.getState().phase === "between", "the round stays over until the next one starts");
+assert(missed.getState().score === 0, "hits after a miss should not score");
+assert(missed.getState().phase === "result", "the game stays resolved until next starts");
+
+drain(missed, RESULT_DURATION);
+assert(missed.getState().phase === "prompt" || missed.getState().phase === "over", "the result beat should advance");
 
 missed.reset();
 assert(missed.getState().phase === "start", "reset should return to the start screen");

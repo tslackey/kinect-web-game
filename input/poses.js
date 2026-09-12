@@ -52,9 +52,8 @@ export function posesFromSample(sample) {
 }
 
 /**
- * Build a PoseSample from webcam slots plus pointer / keyboard stand-ins.
- * Webcam index 0 is player 1, index 1 is player 2. Empty slots fill from
- * extra pointers, then the keyboard. Caps at two maps.
+ * Build a PoseSample from webcam pose maps plus pointer / keyboard stand-ins.
+ * Empty slots fill from extra pointers, then the keyboard. Caps at two maps.
  *
  * @param {{
  *   webcamPoses?: (Record<string, Joint> | null | undefined)[],

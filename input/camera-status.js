@@ -56,7 +56,7 @@ export function classifyCameraError(error) {
 
 export const CAMERA_COPY = {
   prompt:
-    "Allow the camera to track your hands on-device. A second webcam is a second player. Nothing is uploaded. Pointer and keyboard still play if you skip.",
+    "Allow the camera to track your hands on-device. Nothing is uploaded. Pointer and keyboard still play if you skip.",
   granted: "Camera already allowed. Click Start camera to begin tracking, or Play to start the session.",
   pending: "Asking for the camera… look for the browser prompt at the top of the window.",
   loading: "Camera on. Loading the pose model…",
