@@ -1,6 +1,5 @@
 /**
  * Shared pose joint names and MediaPipe landmark mapping.
- * The Kinect adapter emits this same joint dictionary.
  */
 
 export const POSE_LANDMARK_NAMES = [

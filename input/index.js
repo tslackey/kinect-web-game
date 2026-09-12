@@ -1,17 +1,17 @@
 /**
- * Input facade: Kinect (when a host is live), else webcam pose, else mouse.
+ * Input facade: webcam pose, else pointer / keyboard stand-ins.
  * game/ and render/ only see the PoseSample — they do not care which adapter
  * produced it.
  */
 
 import { classifyCameraError, CAMERA_COPY } from "./camera-status.js";
-import { createKinectAdapter } from "./kinect.js";
-import { landmarksToJoints } from "./joints.js";
+import { clamp01, landmarksToJoints } from "./joints.js";
 
 const IDLE_SOURCE = "idle";
 const MOUSE_SOURCE = "mouse";
+const KEYBOARD_SOURCE = "keyboard";
 const WEBCAM_SOURCE = "webcam";
-const KINECT_SOURCE = "kinect";
+const KEY_STEP = 0.05;
 
 const TASKS_VISION = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21";
 const POSE_MODEL =
@@ -26,7 +26,7 @@ const POSE_MODEL =
 
 /**
  * @typedef {object} PoseSample
- * @property {"idle" | "mouse" | "webcam" | "kinect"} source
+ * @property {"idle" | "mouse" | "keyboard" | "webcam"} source
  * @property {Record<string, Joint>} joints
  * @property {number} timestamp
  */
@@ -35,24 +35,20 @@ const POSE_MODEL =
  * @param {{
  *   target?: EventTarget,
  *   video?: HTMLVideoElement | null,
- *   search?: string,
- *   protocol?: string,
- *   loadKinectron?: Function,
- *   autoKinect?: boolean,
- *   now?: () => number,
  * }} [options]
  */
 export function createInput({
-  target = window,
+  target = typeof window !== "undefined" ? window : undefined,
   video = null,
-  search,
-  protocol,
-  loadKinectron,
-  autoKinect,
-  now,
 } = {}) {
+  if (!target) {
+    throw new Error("createInput needs an EventTarget.");
+  }
+
   /** @type {Joint | null} */
   let pointer = null;
+  /** @type {Joint | null} */
+  let keys = null;
   /** @type {Record<string, Joint> | null} */
   let webcamJoints = null;
   /** @type {import("./camera-status.js").CameraStatus} */
@@ -67,25 +63,13 @@ export function createInput({
   let videoEl =
     typeof HTMLVideoElement !== "undefined" && video instanceof HTMLVideoElement ? video : null;
 
-  const kinect = createKinectAdapter({
-    search: search ?? (typeof window !== "undefined" ? window.location.search : ""),
-    protocol: protocol ?? (typeof window !== "undefined" ? window.location.protocol : "https:"),
-    loadClient: loadKinectron,
-    now,
-    probe: loadKinectron ? false : undefined,
-  });
-  const shouldAutoKinect = autoKinect ?? kinect.config.auto;
-  let announceKinect = false;
-  if (shouldAutoKinect) {
-    void kinect.start();
-  }
-
   /**
    * @param {PointerEvent} event
    */
   function onPointer(event) {
-    const width = window.innerWidth || 1;
-    const height = window.innerHeight || 1;
+    const view = typeof window !== "undefined" ? window : null;
+    const width = view?.innerWidth || 1;
+    const height = view?.innerHeight || 1;
     pointer = {
       x: Math.min(1, Math.max(0, event.clientX / width)),
       y: Math.min(1, Math.max(0, event.clientY / height)),
@@ -93,8 +77,24 @@ export function createInput({
     };
   }
 
+  /**
+   * @param {KeyboardEvent} event
+   */
+  function onKeyDown(event) {
+    const delta = keyDelta(event.key);
+    if (!delta) return;
+
+    const origin = keys ?? pointer ?? { x: 0.5, y: 0.5, confidence: 1 };
+    keys = {
+      x: clamp01(origin.x + delta.x),
+      y: clamp01(origin.y + delta.y),
+      confidence: 1,
+    };
+  }
+
   target.addEventListener("pointermove", onPointer);
   target.addEventListener("pointerdown", onPointer);
+  target.addEventListener("keydown", onKeyDown);
 
   async function startCamera() {
     if (cameraStatus === "pending" || cameraStatus === "loading" || cameraStatus === "ready") {
@@ -148,15 +148,6 @@ export function createInput({
     const timestamp = performance.now();
     refreshWebcamJoints(timestamp);
 
-    const kinectJoints = kinect.getJoints(timestamp);
-    if (kinectJoints && Object.keys(kinectJoints).length > 0) {
-      return {
-        source: KINECT_SOURCE,
-        joints: kinectJoints,
-        timestamp,
-      };
-    }
-
     if (webcamJoints && Object.keys(webcamJoints).length > 0) {
       return {
         source: WEBCAM_SOURCE,
@@ -173,44 +164,30 @@ export function createInput({
       };
     }
 
+    if (keys) {
+      return {
+        source: KEYBOARD_SOURCE,
+        joints: { pointer: { ...keys } },
+        timestamp,
+      };
+    }
+
     return { source: IDLE_SOURCE, joints: {}, timestamp };
   }
 
   function getStatus() {
-    const kinectStatus = kinect.getStatus();
-    const kinectActive = kinectStatus.kinect === "live" || kinectStatus.kinect === "ready";
-    const showKinect = kinectActive || announceKinect;
     return {
       camera: cameraStatus,
-      kinect: kinectStatus.kinect,
-      kinectHost: kinectStatus.host,
-      message: showKinect ? kinectStatus.message : cameraMessage,
+      message: cameraMessage,
       cameraMessage,
-      kinectMessage: kinectStatus.message,
-      jointCount: kinectActive
-        ? kinectStatus.jointCount
-        : webcamJoints
-          ? Object.keys(webcamJoints).length
-          : 0,
+      jointCount: webcamJoints ? Object.keys(webcamJoints).length : 0,
     };
-  }
-
-  function startKinect() {
-    announceKinect = true;
-    return kinect.start();
-  }
-
-  /**
-   * @param {unknown} frame
-   */
-  function ingestKinectFrame(frame) {
-    kinect.ingest(frame);
   }
 
   function dispose() {
     target.removeEventListener("pointermove", onPointer);
     target.removeEventListener("pointerdown", onPointer);
-    kinect.stop();
+    target.removeEventListener("keydown", onKeyDown);
     stopStream();
     try {
       landmarker?.close?.();
@@ -263,7 +240,19 @@ export function createInput({
     }
   }
 
-  return { sample, startCamera, startKinect, ingestKinectFrame, getStatus, dispose };
+  return { sample, startCamera, getStatus, dispose };
+}
+
+/**
+ * @param {string} key
+ * @returns {{ x: number, y: number } | null}
+ */
+function keyDelta(key) {
+  if (key === "ArrowLeft" || key === "a" || key === "A") return { x: -KEY_STEP, y: 0 };
+  if (key === "ArrowRight" || key === "d" || key === "D") return { x: KEY_STEP, y: 0 };
+  if (key === "ArrowUp" || key === "w" || key === "W") return { x: 0, y: -KEY_STEP };
+  if (key === "ArrowDown" || key === "s" || key === "S") return { x: 0, y: KEY_STEP };
+  return null;
 }
 
 async function loadPoseLandmarker() {
