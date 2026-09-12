@@ -1,9 +1,10 @@
 /**
  * Draws the current game state onto the existing canvas.
- * Webcam joints become a stick figure; the marker still shows game aim.
+ * Webcam joints become a stick figure; the orb is the one verb.
  */
 
 import { STICK_BONES } from "../input/joints.js";
+import { TARGET_LIFETIME } from "../game/index.js";
 
 /**
  * @typedef {import("../game/index.js").GameState} GameState
@@ -37,6 +38,7 @@ export function createRenderer(canvas) {
   function draw(state) {
     ctx.clearRect(0, 0, width, height);
     drawSkeleton(state.pose?.joints);
+    drawTarget(state);
     drawMarker(state);
   }
 
@@ -90,21 +92,67 @@ export function createRenderer(canvas) {
   /**
    * @param {GameState} state
    */
+  function drawTarget(state) {
+    const { target, phase, timeLeft, elapsed } = state;
+    const x = target.x * width;
+    const y = target.y * height;
+    const pulse = 0.5 + 0.5 * Math.sin(elapsed * 5);
+    const failed = phase === "failed";
+    const remaining = phase === "playing" && timeLeft != null ? timeLeft / TARGET_LIFETIME : 1;
+    const hue = failed ? [255, 107, 107] : remaining < 0.35 ? [255, 196, 84] : [61, 255, 154];
+    const [r, g, b] = hue;
+    const alpha = failed ? 0.45 : 0.85 + pulse * 0.15;
+
+    const ringX = Math.min(width, height) * 0.055;
+    const ringY = ringX;
+    ctx.beginPath();
+    ctx.ellipse(x, y, ringX, ringY, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${failed ? 0.16 : 0.22 + pulse * 0.14})`;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 7]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.beginPath();
+    ctx.arc(x, y, 36, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0, remaining));
+    ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${failed ? 0.28 : 0.9})`;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(x, y, 18 + pulse * 5, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.55)`;
+    ctx.shadowBlur = 22;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.beginPath();
+    ctx.arc(x, y, 6, 0, Math.PI * 2);
+    ctx.fillStyle = failed ? "rgba(20, 8, 8, 0.85)" : "#052015";
+    ctx.fill();
+  }
+
+  /**
+   * @param {GameState} state
+   */
   function drawMarker(state) {
     const x = state.marker.x * width;
     const y = state.marker.y * height;
     const pulse = 0.5 + 0.5 * Math.sin(state.elapsed * 4);
+    const failed = state.phase === "failed";
+    const color = failed ? "255, 107, 107" : "61, 255, 154";
 
     ctx.beginPath();
     ctx.arc(x, y, 28 + pulse * 10, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(61, 255, 154, ${0.18 + pulse * 0.22})`;
+    ctx.strokeStyle = `rgba(${color}, ${0.18 + pulse * 0.22})`;
     ctx.lineWidth = 2;
     ctx.stroke();
 
     ctx.beginPath();
     ctx.arc(x, y, 8, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(61, 255, 154, 0.95)";
-    ctx.shadowColor = "rgba(61, 255, 154, 0.55)";
+    ctx.fillStyle = `rgba(${color}, 0.95)`;
+    ctx.shadowColor = `rgba(${color}, 0.55)`;
     ctx.shadowBlur = 18;
     ctx.fill();
     ctx.shadowBlur = 0;

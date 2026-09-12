@@ -3,8 +3,8 @@
 Shareable GitHub Pages motion arcade. Webcam first; Kinect later as an adapter
 behind the same `input` → `game` → `render` spine.
 
-Slice 3 is webcam body input: allow the camera, move, and see your joints
-update on the canvas.
+Slice 4 is one verb: hit floating orbs with your hands. A hit adds a point.
+Miss the timer and the attempt ends.
 
 ## Local preview
 
@@ -14,17 +14,17 @@ Serve the repo root (ES modules and `getUserMedia` need a local server):
 python3 -m http.server 8080
 ```
 
-Then visit [http://localhost:8080](http://localhost:8080). Click **Allow camera**.
-If the camera is blocked, the page stays up and the pointer still steers.
+Then visit [http://localhost:8080](http://localhost:8080). Click **Allow camera**,
+then reach for the orb. If the camera is blocked, the pointer still plays.
 
 ## Modules
 
 | Path | Role |
 | --- | --- |
 | `input/` | Pose sample. Webcam via MediaPipe Pose when allowed; mouse fallback. |
-| `game/` | Owns state and `tick(dt)`. Follows `nose` (or `pointer`). |
-| `render/` | Draws the stick figure and marker to `#motion-field`. |
-| `main.js` | Wires the animation frame loop and camera button. |
+| `game/` | Owns state and `tick(dt)`. Hands / pointer hit orbs; score or fail. |
+| `render/` | Draws the stick figure, orb, and marker to `#motion-field`. |
+| `main.js` | Wires the animation frame loop, camera button, and try-again. |
 
 ## GitHub Pages
 

@@ -6,6 +6,9 @@ const canvas = document.getElementById("motion-field");
 const statusEl = document.getElementById("status");
 const cameraCopy = document.getElementById("camera-copy");
 const startBtn = document.getElementById("start-camera");
+const tryAgainBtn = document.getElementById("try-again");
+const headline = document.getElementById("headline");
+const scoreline = document.getElementById("scoreline");
 const video = document.getElementById("camera-feed");
 
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -28,6 +31,14 @@ if (startBtn instanceof HTMLButtonElement) {
   });
 }
 
+if (tryAgainBtn instanceof HTMLButtonElement) {
+  tryAgainBtn.addEventListener("click", () => {
+    game.reset();
+    renderer.draw(game.getState());
+    updateHud(game.getState());
+  });
+}
+
 function frame(now) {
   const dt = (now - lastTime) / 1000;
   lastTime = now;
@@ -36,7 +47,7 @@ function frame(now) {
   const state = game.tick(dt, sample);
   renderer.draw(state);
 
-  if (now - lastHudAt > 250) {
+  if (now - lastHudAt > 120) {
     lastHudAt = now;
     updateHud(state);
   }
@@ -49,11 +60,27 @@ function frame(now) {
  */
 function updateHud(state) {
   const cam = input.getStatus();
-  const jointCount = Object.keys(state.pose?.joints ?? {}).length;
-  const seconds = state.elapsed.toFixed(1);
+  const failed = state.phase === "failed";
+
+  if (headline) {
+    headline.textContent = failed ? "Miss" : "Hit the orbs";
+    headline.classList.toggle("is-fail", failed);
+  }
+
+  if (scoreline) {
+    scoreline.textContent = `Score ${state.score}`;
+    scoreline.classList.toggle("is-fail", failed);
+  }
 
   if (statusEl) {
-    statusEl.textContent = `${state.inputSource} · ${jointCount} joints · tick ${state.ticks} · ${seconds}s`;
+    statusEl.classList.toggle("is-fail", failed);
+    if (failed) {
+      statusEl.textContent = "The orb timed out. Attempt over.";
+    } else if (state.phase === "playing" && state.timeLeft != null) {
+      statusEl.textContent = `${state.timeLeft.toFixed(1)}s left`;
+    } else {
+      statusEl.textContent = "Reach for the orb";
+    }
   }
 
   if (cameraCopy) {
@@ -63,10 +90,18 @@ function updateHud(state) {
   if (startBtn instanceof HTMLButtonElement) {
     const busy = cam.camera === "pending" || cam.camera === "loading";
     startBtn.disabled = busy || cam.camera === "ready";
+    startBtn.classList.toggle("primary", !failed);
+    startBtn.classList.toggle("ghost", failed);
     if (cam.camera === "ready") startBtn.textContent = "Camera on";
     else if (busy) startBtn.textContent = "Starting…";
     else if (cam.camera === "prompt") startBtn.textContent = "Allow camera";
     else startBtn.textContent = "Try camera again";
+  }
+
+  if (tryAgainBtn instanceof HTMLButtonElement) {
+    tryAgainBtn.hidden = !failed;
+    tryAgainBtn.classList.toggle("primary", failed);
+    tryAgainBtn.classList.toggle("ghost", !failed);
   }
 
   if (video instanceof HTMLVideoElement) {

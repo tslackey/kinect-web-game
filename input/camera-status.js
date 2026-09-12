@@ -23,14 +23,14 @@ export function classifyCameraError(error) {
   if (name === "NotAllowedError" || name === "PermissionDeniedError") {
     return {
       status: "denied",
-      message: "Camera blocked. Allow it in the browser settings, or use the pointer to steer.",
+      message: "Camera blocked. Allow it in the browser settings, or use the pointer to hit orbs.",
     };
   }
 
   if (name === "NotFoundError" || name === "DevicesNotFoundError" || name === "OverconstrainedError") {
     return {
       status: "unavailable",
-      message: "No camera found. The pointer still steers the marker.",
+      message: "No camera found. The pointer can still hit the orbs.",
     };
   }
 
@@ -50,7 +50,7 @@ export function classifyCameraError(error) {
 
   return {
     status: "error",
-    message: "Camera failed to start. The pointer still steers the marker.",
+      message: "Camera failed to start. The pointer can still hit the orbs.",
   };
 }
 
@@ -58,5 +58,5 @@ export const CAMERA_COPY = {
   prompt: "Allow the camera to track your joints on-device. Nothing is uploaded.",
   pending: "Asking for the camera…",
   loading: "Camera on. Loading the pose model…",
-  ready: "Camera live. Move — your joints should track on the canvas.",
+  ready: "Camera live. Reach for the glowing orb with either hand.",
 };
