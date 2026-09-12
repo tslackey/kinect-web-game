@@ -2,11 +2,15 @@
  * Game state owner. One verb: hands (or the pointer) hit a floating orb.
  * A session is start → rounds → game over. A hit increments score.
  * Letting the orb timer run out ends the round.
+ * Either pose map can score — same orb, two bodies.
  */
+
+import { posesFromSample } from "../input/poses.js";
 
 /**
  * @typedef {import("../input/index.js").PoseSample} PoseSample
  * @typedef {import("../input/index.js").Joint} Joint
+ * @typedef {import("../input/poses.js").PoseMap} PoseMap
  */
 
 export const HIT_RADIUS = 0.13;
@@ -26,6 +30,7 @@ const DRIFT_SPAN = 0.045;
  * @typedef {object} Marker
  * @property {number} x Normalized horizontal position in [0, 1].
  * @property {number} y Normalized vertical position in [0, 1].
+ * @property {string} [id]
  */
 
 /**
@@ -43,6 +48,7 @@ const DRIFT_SPAN = 0.045;
  * @property {number} ticks
  * @property {string} inputSource
  * @property {Marker} marker
+ * @property {Marker[]} markers One aim per pose map when two people are live.
  * @property {PoseSample | null} pose
  * @property {"start" | "waiting" | "playing" | "between" | "over"} phase
  * @property {number} score
@@ -101,6 +107,7 @@ export function createGame({ random = Math.random, rounds = ROUND_COUNT } = {}) 
     ticks: 0,
     inputSource: "idle",
     marker: { x: 0.5, y: 0.5 },
+    markers: [],
     pose: null,
     phase: "start",
     score: 0,
@@ -126,11 +133,10 @@ export function createGame({ random = Math.random, rounds = ROUND_COUNT } = {}) 
     state.pose = sample;
     state.inputSource = sample?.source ?? "idle";
 
-    const strikers = listStrikers(sample?.joints);
-    const aim = pickAim(sample?.joints, state.target) ?? idleAim(state.elapsed);
+    const poses = posesFromSample(sample);
+    const strikers = listSampleStrikers(sample);
     const follow = 1 - Math.exp(-step * 8);
-    state.marker.x += (aim.x - state.marker.x) * follow;
-    state.marker.y += (aim.y - state.marker.y) * follow;
+    followMarkers(state, poses, follow);
 
     if (state.phase === "start" || state.phase === "over") {
       driftTarget(state.target, step);
@@ -199,6 +205,7 @@ export function createGame({ random = Math.random, rounds = ROUND_COUNT } = {}) 
     state.timeLeft = null;
     state.holdLeft = null;
     state.flash = null;
+    state.markers = [];
     return state;
   }
 
@@ -266,6 +273,16 @@ export function listStrikers(joints) {
 }
 
 /**
+ * Hands from every pose map. Two people share the same orb.
+ *
+ * @param {PoseSample | null | undefined} sample
+ * @returns {Joint[]}
+ */
+export function listSampleStrikers(sample) {
+  return posesFromSample(sample).flatMap((pose) => listStrikers(pose.joints));
+}
+
+/**
  * @param {Joint[]} strikers
  * @param {Target} target
  */
@@ -287,6 +304,40 @@ function pickAim(joints, target) {
   const aim = joints.nose ?? null;
   if (!usable(aim)) return null;
   return aim;
+}
+
+/**
+ * @param {GameState} state
+ * @param {PoseMap[]} poses
+ * @param {number} follow
+ */
+function followMarkers(state, poses, follow) {
+  if (poses.length === 0) {
+    const aim = idleAim(state.elapsed);
+    state.marker.x += (aim.x - state.marker.x) * follow;
+    state.marker.y += (aim.y - state.marker.y) * follow;
+    state.markers = [];
+    return;
+  }
+
+  /** @type {Marker[]} */
+  const next = [];
+  for (let i = 0; i < poses.length; i += 1) {
+    const pose = poses[i];
+    const prev = state.markers.find((marker) => marker.id === pose.id) ?? {
+      id: pose.id,
+      x: state.marker.x,
+      y: state.marker.y,
+    };
+    const aim = pickAim(pose.joints, state.target) ?? idleAim(state.elapsed + i * 0.7);
+    prev.x += (aim.x - prev.x) * follow;
+    prev.y += (aim.y - prev.y) * follow;
+    next.push(prev);
+  }
+  state.markers = next;
+  const primary = nearest(next, state.target) ?? next[0];
+  state.marker.x = primary.x;
+  state.marker.y = primary.y;
 }
 
 /**

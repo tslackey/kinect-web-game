@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Kinect Web Game — hit floating orbs with your hands. Open, allow camera, play."
+      content="Kinect Web Game — hit floating orbs with your hands. One or two webcams. Open, allow camera, play."
     />
     <title>Kinect Web Game</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -28,8 +28,9 @@
       <p class="brand">Kinect Web Game</p>
       <h1 id="headline">Hit the orbs</h1>
       <p class="lede" id="lede">
-        Open, allow the camera, play. 3 rounds. Hit orbs with your hands.
-        Pointer and keyboard work if the camera is off.
+        Open, allow a camera, play. A second webcam is a second player.
+        3 rounds. Hit orbs with your hands. Pointer and keyboard stand in
+        if a camera is off.
       </p>
       <div class="scoreboard" id="scoreboard" hidden>
         <p class="scoreline" id="scoreline" aria-live="polite">
@@ -42,8 +43,9 @@
       <section class="camera-invite" id="camera-invite" aria-label="Camera">
         <p class="camera-kicker" id="camera-kicker">First visit</p>
         <p class="camera-copy" id="camera-copy">
-          Allow the camera to track your hands on-device. Nothing is uploaded.
-          Pointer and keyboard still play if you skip or the camera is blocked.
+          Allow the camera to track your hands on-device. A second webcam is
+          a second player. Nothing is uploaded. Pointer and keyboard still
+          play if you skip or the camera is blocked.
         </p>
         <div class="actions">
           <button type="button" class="btn primary" id="start-camera">
@@ -62,13 +64,22 @@
       </section>
     </header>
 
-    <video
-      id="camera-feed"
-      class="camera-feed"
-      playsinline
-      muted
-      autoplay
-    ></video>
+    <div class="camera-feeds" aria-hidden="true">
+      <video
+        id="camera-feed"
+        class="camera-feed"
+        playsinline
+        muted
+        autoplay
+      ></video>
+      <video
+        id="camera-feed-2"
+        class="camera-feed camera-feed-b"
+        playsinline
+        muted
+        autoplay
+      ></video>
+    </div>
 
     <script type="module" src="./main.js"></script>
   </body>

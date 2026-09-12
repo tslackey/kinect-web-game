@@ -31,10 +31,16 @@ const poseGame = createGame();
 for (let i = 0; i < 90; i += 1) {
   poseGame.tick(1 / 60, {
     source: "webcam",
-    joints: {
-      nose: { x: 0.2, y: 0.72, confidence: 0.94 },
-      left_wrist: { x: 0.15, y: 0.4, confidence: 0.9 },
-    },
+    poses: [
+      {
+        id: "p1",
+        source: "webcam",
+        joints: {
+          nose: { x: 0.2, y: 0.72, confidence: 0.94 },
+          left_wrist: { x: 0.15, y: 0.4, confidence: 0.9 },
+        },
+      },
+    ],
     timestamp: i,
   });
 }
@@ -43,6 +49,7 @@ const followed = poseGame.getState();
 assert(followed.inputSource === "webcam", "source should reflect webcam");
 assert(followed.marker.x < 0.25, "marker should follow the striking wrist on x");
 assert(followed.marker.y < 0.5, "marker should follow the striking wrist on y");
-assert(followed.pose?.joints.nose?.x === 0.2, "game should keep webcam joints");
+assert(followed.pose?.poses[0].joints.nose?.x === 0.2, "game should keep webcam joints on the pose map");
+assert(followed.markers.length === 1, "one pose map should drive one marker");
 
 console.log("game/tick.test.mjs passed");

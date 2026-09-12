@@ -1,15 +1,20 @@
 # Kinect Web Game
 
 A motion arcade you can send someone. Open the link, allow the camera, play.
+Two webcams are two people — not one camera guessing two poses.
 
 **Play:** [https://tslackey.github.io/kinect-web-game/](https://tslackey.github.io/kinect-web-game/)
 
 1. Open that URL.
 2. Click **Allow camera**. Hands stay on-device. Nothing is uploaded.
-3. Click **Play**. Hit the orbs with either hand.
+3. A second webcam, if the browser lists one, is player 2. Or use another
+   pointer / the keyboard as the second body.
+4. Click **Play**. Hit the orbs with either hand. Both players score on the
+   same orbs.
 
 If the camera is blocked, click **Play without camera**. The pointer and
-keyboard still play. A session is 3 rounds. Miss an orb and the round ends.
+keyboard still play — two pointers are two skeletons. A session is 3 rounds.
+Miss an orb and the round ends. One camera still plays solo.
 
 Sound is optional. Use **Sound on** / **Sound off**.
 
@@ -34,9 +39,9 @@ camera hardware).
 
 | Path | Role |
 | --- | --- |
-| `input/` | Pose sample. Webcam when the camera is live; else mouse or keyboard. |
-| `game/` | Owns session state and `tick(dt)`. Start, rounds, score, game over. |
-| `render/` | Draws the stick figure, orb, marker, and hit flashes. |
+| `input/` | Pose sample. Up to two webcam streams; else mouse, extra pointers, or keyboard. `sample()` emits pose maps, not one joint dict. |
+| `game/` | Owns session state and `tick(dt)`. Start, rounds, score, game over. Either body can hit. |
+| `render/` | Draws one or two stick figures, the orb, markers, and hit flashes. |
 | `feel/` | Optional synthesized hit / miss audio. |
 | `main.js` | Wires the loop, camera prompt, Play, and sound toggle. |
 

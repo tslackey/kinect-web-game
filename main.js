@@ -19,6 +19,7 @@ const scoreline = document.getElementById("scoreline");
 const scoreValue = document.getElementById("score-value");
 const roundline = document.getElementById("roundline");
 const video = document.getElementById("camera-feed");
+const video2 = document.getElementById("camera-feed-2");
 
 if (!(canvas instanceof HTMLCanvasElement)) {
   throw new Error("Expected #motion-field canvas.");
@@ -29,6 +30,7 @@ const reducedMotion =
 
 const input = createInput({
   video: video instanceof HTMLVideoElement ? video : null,
+  video2: video2 instanceof HTMLVideoElement ? video2 : null,
 });
 const game = createGame();
 const renderer = createRenderer(canvas, { reducedMotion });
@@ -99,8 +101,16 @@ function updateHud(state) {
   const cam = input.getStatus();
   const atGate = state.phase === "start" || state.phase === "over";
   const missed = state.phase === "between" || state.phase === "over";
-  const cameraReady = cam.camera === "ready";
-  const cameraBusy = cam.camera === "pending" || cam.camera === "loading";
+  const cameraReady = cam.camerasReady > 0 || cam.camera === "ready";
+  const cameraBusy =
+    cam.starting ||
+    cam.camera === "pending" ||
+    cam.camera === "loading" ||
+    cam.camera2 === "pending" ||
+    cam.camera2 === "loading";
+  const twoLive = cam.camerasReady >= 2;
+  const offerSecond =
+    cam.camera === "ready" && !twoLive && cam.deviceCount >= 2 && cam.camera2 !== "denied";
 
   document.body.classList.toggle("is-start", state.phase === "start");
   document.body.classList.toggle("is-playing", state.phase === "waiting" || state.phase === "playing");
@@ -109,6 +119,7 @@ function updateHud(state) {
   document.body.classList.toggle("is-camera-prompt", cam.camera === "prompt");
   document.body.classList.toggle("is-camera-denied", cam.camera === "denied" || cam.camera === "unavailable" || cam.camera === "error");
   document.body.classList.toggle("is-camera-ready", cameraReady || cam.camera === "loading");
+  document.body.classList.toggle("is-two-cameras", twoLive);
 
   if (headline) {
     headline.textContent = headlineFor(state);
@@ -155,12 +166,14 @@ function updateHud(state) {
   }
 
   if (startBtn instanceof HTMLButtonElement) {
-    startBtn.hidden = cameraReady;
+    startBtn.hidden = cameraReady && !offerSecond;
     startBtn.disabled = cameraBusy;
-    const offerCamera = cam.camera === "prompt" || cameraBusy;
+    const offerCamera = cam.camera === "prompt" || cameraBusy || offerSecond;
     startBtn.classList.toggle("primary", offerCamera && !missed);
     startBtn.classList.toggle("ghost", !offerCamera || missed);
     if (cameraBusy) startBtn.textContent = "Starting…";
+    else if (offerSecond && cam.camera2 === "error") startBtn.textContent = "Try second camera again";
+    else if (offerSecond) startBtn.textContent = "Allow second camera";
     else if (cam.camera === "prompt" && cam.permission === "granted") startBtn.textContent = "Start camera";
     else if (cam.camera === "prompt") startBtn.textContent = "Allow camera";
     else startBtn.textContent = "Try camera again";
@@ -176,7 +189,11 @@ function updateHud(state) {
   }
 
   if (video instanceof HTMLVideoElement) {
-    video.classList.toggle("is-live", cameraReady || cam.camera === "loading");
+    video.classList.toggle("is-live", cam.camera === "ready" || cam.camera === "loading");
+  }
+
+  if (video2 instanceof HTMLVideoElement) {
+    video2.classList.toggle("is-live", cam.camera2 === "ready" || cam.camera2 === "loading");
   }
 }
 
@@ -200,7 +217,7 @@ function ledeFor(state) {
   if (state.phase === "between") {
     return "Missed that one. The next round is a little quicker.";
   }
-  return "Open, allow the camera, play. 3 rounds. Hit orbs with your hands. Pointer and keyboard work if the camera is off.";
+  return "Open, allow a camera, play. A second webcam is a second player. 3 rounds. Hit orbs with your hands. Pointer and keyboard stand in if a camera is off.";
 }
 
 /**
@@ -227,6 +244,9 @@ function statusFor(state, cam) {
     return `Round ${state.round} of ${state.rounds} · ${state.timeLeft.toFixed(1)}s left`;
   }
   if (state.phase === "waiting") {
+    if (cam.camerasReady >= 2) {
+      return `Round ${state.round} of ${state.rounds}. Both players, reach for the orb.`;
+    }
     if (cam.camera !== "ready") {
       return `Round ${state.round} of ${state.rounds}. Pointer and keyboard work. You can still allow the camera.`;
     }
@@ -243,6 +263,7 @@ function statusFor(state, cam) {
  * @param {import("./game/index.js").GameState} state
  */
 function cameraKickerFor(cam, state) {
+  if (cam.camerasReady >= 2) return "Two cameras live";
   if (cam.camera === "ready") return "Camera live";
   if (cam.camera === "loading" || cam.camera === "pending") return "Camera";
   if (cam.camera === "denied") return "Camera blocked";

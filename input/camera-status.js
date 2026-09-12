@@ -56,11 +56,14 @@ export function classifyCameraError(error) {
 
 export const CAMERA_COPY = {
   prompt:
-    "Allow the camera to track your hands on-device. Nothing is uploaded. Pointer and keyboard still play if you skip.",
+    "Allow the camera to track your hands on-device. A second webcam is a second player. Nothing is uploaded. Pointer and keyboard still play if you skip.",
   granted: "Camera already allowed. Click Start camera to begin tracking, or Play to start the session.",
   pending: "Asking for the camera… look for the browser prompt at the top of the window.",
   loading: "Camera on. Loading the pose model…",
   ready: "Camera live. Reach for the glowing orb with either hand.",
+  readyOneMore:
+    "One camera live. Allow a second webcam for player 2, or use another pointer / the keyboard.",
+  readyTwo: "Two cameras live. Each person hits the same orbs. Green is player 1, blue is player 2.",
   denied:
     "Camera blocked. Use the pointer or keyboard, or allow the camera in the browser settings and try again.",
   unavailable: "No camera found. The pointer and keyboard can still hit the orbs.",
