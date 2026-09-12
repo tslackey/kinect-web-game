@@ -120,6 +120,7 @@ const live = createKinectAdapter({
   search: "?kinect=10.0.0.8",
   protocol: "http:",
   loadClient: createFakeLoader(fake),
+  probe: false,
 });
 await live.start();
 assert(fake.instance, "a successful start should construct the Kinectron client");
@@ -158,11 +159,22 @@ assert(verb.getState().score === 1, "the existing verb should score from mapped 
 assert(verb.getState().inputSource === "kinect", "game should see the kinect source without code changes");
 routed.dispose();
 
+const probed = createKinectAdapter({
+  search: "?kinect=127.0.0.1",
+  protocol: "http:",
+  loadClient: async () => {
+    throw new Error("should not load Kinectron when the host probe fails");
+  },
+});
+await probed.start();
+assert(probed.getStatus().kinect === "missing", "an unreachable local host should fail the probe");
+
 const missing = createKinectAdapter({
   search: "?kinect=127.0.0.1",
   protocol: "http:",
   loadClient: createTimeoutLoader(),
   connectMs: 30,
+  probe: false,
 });
 await missing.start();
 assert(missing.getStatus().kinect === "missing", "a hung client should time out as missing");

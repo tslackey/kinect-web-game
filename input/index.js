@@ -72,6 +72,7 @@ export function createInput({
     protocol: protocol ?? (typeof window !== "undefined" ? window.location.protocol : "https:"),
     loadClient: loadKinectron,
     now,
+    probe: loadKinectron ? false : undefined,
   });
   const shouldAutoKinect = autoKinect ?? kinect.config.auto;
   let announceKinect = false;

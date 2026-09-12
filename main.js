@@ -110,13 +110,14 @@ function updateHud(state) {
   if (kinectBtn instanceof HTMLButtonElement) {
     const kinectBusy = cam.kinect === "connecting";
     const kinectLive = cam.kinect === "live" || cam.kinect === "ready";
-    kinectBtn.disabled = kinectBusy || kinectLive;
+    const kinectAnnounced = cam.message === cam.kinectMessage;
+    kinectBtn.disabled = kinectLive || (kinectBusy && kinectAnnounced);
     kinectBtn.classList.toggle("primary", kinectLive && !failed);
     kinectBtn.classList.toggle("ghost", !kinectLive || failed);
     if (cam.kinect === "live") kinectBtn.textContent = "Kinect on";
     else if (cam.kinect === "ready") kinectBtn.textContent = "Kinect ready";
-    else if (kinectBusy) kinectBtn.textContent = "Looking for Kinect…";
-    else if (cam.kinect === "missing" || cam.kinect === "error") {
+    else if (kinectBusy && kinectAnnounced) kinectBtn.textContent = "Looking for Kinect…";
+    else if ((cam.kinect === "missing" || cam.kinect === "error") && kinectAnnounced) {
       kinectBtn.textContent = "Try Kinect again";
     } else kinectBtn.textContent = "Connect Kinect";
   }

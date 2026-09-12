@@ -22,6 +22,7 @@ const STALE_MS = 1500;
  *   loadClient?: (config: import("./kinect-config.js").KinectConfig) => Promise<unknown>,
  *   now?: () => number,
  *   connectMs?: number,
+ *   probe?: boolean,
  * }} [options]
  */
 export function createKinectAdapter({
@@ -30,6 +31,7 @@ export function createKinectAdapter({
   loadClient = defaultLoadKinectron,
   now = defaultNow,
   connectMs = CONNECT_MS,
+  probe = true,
 } = {}) {
   const config = parseKinectConfig(search, { protocol });
 
@@ -95,6 +97,12 @@ export function createKinectAdapter({
     if (protocol === "https:" && !config.secure && isLoopback(config.host)) {
       status = "error";
       message = KINECT_COPY.mixed;
+      return;
+    }
+
+    if (probe && !(await hostLooksReachable(config))) {
+      status = "missing";
+      message = KINECT_COPY.missing;
       return;
     }
 
@@ -249,6 +257,23 @@ export function createKinectAdapter({
  */
 function isLoopback(host) {
   return host === "127.0.0.1" || host === "localhost" || host === "::1";
+}
+
+/**
+ * Cheap preflight so a missing local host does not load PeerJS.
+ * Secure / ngrok hosts skip this and go through the Kinectron client.
+ *
+ * @param {import("./kinect-config.js").KinectConfig} config
+ */
+async function hostLooksReachable(config) {
+  if (config.secure || typeof fetch !== "function") return true;
+  const url = `http://${config.host}:${config.port}/`;
+  try {
+    await fetch(url, { mode: "no-cors", signal: AbortSignal.timeout(400) });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function defaultNow() {
