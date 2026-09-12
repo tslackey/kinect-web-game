@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Kinect Web Game — a browser playground for motion play."
+      content="Kinect Web Game — hit floating orbs with your hands."
     />
     <title>Kinect Web Game</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -26,13 +26,13 @@
 
     <header class="hud">
       <p class="brand">Kinect Web Game</p>
-      <h1>The page sees you</h1>
+      <h1 id="headline">Hit the orbs</h1>
       <p class="lede">
-        Allow the camera, then move. Joints feed game state and draw on the
-        canvas. If the camera is blocked, the pointer still steers the marker.
-        Kinect can later use this same input shape.
+        Reach with either hand. Miss one and the attempt ends. The pointer
+        works if the camera is off.
       </p>
-      <p class="status" id="status" role="status">Starting loop…</p>
+      <p class="scoreline" id="scoreline" aria-live="polite">Score 0</p>
+      <p class="status" id="status" role="status">Reach for the orb</p>
       <div class="camera-panel">
         <p class="camera-copy" id="camera-copy">
           Allow the camera to track your joints on-device. Nothing is uploaded.
@@ -40,6 +40,9 @@
         <div class="actions">
           <button type="button" class="btn primary" id="start-camera">
             Allow camera
+          </button>
+          <button type="button" class="btn ghost" id="try-again" hidden>
+            Try again
           </button>
           <a
             class="btn ghost"

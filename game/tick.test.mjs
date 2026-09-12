@@ -41,8 +41,8 @@ for (let i = 0; i < 90; i += 1) {
 
 const followed = poseGame.getState();
 assert(followed.inputSource === "webcam", "source should reflect webcam");
-assert(followed.marker.x < 0.35, "marker should follow the nose on x");
-assert(followed.marker.y > 0.55, "marker should follow the nose on y");
+assert(followed.marker.x < 0.25, "marker should follow the striking wrist on x");
+assert(followed.marker.y < 0.5, "marker should follow the striking wrist on y");
 assert(followed.pose?.joints.nose?.x === 0.2, "game should keep webcam joints");
 
 console.log("game/tick.test.mjs passed");

@@ -5,6 +5,7 @@
   --muted: #9bb5a8;
   --accent: #3dff9a;
   --accent-dim: #1f8f5a;
+  --fail: #ff6b6b;
   --line: rgba(232, 242, 236, 0.12);
   --shadow: rgba(0, 0, 0, 0.45);
   --font-display: "Bebas Neue", "Arial Narrow", sans-serif;
@@ -174,12 +175,35 @@ h1 {
   background: rgba(232, 242, 236, 0.04);
 }
 
+.scoreline {
+  margin: 0.15rem 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 8vw, 4rem);
+  letter-spacing: 0.06em;
+  line-height: 0.9;
+  text-transform: uppercase;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.scoreline.is-fail {
+  color: var(--fail);
+}
+
 .status {
   margin: 0.15rem 0 0.35rem;
   min-height: 1.25rem;
   font-size: 0.9rem;
   font-variant-numeric: tabular-nums;
   color: var(--accent);
+}
+
+.status.is-fail {
+  color: var(--fail);
+}
+
+h1.is-fail {
+  color: var(--fail);
 }
 
 .camera-panel {
