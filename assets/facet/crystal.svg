@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet crystal">
+  <!-- Pointy hex on a 128 grid. Upper-left light. -->
+  <polygon fill="#b6d78d" points="64,12 20,38 64,64"/>
+  <polygon fill="#9ece6a" points="64,12 108,38 64,64"/>
+  <polygon fill="#bb9af7" points="108,38 108,90 64,64"/>
+  <polygon fill="#8771b4" points="108,90 64,116 64,64"/>
+  <polygon fill="#7aa2f7" points="64,116 20,90 64,64"/>
+  <polygon fill="#5b77b4" points="20,90 20,38 64,64"/>
+</svg>

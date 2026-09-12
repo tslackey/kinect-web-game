@@ -8,6 +8,7 @@
       content="Kinect Web Game — hit floating orbs with your hands. One or two webcams. Open, allow camera, play."
     />
     <title>Kinect Web Game</title>
+    <link rel="icon" href="./assets/facet/shard.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -18,14 +19,22 @@
   </head>
   <body class="is-start is-camera-prompt">
     <div class="atmosphere" aria-hidden="true">
-      <div class="grid"></div>
-      <div class="glow glow-a"></div>
-      <div class="glow glow-b"></div>
+      <div class="mesh"></div>
+      <div class="terrain"></div>
       <canvas id="motion-field" width="960" height="540"></canvas>
     </div>
 
     <header class="hud">
-      <p class="brand">Kinect Web Game</p>
+      <p class="brand">
+        <img
+          class="brand-mark"
+          src="./assets/facet/shard.svg"
+          width="56"
+          height="56"
+          alt=""
+        />
+        Kinect Web Game
+      </p>
       <h1 id="headline">Hit the orbs</h1>
       <p class="lede" id="lede">
         Open, allow a camera, play. A second webcam is a second player.
@@ -33,15 +42,33 @@
         if a camera is off.
       </p>
       <div class="scoreboard" id="scoreboard" hidden>
-        <p class="scoreline" id="scoreline" aria-live="polite">
-          <span class="score-kicker">Score</span>
-          <strong class="score-value" id="score-value">0</strong>
-        </p>
+        <div class="score-head">
+          <img
+            class="score-mark"
+            src="./assets/facet/crystal.svg"
+            width="40"
+            height="40"
+            alt=""
+          />
+          <p class="scoreline" id="scoreline" aria-live="polite">
+            <span class="score-kicker">Score</span>
+            <strong class="score-value" id="score-value">0</strong>
+          </p>
+        </div>
         <p class="roundline" id="roundline">Round 1 of 3</p>
       </div>
       <p class="status" id="status" role="status">Allow the camera, then press Play.</p>
       <section class="camera-invite" id="camera-invite" aria-label="Camera">
-        <p class="camera-kicker" id="camera-kicker">First visit</p>
+        <p class="camera-kicker" id="camera-kicker">
+          <img
+            class="kicker-mark"
+            src="./assets/facet/user.svg"
+            width="16"
+            height="16"
+            alt=""
+          />
+          <span id="camera-kicker-text">First visit</span>
+        </p>
         <p class="camera-copy" id="camera-copy">
           Allow the camera to track your hands on-device. A second webcam is
           a second player. Nothing is uploaded. Pointer and keyboard still
@@ -51,7 +78,16 @@
           <button type="button" class="btn primary" id="start-camera">
             Allow camera
           </button>
-          <button type="button" class="btn ghost" id="play">Play without camera</button>
+          <button type="button" class="btn ghost" id="play">
+            <img
+              class="btn-icon"
+              src="./assets/facet/play.svg"
+              width="16"
+              height="16"
+              alt=""
+            />
+            <span id="play-label">Play without camera</span>
+          </button>
           <button type="button" class="btn ghost" id="toggle-sound" aria-pressed="true">
             Sound on
           </button>

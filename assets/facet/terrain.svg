@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 128" preserveAspectRatio="xMidYMax slice" role="img" aria-label="Facet terrain">
+  <!-- 256 grid strip. Sky split toward Bone (lit) and Ink (shade). -->
+  <polygon fill="#9cb8f2" points="0,0 256,0 0,128"/>
+  <polygon fill="#7aa2f7" points="256,0 256,128 0,128"/>
+
+  <!-- Back range: Moss and Moss mixed toward Bone -->
+  <polygon fill="#b6d78d" points="0,128 0,78 36,50 72,86 48,128"/>
+  <polygon fill="#9ece6a" points="36,50 88,78 72,86 48,128 20,128"/>
+  <polygon fill="#f4efe6" points="28,62 36,50 44,62"/>
+
+  <polygon fill="#81a75b" points="84,128 104,70 128,92 148,64 176,128"/>
+  <polygon fill="#b6d78d" points="104,70 128,92 116,128 96,128"/>
+
+  <polygon fill="#b6d78d" points="168,128 196,54 224,86 256,60 256,128"/>
+  <polygon fill="#9ece6a" points="196,54 228,78 224,86 200,128 176,128"/>
+  <polygon fill="#f4efe6" points="188,66 196,54 204,66"/>
+
+  <!-- Foreground: Moss mixed toward Ink -->
+  <polygon fill="#4f6341" points="0,128 8,96 56,70 96,128"/>
+  <polygon fill="#749554" points="56,70 96,128 40,128"/>
+  <polygon fill="#4f6341" points="88,128 120,86 152,104 184,72 216,128"/>
+  <polygon fill="#749554" points="152,104 184,72 208,128 140,128"/>
+  <polygon fill="#4f6341" points="200,128 228,90 256,108 256,128"/>
+</svg>

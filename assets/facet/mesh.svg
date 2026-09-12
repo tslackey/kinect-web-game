@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet mesh tile">
+  <!-- Tileable 128 grid. Each 32 cell is an X of four triangles. -->
+  <g id="ember-row">
+    <g>
+      <polygon fill="#f4efe6" points="0,0 32,0 16,16"/>
+      <polygon fill="#b67450" points="0,0 0,32 16,16"/>
+      <polygon fill="#ff9e64" points="32,0 32,32 16,16"/>
+      <polygon fill="#f4efe6" points="0,32 32,32 16,16"/>
+    </g>
+    <g transform="translate(32,0)">
+      <polygon fill="#f4efe6" points="0,0 32,0 16,16"/>
+      <polygon fill="#b67450" points="0,0 0,32 16,16"/>
+      <polygon fill="#ff9e64" points="32,0 32,32 16,16"/>
+      <polygon fill="#f4efe6" points="0,32 32,32 16,16"/>
+    </g>
+    <g transform="translate(64,0)">
+      <polygon fill="#f4efe6" points="0,0 32,0 16,16"/>
+      <polygon fill="#b67450" points="0,0 0,32 16,16"/>
+      <polygon fill="#ff9e64" points="32,0 32,32 16,16"/>
+      <polygon fill="#f4efe6" points="0,32 32,32 16,16"/>
+    </g>
+    <g transform="translate(96,0)">
+      <polygon fill="#f4efe6" points="0,0 32,0 16,16"/>
+      <polygon fill="#b67450" points="0,0 0,32 16,16"/>
+      <polygon fill="#ff9e64" points="32,0 32,32 16,16"/>
+      <polygon fill="#f4efe6" points="0,32 32,32 16,16"/>
+    </g>
+  </g>
+  <g id="lilac-row" transform="translate(0,32)">
+    <g>
+      <polygon fill="#f4efe6" points="0,0 32,0 16,16"/>
+      <polygon fill="#8771b4" points="0,0 0,32 16,16"/>
+      <polygon fill="#bb9af7" points="32,0 32,32 16,16"/>
+      <polygon fill="#f4efe6" points="0,32 32,32 16,16"/>
+    </g>
+    <g transform="translate(32,0)">
+      <polygon fill="#f4efe6" points="0,0 32,0 16,16"/>
+      <polygon fill="#8771b4" points="0,0 0,32 16,16"/>
+      <polygon fill="#bb9af7" points="32,0 32,32 16,16"/>
+      <polygon fill="#f4efe6" points="0,32 32,32 16,16"/>
+    </g>
+    <g transform="translate(64,0)">
+      <polygon fill="#f4efe6" points="0,0 32,0 16,16"/>
+      <polygon fill="#8771b4" points="0,0 0,32 16,16"/>
+      <polygon fill="#bb9af7" points="32,0 32,32 16,16"/>
+      <polygon fill="#f4efe6" points="0,32 32,32 16,16"/>
+    </g>
+    <g transform="translate(96,0)">
+      <polygon fill="#f4efe6" points="0,0 32,0 16,16"/>
+      <polygon fill="#8771b4" points="0,0 0,32 16,16"/>
+      <polygon fill="#bb9af7" points="32,0 32,32 16,16"/>
+      <polygon fill="#f4efe6" points="0,32 32,32 16,16"/>
+    </g>
+  </g>
+  <use href="#ember-row" y="64"/>
+  <use href="#lilac-row" y="64"/>
+</svg>
