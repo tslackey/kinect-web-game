@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet catch fruit">
+  <!-- 128 grid. Ember apple, Moss leaf. Upper-left light. -->
+  <polygon fill="#fcb588" points="64,40 28,72 64,108"/>
+  <polygon fill="#ff9e64" points="64,40 100,68 64,108"/>
+  <polygon fill="#b67450" points="28,72 100,68 64,108"/>
+  <polygon fill="#fcb588" points="48,68 68,52 76,80"/>
+  <polygon fill="#1a1b26" points="64,40 60,16 70,36"/>
+  <polygon fill="#b6d78d" points="68,36 100,20 84,52"/>
+  <polygon fill="#749554" points="84,52 100,20 96,56"/>
+</svg>

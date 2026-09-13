@@ -329,8 +329,15 @@ body.is-curtain .hud {
   opacity: 0.22;
 }
 
-body[data-stage="garden"] .atmosphere {
+body[data-stage="garden"] .atmosphere,
+body[data-stage="bar"] .atmosphere,
+body[data-stage="pitch"] .atmosphere,
+body[data-stage="grove"] .atmosphere {
   background-color: color-mix(in srgb, var(--moss) 10%, var(--ink));
+}
+
+body[data-stage="dirt"] .atmosphere {
+  background-color: color-mix(in srgb, var(--mist) 10%, var(--ink));
 }
 
 body[data-stage="hearth"] .atmosphere,

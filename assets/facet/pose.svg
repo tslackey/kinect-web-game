@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet strike pose">
+  <!-- 128 grid. Lilac pose star. Upper-left light. -->
+  <polygon fill="#c8adf3" points="64,12 48,40 80,40"/>
+  <polygon fill="#bb9af7" points="116,64 80,40 80,88"/>
+  <polygon fill="#8771b4" points="64,116 80,88 48,88"/>
+  <polygon fill="#8771b4" points="12,64 48,88 48,40"/>
+  <polygon fill="#f4efe6" points="36,20 20,12 48,40"/>
+  <polygon fill="#f4efe6" points="92,24 108,16 80,44"/>
+  <polygon fill="#c8adf3" points="64,28 36,52 64,64"/>
+  <polygon fill="#bb9af7" points="64,28 92,52 64,64"/>
+  <polygon fill="#9ece6a" points="92,52 92,84 64,64"/>
+  <polygon fill="#1a1b26" points="92,84 64,100 64,64"/>
+  <polygon fill="#7aa2f7" points="64,100 36,84 64,64"/>
+  <polygon fill="#ff9e64" points="36,84 36,52 64,64"/>
+</svg>

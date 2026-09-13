@@ -11,7 +11,7 @@ import { drawCrystal, facetShade, fillDiamond, fillPoly, fillTri } from "./facet
  * @typedef {import("../game/transition.js").CurtainView} CurtainView
  * @typedef {import("./facet.js").Pt} Pt
  * @typedef {"moss" | "sky" | "lilac" | "ember" | "coral"} StageHue
- * @typedef {"hills" | "trees" | "logs" | "mounds" | "shards" | "beams" | "posts" | "flats" | "wedges" | "marks" | "field" | "waves"} StageMotif
+ * @typedef {"hills" | "trees" | "logs" | "mounds" | "shards" | "beams" | "posts" | "flats" | "wedges" | "marks" | "field" | "waves" | "hurdle" | "goals" | "span" | "high" | "press" | "hands"} StageMotif
  * @typedef {{
  *   hue: StageHue,
  *   motif: StageMotif,
@@ -363,9 +363,9 @@ function drawFloorRange(ctx, width, height, kit) {
  */
 function drawStageMotif(ctx, width, height, kit) {
   const motif = kit.motif;
-  if (motif === "hills" || motif === "field" || motif === "mounds") {
+  if (motif === "hills" || motif === "mounds") {
     drawCornerPlant(ctx, width * 0.08, height * 0.78, kit, motif === "mounds" ? 0.7 : 1);
-    drawCornerPlant(ctx, width * 0.92, height * 0.8, kit, motif === "field" ? 0.55 : 0.9);
+    drawCornerPlant(ctx, width * 0.92, height * 0.8, kit, 0.9);
     return;
   }
   if (motif === "trees") {
@@ -381,17 +381,25 @@ function drawStageMotif(ctx, width, height, kit) {
   if (motif === "shards") {
     drawCrystal(ctx, width * 0.09, height * 0.76, 36, crystalPalette(kit));
     drawCrystal(ctx, width * 0.92, height * 0.72, 28, crystalPalette(kit));
+    drawFacetShard(ctx, width * 0.16, height * 0.62, 22, 1);
+    drawFacetShard(ctx, width * 0.86, height * 0.58, 18, -1);
     return;
   }
   if (motif === "beams") {
     fillTri(ctx, [0, 0], [width * 0.24, 0], [0, height * 0.48], kit.lit);
     fillTri(ctx, [width * 0.1, 0], [width * 0.36, 0], [width * 0.05, height * 0.4], kit.mid);
     fillTri(ctx, [width * 0.74, 0], [width, 0], [width, height * 0.32], kit.shade);
+    drawBeamPylon(ctx, width * 0.05, height * 0.48, kit, 1);
+    drawBeamPylon(ctx, width * 0.95, height * 0.46, kit, -1);
     return;
   }
-  if (motif === "posts") {
+  if (motif === "posts" || motif === "hurdle") {
     drawPost(ctx, width * 0.09, height * 0.36, height * 0.52, kit);
     drawPost(ctx, width * 0.91, height * 0.34, height * 0.54, kit);
+    if (motif === "hurdle") {
+      fillTri(ctx, [width * 0.04, height * 0.34], [width * 0.14, height * 0.32], [width * 0.05, height * 0.4], kit.mid);
+      fillTri(ctx, [width * 0.86, height * 0.32], [width * 0.96, height * 0.34], [width * 0.95, height * 0.4], kit.shade);
+    }
     return;
   }
   if (motif === "flats") {
@@ -404,11 +412,48 @@ function drawStageMotif(ctx, width, height, kit) {
     fillTri(ctx, [width, height * 0.22], [width, height * 0.72], [width * 0.78, height * 0.5], kit.shade);
     return;
   }
-  if (motif === "marks") {
+  if (motif === "marks" || motif === "hands") {
     fillDiamond(ctx, width * 0.08, height * 0.36, 16, kit.mid);
     fillDiamond(ctx, width * 0.92, height * 0.34, 16, kit.lit);
     fillDiamond(ctx, width * 0.08, height * 0.36, 6, FACET.ink);
     fillDiamond(ctx, width * 0.92, height * 0.34, 6, FACET.ink);
+    if (motif === "hands") {
+      drawCornerHand(ctx, width * 0.1, height * 0.7, kit, 1);
+      drawCornerHand(ctx, width * 0.9, height * 0.68, kit, -1);
+    }
+    return;
+  }
+  if (motif === "goals" || motif === "field") {
+    drawGoal(ctx, width * 0.06, height * 0.52, kit, 1);
+    drawGoal(ctx, width * 0.94, height * 0.5, kit, -1);
+    drawCornerPlant(ctx, width * 0.18, height * 0.86, kit, 0.45);
+    drawCornerPlant(ctx, width * 0.82, height * 0.86, kit, 0.4);
+    return;
+  }
+  if (motif === "span") {
+    drawReachArm(ctx, width * 0.04, height * 0.42, kit, 1);
+    drawReachArm(ctx, width * 0.96, height * 0.4, kit, -1);
+    return;
+  }
+  if (motif === "high") {
+    drawHighStand(ctx, width * 0.1, height * 0.22, kit);
+    drawHighStand(ctx, width * 0.9, height * 0.2, kit);
+    drawFacetShard(ctx, width * 0.12, height * 0.72, 20, 1);
+    drawFacetShard(ctx, width * 0.88, height * 0.7, 16, -1);
+    return;
+  }
+  if (motif === "press") {
+    drawPressPlate(ctx, width * 0.1, height * 0.82, kit);
+    drawPressPlate(ctx, width * 0.9, height * 0.8, kit);
+    fillTri(ctx, [0, 0], [width * 0.18, 0], [0, height * 0.22], kit.shade);
+    fillTri(ctx, [width, 0], [width, height * 0.2], [width * 0.82, 0], kit.mid);
+    return;
+  }
+  if (motif === "waves") {
+    drawWaveBanner(ctx, width * 0.12, height * 0.14, kit);
+    drawWaveBanner(ctx, width * 0.88, height * 0.12, kit);
+    drawCornerHand(ctx, width * 0.08, height * 0.72, kit, 1);
+    drawCornerHand(ctx, width * 0.92, height * 0.7, kit, -1);
     return;
   }
   fillTri(ctx, [width * 0.18, height * 0.08], [width * 0.34, height * 0.08], [width * 0.26, height * 0.16], kit.lit);
@@ -497,6 +542,116 @@ function drawFlat(ctx, x, y, w, h, kit) {
 }
 
 /**
+ * Side pylon for the duck-beam corridor.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {StageKit} kit
+ * @param {number} fx
+ */
+function drawBeamPylon(ctx, x, y, kit, fx) {
+  fillTri(ctx, [x, y + 36], [x + 10 * fx, y - 28], [x + 4 * fx, y + 40], kit.lit);
+  fillTri(ctx, [x + 10 * fx, y - 28], [x + 22 * fx, y - 8], [x + 4 * fx, y + 40], kit.shade);
+  fillTri(ctx, [x + 8 * fx, y - 20], [x + 34 * fx, y - 4], [x + 12 * fx, y], kit.mid);
+}
+
+/**
+ * Attached Facet shard — ember crown, moss/sky/lilac body.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {number} r
+ * @param {number} fx
+ */
+function drawFacetShard(ctx, x, y, r, fx) {
+  fillTri(ctx, [x, y - r], [x - r * 0.75 * fx, y - r * 0.15], [x + r * 0.75 * fx, y - r * 0.15], FACET.ember);
+  fillTri(ctx, [x - r * 0.75 * fx, y - r * 0.15], [x + r * 0.75 * fx, y - r * 0.15], [x, y + r * 0.15], FACET.sky);
+  fillTri(ctx, [x - r * 0.75 * fx, y - r * 0.15], [x - r * 0.55 * fx, y + r], [x, y + r * 0.15], FACET.moss);
+  fillTri(ctx, [x - r * 0.55 * fx, y + r], [x + r * 0.55 * fx, y + r], [x, y + r * 0.15], FACET_STEPS.skyInk);
+  fillTri(ctx, [x + r * 0.75 * fx, y - r * 0.15], [x + r * 0.55 * fx, y + r], [x, y + r * 0.15], FACET.lilac);
+}
+
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {StageKit} kit
+ * @param {number} fx
+ */
+function drawCornerHand(ctx, x, y, kit, fx) {
+  fillTri(ctx, [x - 10 * fx, y + 6], [x, y - 10], [x + 14 * fx, y + 8], kit.lit);
+  fillTri(ctx, [x - 10 * fx, y + 6], [x + 14 * fx, y + 8], [x, y + 20], kit.shade);
+  fillTri(ctx, [x - 4 * fx, y - 8], [x - 6 * fx, y - 26], [x + 6 * fx, y - 6], kit.mid);
+  fillTri(ctx, [x + 6 * fx, y - 6], [x + 10 * fx, y - 24], [x + 16 * fx, y], kit.lit);
+}
+
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {StageKit} kit
+ * @param {number} fx
+ */
+function drawGoal(ctx, x, y, kit, fx) {
+  fillTri(ctx, [x, y + 70], [x + 8 * fx, y - 10], [x + 16 * fx, y + 70], kit.lit);
+  fillTri(ctx, [x + 8 * fx, y - 10], [x + 70 * fx, y], [x + 16 * fx, y + 8], kit.mid);
+  fillTri(ctx, [x + 16 * fx, y + 8], [x + 70 * fx, y], [x + 64 * fx, y + 16], kit.shade);
+  fillTri(ctx, [x + 8 * fx, y + 70], [x + 64 * fx, y + 16], [x + 16 * fx, y + 70], kit.deep);
+}
+
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {StageKit} kit
+ * @param {number} fx
+ */
+function drawReachArm(ctx, x, y, kit, fx) {
+  fillTri(ctx, [x, y + 16], [x + 90 * fx, y - 8], [x + 12 * fx, y + 28], kit.lit);
+  fillTri(ctx, [x + 12 * fx, y + 28], [x + 90 * fx, y - 8], [x + 86 * fx, y + 18], kit.shade);
+  fillTri(ctx, [x + 78 * fx, y - 16], [x + 108 * fx, y - 4], [x + 80 * fx, y + 10], kit.mid);
+}
+
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {StageKit} kit
+ */
+function drawHighStand(ctx, x, y, kit) {
+  fillTri(ctx, [x - 16, y + 18], [x, y - 28], [x + 6, y + 18], kit.lit);
+  fillTri(ctx, [x, y - 28], [x + 18, y + 14], [x + 6, y + 18], kit.shade);
+  fillTri(ctx, [x - 22, y + 16], [x + 22, y + 10], [x, y + 28], kit.mid);
+}
+
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {StageKit} kit
+ */
+function drawPressPlate(ctx, x, y, kit) {
+  fillTri(ctx, [x - 36, y], [x, y - 16], [x + 36, y + 4], kit.lit);
+  fillTri(ctx, [x - 36, y], [x + 36, y + 4], [x, y + 18], kit.shade);
+  fillTri(ctx, [x - 16, y - 4], [x, y - 20], [x + 16, y], FACET.bone);
+}
+
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {StageKit} kit
+ */
+function drawWaveBanner(ctx, x, y, kit) {
+  fillTri(ctx, [x - 28, y + 10], [x, y - 12], [x + 28, y + 10], kit.mid);
+  fillTri(ctx, [x - 28, y + 10], [x - 10, y + 2], [x, y - 12], kit.lit);
+  fillTri(ctx, [x, y - 12], [x + 10, y + 2], [x + 28, y + 10], kit.shade);
+  fillTri(ctx, [x - 18, y + 20], [x, y + 8], [x + 18, y + 20], kit.lit);
+}
+
+/**
  * @param {StageKit} kit
  */
 function crystalPalette(_kit) {
@@ -548,15 +703,15 @@ const STAGE_KITS = {
   },
   crystal: kit("lilac", "shards", 0.08),
   beam: kit("sky", "beams", 0.1),
-  bar: kit("moss", "posts", 0.09),
+  bar: kit("moss", "hurdle", 0.09),
   stage: kit("lilac", "flats", 0.1),
   tilt: kit("ember", "wedges", 0.09),
-  cue: kit("coral", "marks", 0.1),
-  pitch: kit("moss", "field", 0.1),
-  span: kit("sky", "posts", 0.1),
-  high: kit("lilac", "shards", 0.1),
+  cue: kit("coral", "hands", 0.1),
+  pitch: kit("moss", "goals", 0.1),
+  span: kit("sky", "span", 0.1),
+  high: kit("lilac", "high", 0.1),
   hello: kit("sky", "waves", 0.09),
-  press: kit("ember", "wedges", 0.1),
+  press: kit("ember", "press", 0.1),
 };
 
 /**

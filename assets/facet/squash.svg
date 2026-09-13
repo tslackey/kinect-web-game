@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet squash it">
+  <!-- 128 grid. Ember press pad. Upper-left light. -->
+  <polygon fill="#fcb588" points="16,68 64,40 112,72"/>
+  <polygon fill="#b67450" points="16,68 112,72 64,100"/>
+  <polygon fill="#ff9e64" points="32,64 92,60 64,84"/>
+  <polygon fill="#f4efe6" points="44,60 64,36 84,64"/>
+  <polygon fill="#b67450" points="44,88 84,88 64,108"/>
+  <polygon fill="#b67450" points="8,84 24,68 32,96"/>
+  <polygon fill="#ff9e64" points="120,84 104,72 96,96"/>
+</svg>

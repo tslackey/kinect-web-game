@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet clap now">
+  <!-- 128 grid. Two hands meeting. Upper-left light. -->
+  <polygon fill="#fcb588" points="20,52 48,56 40,92"/>
+  <polygon fill="#b67450" points="20,52 40,92 12,84"/>
+  <polygon fill="#fcb588" points="40,36 56,28 52,60"/>
+  <polygon fill="#ff9e64" points="48,56 72,52 52,68"/>
+  <polygon fill="#ff9e64" points="48,68 68,80 44,84"/>
+  <polygon fill="#b67450" points="40,84 56,100 32,96"/>
+  <polygon fill="#fcb588" points="16,60 4,68 24,80"/>
+  <polygon fill="#f4efe6" points="52,32 60,28 56,44"/>
+  <polygon fill="#fcb588" points="108,52 80,56 88,92"/>
+  <polygon fill="#b67450" points="108,52 88,92 116,84"/>
+  <polygon fill="#fcb588" points="88,36 72,28 76,60"/>
+  <polygon fill="#ff9e64" points="80,56 56,52 76,68"/>
+  <polygon fill="#b67450" points="88,84 72,100 96,96"/>
+</svg>

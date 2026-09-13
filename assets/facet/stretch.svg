@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet stretch wide">
+  <!-- 128 grid. Reach posts with inward handles. Upper-left light. -->
+  <polygon fill="#9cb8f2" points="20,108 26,28 32,108"/>
+  <polygon fill="#5b77b4" points="26,28 40,36 32,108"/>
+  <polygon fill="#7aa2f7" points="12,56 36,48 36,76"/>
+  <polygon fill="#5b77b4" points="36,48 64,60 36,76"/>
+  <polygon fill="#ff9e64" points="8,60 28,52 28,80"/>
+  <polygon fill="#9cb8f2" points="16,32 28,12 40,36"/>
+  <polygon fill="#9cb8f2" points="108,108 102,28 96,108"/>
+  <polygon fill="#5b77b4" points="102,28 88,36 96,108"/>
+  <polygon fill="#7aa2f7" points="116,56 92,48 92,76"/>
+  <polygon fill="#5b77b4" points="92,48 64,60 92,76"/>
+  <polygon fill="#ff9e64" points="120,60 100,52 100,80"/>
+  <polygon fill="#9cb8f2" points="112,32 100,12 88,36"/>
+</svg>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet jump bar">
+  <!-- 128 grid. Hurdle posts and sky bar. Upper-left light. -->
+  <polygon fill="#9cb8f2" points="28,44 100,48 28,56"/>
+  <polygon fill="#5b77b4" points="28,56 100,48 100,64"/>
+  <polygon fill="#7aa2f7" points="36,50 92,52 64,62"/>
+  <polygon fill="#b6d78d" points="20,104 26,28 32,104"/>
+  <polygon fill="#749554" points="26,28 36,36 32,104"/>
+  <polygon fill="#749554" points="16,100 40,94 28,112"/>
+  <polygon fill="#9ece6a" points="18,36 28,16 38,40"/>
+  <polygon fill="#ff9e64" points="30,32 56,20 38,44"/>
+  <polygon fill="#f4efe6" points="38,44 56,20 54,48"/>
+  <polygon fill="#b6d78d" points="108,104 102,28 96,104"/>
+  <polygon fill="#749554" points="102,28 92,36 96,104"/>
+  <polygon fill="#9ece6a" points="110,36 100,16 90,40"/>
+  <polygon fill="#ff9e64" points="98,32 72,20 90,44"/>
+</svg>
