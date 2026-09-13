@@ -1,14 +1,23 @@
 /**
  * Input facade: one webcam (up to two bodies in frame), else pointer /
- * keyboard stand-ins. A live camera pose suppresses mouse and keyboard.
- * game/ and render/ only see PoseSample.poses — one map per person.
+ * keyboard stand-ins. Webcam joints are exponentially smoothed and hold
+ * last-known-good on dropouts. A live camera pose suppresses mouse and
+ * keyboard. game/ and render/ only see PoseSample.poses — one map per person.
  */
 
 import { classifyCameraError, peekCameraPermission, CAMERA_COPY } from "./camera-status.js";
 import { landmarksToJoints } from "./joints.js";
 import { assembleSample, pickSecondDeviceId } from "./poses.js";
+import { createPoseSmoother } from "./smooth.js";
 
 export { assembleSample, pickSecondDeviceId, pointerToPose, posesFromSample } from "./poses.js";
+export {
+  LKG_FADE_MS,
+  LKG_HOLD_MS,
+  MIN_CONFIDENCE,
+  SMOOTH_RATE,
+  createPoseSmoother,
+} from "./smooth.js";
 
 const KEY_STEP = 0.05;
 
@@ -57,6 +66,7 @@ export function createInput({
 
   /** @type {ReturnType<typeof makeSlot>[]} */
   const slots = [makeSlot(video), makeSlot(video2)];
+  const smoother = createPoseSmoother();
 
   /**
    * @param {PointerEvent} event
@@ -134,7 +144,7 @@ export function createInput({
     const timestamp = performance.now();
     refreshWebcamJoints(timestamp);
     return assembleSample({
-      webcamPoses: webcamPosesFromPrimary(),
+      webcamPoses: webcamPosesFromPrimary(timestamp),
       pointers: [...pointers.values()],
       keys,
       timestamp,
@@ -144,12 +154,19 @@ export function createInput({
   /**
    * Play reads pose maps from the first live webcam only.
    * Two people share that stream when the landmarker returns two maps.
+   * Webcam maps pass through last-known-good + exponential smooth.
+   * Pointer / keyboard stay crisp in assembleSample.
+   *
+   * @param {number} [timestamp]
    */
-  function webcamPosesFromPrimary() {
+  function webcamPosesFromPrimary(timestamp = performance.now()) {
     const primary = slots[0];
-    if (primary.status !== "ready") return [];
-    if (primary.poseMaps.length > 0) return primary.poseMaps;
-    return primary.joints ? [primary.joints] : [];
+    if (primary.status !== "ready") {
+      smoother.reset();
+      return [];
+    }
+    const raw = primary.poseMaps.length > 0 ? primary.poseMaps : primary.joints ? [primary.joints] : [];
+    return smoother.apply(raw, timestamp);
   }
 
   function getStatus() {
@@ -173,6 +190,7 @@ export function createInput({
     target.removeEventListener("pointermove", onPointer);
     target.removeEventListener("pointerdown", onPointer);
     target.removeEventListener("keydown", onKeyDown);
+    smoother.reset();
     for (const slot of slots) {
       stopSlot(slot);
     }
@@ -201,7 +219,14 @@ export function createInput({
           if (maps.length) {
             slot.poseMaps = maps;
             slot.joints = maps[0];
+          } else {
+            slot.poseMaps = [];
+            slot.joints = null;
           }
+        } else {
+          // Empty detect: let the smoother hold LKG, then fade/idle.
+          slot.poseMaps = [];
+          slot.joints = null;
         }
       } catch {
         // A bad frame must not tear down the tick loop.

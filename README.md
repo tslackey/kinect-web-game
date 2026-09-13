@@ -6,8 +6,9 @@ A motion arcade you can send someone. Open the link, allow the camera, play.
 
 1. Open that URL.
 2. Click **Allow camera**. Hands stay on-device. Nothing is uploaded.
-3. Click **Play**. A **curtain** drops, the next stage swaps while you
-   are covered, then the curtain rises on a **big title placard**. After
+3. Hold a hand over the on-canvas **Play** mark until it fills, or click
+   **Play**. A **curtain** drops, the next stage swaps while you are
+   covered, then the curtain rises on a **big title placard**. After
    that, one game for about **18 seconds**.
 
 A session shuffles a short run from the expanded pack — not every game
@@ -27,8 +28,15 @@ and the same win.
 
 If a camera body is in frame, that skeleton is the only player — moving
 the mouse does not add a second body. Keyboard is also suppressed while
-a camera body is live. If the camera is blocked or has no usable pose,
-click **Play without camera**. The pointer and keyboard still play.
+a camera body is live. Camera joints are smoothed and hold last-known-good
+for a short beat so a one-frame dropout does not yank the skeleton.
+Pointer and keyboard stay crisp.
+
+If the camera is blocked or has no usable pose, click **Play without
+camera**. The pointer and keyboard still play. On start and game-over,
+hold a wrist (or the pointer when the camera is off) over the on-canvas
+Play mark until the fill completes. Leaving the mark resets the fill.
+Click **Play** stays as the fallback. The hold does not fire mid-game.
 
 Sound is optional. Use **Sound on** / **Sound off**.
 
@@ -53,9 +61,9 @@ camera hardware).
 
 | Path | Role |
 | --- | --- |
-| `input/` | Pose sample from one webcam; else mouse or keyboard. A live camera pose suppresses stand-ins. `sample()` emits pose maps. |
-| `game/` | Microgame contract and session loop: curtain → 18s play → win/fail → next. `transition.toNext({ title, backgroundId })` is the shared wipe. Expanded pack + shuffle. |
-| `render/` | Stick figures, Facet carry/stomp art, placeholder simple-game marks, theater curtains, title placard, and stage sets. |
+| `input/` | Pose sample from one webcam; else mouse or keyboard. Webcam joints are exponentially smoothed with last-known-good (`SMOOTH_RATE`, `LKG_HOLD_MS`, `MIN_CONFIDENCE` in `input/smooth.js`). A live camera pose suppresses stand-ins. `sample()` emits pose maps. |
+| `game/` | Microgame contract and session loop: curtain → 18s play → win/fail → next. `transition.toNext({ title, backgroundId })` is the shared wipe. Start / game-over share a hand-hold Play mark (`START_DWELL` in `game/start-dwell.js`). Expanded pack + shuffle. |
+| `render/` | Stick figures, Facet carry/stomp art, placeholder simple-game marks, theater curtains, title placard, stage sets, and the start-hold ring. |
 | `feel/` | Optional synthesized hit / miss audio. |
 | `main.js` | Wires the loop, camera prompt, Play, and sound toggle. |
 

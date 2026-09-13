@@ -5,11 +5,13 @@
  * Default session shuffles a short run from the expanded pack (plant, pet,
  * fire, stomp, orb, plus the simple sweep). Either pose map on the sample
  * can score — one webcam, up to two bodies. Curtain wipes live on the
- * session, not on each game.
+ * session, not on each game. Start and game-over share an on-canvas
+ * hand-hold Play mark; click Play stays as the fallback.
  */
 
 import { posesFromSample } from "../input/poses.js";
 import { FOOT_STRIKER_NAMES, STRIKER_NAMES, listStrikers } from "./hit.js";
+import { createStartDwell, startHoldFor } from "./start-dwell.js";
 import { CATCH_FRUIT } from "./fruit.js";
 import { CLAP_NOW } from "./clap.js";
 import { DUCK_BEAM } from "./duck.js";
@@ -83,6 +85,13 @@ export {
   listSampleStrikers,
   listStrikers,
 } from "./hit.js";
+export {
+  START_DWELL,
+  START_HOLD,
+  START_HOLD_RADIUS,
+  createStartDwell,
+  startHoldFor,
+} from "./start-dwell.js";
 export {
   DRIFT_BOOST,
   LIFETIME_STEP,
@@ -178,6 +187,7 @@ const LEAN_GAMES = new Set(["lean-away"]);
  * @property {number | null} timeLeft Seconds left on the live game, or null during prompt.
  * @property {number | null} holdLeft Seconds left in the prompt or result beat.
  * @property {Flash | null} flash Latest hit / miss / game-over cue for juice. Not a mechanic.
+ * @property {import("./start-dwell.js").StartHold} startHold On-canvas dwell Play. Active on start / over only.
  */
 
 /**
@@ -221,6 +231,7 @@ export function createGame({
   const sessionGames = sequence.length;
   const first = sequence[0] ?? WATER_PLANT;
   const transition = createTransition({ reducedMotion });
+  const startDwell = createStartDwell();
   let nextFlashId = 1;
   /** @type {MicrogamePlay | null} */
   let current = null;
@@ -257,6 +268,7 @@ export function createGame({
     timeLeft: null,
     holdLeft: null,
     flash: null,
+    startHold: startHoldFor("start"),
   };
 
   /**
@@ -275,9 +287,16 @@ export function createGame({
     followMarkers(state, poses, follow);
 
     if (state.phase === "start" || state.phase === "over") {
+      const hold = startDwell.update(step, sample, state.phase);
+      state.startHold = hold;
       driftLiveTarget(state, step);
+      if (hold.fired) {
+        start();
+      }
       return state;
     }
+
+    state.startHold = startHoldFor(state.phase);
 
     if (state.phase === "prompt") {
       const view = transition.tick(step);
@@ -321,6 +340,8 @@ export function createGame({
     if (state.phase !== "start" && state.phase !== "over") {
       return state;
     }
+    startDwell.reset();
+    state.startHold = startHoldFor("prompt");
     nextFlashId = 1;
     state.elapsed = 0;
     state.score = 0;
@@ -333,6 +354,7 @@ export function createGame({
     current = null;
     pendingIndex = null;
     nextFlashId = 1;
+    startDwell.reset();
     transition.reset();
     state.elapsed = 0;
     state.ticks = 0;
@@ -351,6 +373,7 @@ export function createGame({
     state.holdLeft = null;
     state.flash = null;
     state.markers = [];
+    state.startHold = startHoldFor("start");
     return state;
   }
 
