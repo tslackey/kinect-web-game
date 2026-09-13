@@ -1,17 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet bucket">
-  <!-- 128 grid. Light from upper-left. Hard-edge handle. -->
-  <polygon fill="#c8adf3" points="48,49 64,16 56,49"/>
-  <polygon fill="#8771b4" points="80,49 64,16 72,49"/>
-  <polygon fill="#bb9af7" points="64,16 56,29 72,29"/>
+  <!-- 128 grid. Hard-edge handle, tapered pail, sky water. Upper-left light. -->
+  <polygon fill="#c8adf3" points="40,48 64,8 52,48"/>
+  <polygon fill="#8771b4" points="88,48 64,8 76,48"/>
+  <polygon fill="#bb9af7" points="64,8 52,28 76,28"/>
 
-  <polygon fill="#c8adf3" points="33,58 95,58 40,103"/>
-  <polygon fill="#8771b4" points="95,58 88,103 40,103"/>
-  <polygon fill="#8771b4" points="40,103 88,103 64,110"/>
-  <polygon fill="#bb9af7" points="50,75 71,64 78,81"/>
+  <polygon fill="#c8adf3" points="28,56 100,56 36,108"/>
+  <polygon fill="#8771b4" points="100,56 92,108 36,108"/>
+  <polygon fill="#8771b4" points="36,108 92,108 64,116"/>
+  <polygon fill="#bb9af7" points="48,76 74,64 82,88"/>
 
-  <polygon fill="#c8adf3" points="26,43 102,43 99,58"/>
-  <polygon fill="#bb9af7" points="26,43 99,58 29,58"/>
+  <polygon fill="#c8adf3" points="20,36 108,36 104,56"/>
+  <polygon fill="#bb9af7" points="20,36 104,56 24,56"/>
 
-  <polygon fill="#7aa2f7" points="42,61 86,61 64,73"/>
-  <polygon fill="#9cb8f2" points="42,61 71,57 64,73"/>
+  <polygon fill="#7aa2f7" points="40,60 88,60 64,76"/>
+  <polygon fill="#9cb8f2" points="40,60 76,54 64,76"/>
 </svg>

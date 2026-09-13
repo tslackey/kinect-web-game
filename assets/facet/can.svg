@@ -1,19 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet watering can">
-  <!-- 128 grid. Light from upper-left. Spout faces right. -->
-  <polygon fill="#c8adf3" points="32,56 82,52 40,104"/>
-  <polygon fill="#8771b4" points="82,52 93,104 40,104"/>
-  <polygon fill="#8771b4" points="40,104 93,104 66,113"/>
-  <polygon fill="#bb9af7" points="50,79 75,60 82,86"/>
+  <!-- 128 grid. Upright body, left handle, long spout. Upper-left light. -->
+  <polygon fill="#c8adf3" points="32,48 88,44 38,108"/>
+  <polygon fill="#8771b4" points="88,44 96,108 38,108"/>
+  <polygon fill="#8771b4" points="38,108 96,108 66,120"/>
+  <polygon fill="#bb9af7" points="50,76 76,60 82,88"/>
 
-  <polygon fill="#fcb588" points="24,39 79,37 79,56"/>
-  <polygon fill="#ff9e64" points="79,37 97,41 97,56"/>
-  <polygon fill="#b67450" points="79,37 79,56 97,56"/>
+  <polygon fill="#fcb588" points="24,28 92,24 92,48"/>
+  <polygon fill="#ff9e64" points="92,24 104,32 104,48"/>
+  <polygon fill="#b67450" points="92,24 92,48 104,48"/>
+  <polygon fill="#fcb588" points="24,28 92,48 28,48"/>
 
-  <polygon fill="#8771b4" points="32,60 8,49 28,68"/>
-  <polygon fill="#bb9af7" points="8,49 5,86 21,72"/>
-  <polygon fill="#8771b4" points="28,79 5,86 35,90"/>
+  <polygon fill="#8771b4" points="32,52 4,32 20,64"/>
+  <polygon fill="#bb9af7" points="4,32 0,80 20,64"/>
+  <polygon fill="#8771b4" points="20,76 0,80 36,92"/>
 
-  <polygon fill="#9cb8f2" points="86,48 126,55 89,64"/>
-  <polygon fill="#5b77b4" points="89,57 126,55 122,73"/>
-  <polygon fill="#7aa2f7" points="111,59 126,55 122,73"/>
+  <polygon fill="#9cb8f2" points="88,40 126,48 96,60"/>
+  <polygon fill="#5b77b4" points="96,52 126,48 118,76"/>
+  <polygon fill="#7aa2f7" points="108,52 126,48 118,76"/>
 </svg>

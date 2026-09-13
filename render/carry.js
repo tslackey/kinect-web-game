@@ -43,7 +43,7 @@ export function drawHitRing(ctx, x, y, zone, rgb, alpha, lineWidth = 2) {
  * @param {number} zone
  */
 export function drawCarryPlant(ctx, x, y, { grown, missed, gated }, zone) {
-  const scale = grown ? 1.7 : 1.32;
+  const scale = grown ? 1.85 : 1.45;
   const alpha = gated ? 0.55 : missed ? 0.5 : 1;
   const moss = carryShade({ missed, hue: "moss" });
   const soil = missed ? facetShade("coral") : facetShade("moss");
@@ -55,15 +55,15 @@ export function drawCarryPlant(ctx, x, y, { grown, missed, gated }, zone) {
   drawHitRing(ctx, x, y, zone, missed ? FACET_RGB.coral : FACET_RGB.moss, gated ? 0.25 : 0.55);
 
   drawFaces(ctx, x, y, scale, [
-    { pts: [[-18, 22], [0, 11], [2, 27]], fill: soil.shade },
-    { pts: [[0, 11], [18, 20], [2, 27]], fill: soil.mid },
-    { pts: [[-10, 18], [0, 11], [8, 20]], fill: soil.lit },
-    { pts: [[-6, 24], [2, 27], [10, 23]], fill: soilDeep },
+    { pts: [[-20, 24], [0, 12], [2, 30]], fill: soil.shade },
+    { pts: [[0, 12], [20, 22], [2, 30]], fill: soil.mid },
+    { pts: [[-12, 20], [0, 12], [10, 22]], fill: soil.lit },
+    { pts: [[-8, 26], [2, 30], [12, 25]], fill: soilDeep },
   ]);
 
   if (grown) {
     drawFaces(ctx, x, y, scale, grownPlantFaces(moss));
-    drawCrystal(ctx, x, y - 38 * scale, 11 * scale, missed ? coralBloom() : lilacCrystal());
+    drawCrystal(ctx, x, y - 40 * scale, 14 * scale, missed ? coralBloom() : lilacCrystal());
   } else {
     drawFaces(ctx, x, y, scale, wiltedPlantFaces(moss, bud));
   }
@@ -78,7 +78,7 @@ export function drawCarryPlant(ctx, x, y, { grown, missed, gated }, zone) {
  * @param {number} zone
  */
 export function drawCarryCan(ctx, x, y, { held, gated, missed, face = 1 }, zone) {
-  const scale = 1.18;
+  const scale = 1.55;
   const alpha = gated ? 0.45 : missed ? 0.55 : 1;
   const body = carryShade({ missed, held, hue: "lilac" });
   const lip = missed ? facetShade("coral") : held ? facetShade("ember") : facetShade("ember");
@@ -106,7 +106,7 @@ export function drawCarryCan(ctx, x, y, { held, gated, missed, face = 1 }, zone)
  */
 export function canSpoutOffset(face = 1) {
   const fx = face < 0 ? -1 : 1;
-  return { x: 36 * 1.18 * fx, y: -2 * 1.18 };
+  return { x: 44 * 1.55 * fx, y: -6 * 1.55 };
 }
 
 /**
@@ -117,7 +117,7 @@ export function canSpoutOffset(face = 1) {
  * @param {number} zone
  */
 export function drawCarryPet(ctx, x, y, { happy, missed, gated }, zone) {
-  const scale = happy ? 1.52 : 1.32;
+  const scale = happy ? 1.7 : 1.5;
   const alpha = gated ? 0.55 : missed ? 0.5 : 1;
   const body = carryShade({ missed, happy, hue: "lilac" });
   const ear = missed ? facetShade("coral") : happy ? facetShade("ember") : facetShade("sky");
@@ -134,8 +134,8 @@ export function drawCarryPet(ctx, x, y, { happy, missed, gated }, zone) {
     gated ? 0.25 : 0.55,
   );
   drawFaces(ctx, x, y, scale, petFaces(body, ear, muzzle, { happy, missed }));
-  fillDiamond(ctx, x - 4.2 * scale, y - 17 * scale, 2.1 * scale, FACET.ink);
-  fillDiamond(ctx, x + 5.2 * scale, y - 16.5 * scale, 2.1 * scale, FACET.ink);
+  fillDiamond(ctx, x - 5 * scale, y - 18 * scale, 2.4 * scale, FACET.ink);
+  fillDiamond(ctx, x + 6 * scale, y - 17.5 * scale, 2.4 * scale, FACET.ink);
   ctx.restore();
 }
 
@@ -147,7 +147,7 @@ export function drawCarryPet(ctx, x, y, { happy, missed, gated }, zone) {
  * @param {number} zone
  */
 export function drawCarryBowl(ctx, x, y, { held, gated, missed }, zone) {
-  const scale = 1.22;
+  const scale = 1.7;
   const alpha = gated ? 0.45 : missed ? 0.55 : 1;
   const dish = carryShade({ missed, held, hue: "lilac" });
   const kibble = missed ? facetShade("coral") : facetShade("ember");
@@ -177,7 +177,8 @@ export function drawCarryBowl(ctx, x, y, { held, gated, missed }, zone) {
  */
 export function drawCarryFlame(ctx, x, y, { out, missed, gated, elapsed }, zone) {
   const flicker = 0.5 + 0.5 * Math.sin(elapsed * 9);
-  const scale = out ? 1.08 : 1.58 + flicker * 0.1;
+  const flameScale = out ? 1.2 : 1.72 + flicker * 0.1;
+  const logScale = 1.62;
   const alpha = gated ? 0.55 : missed ? 0.5 : 1;
   const log = missed ? facetShade("coral") : facetShade("ember");
   const logDeep = missed ? FACET_STEPS.coralInk : mixHex(FACET.ember, FACET.ink, 0.58);
@@ -192,11 +193,11 @@ export function drawCarryFlame(ctx, x, y, { out, missed, gated, elapsed }, zone)
     missed ? FACET_RGB.coral : out ? FACET_RGB.sky : FACET_RGB.ember,
     gated ? 0.25 : 0.55,
   );
-  drawFaces(ctx, x, y, out ? 1.08 : 1.58, logFaces(log, logDeep));
+  drawFaces(ctx, x, y, logScale, logFaces(log, logDeep));
   if (out) {
-    drawFaces(ctx, x, y, 1.08, steamFaces(missed));
+    drawFaces(ctx, x, y, 1.35, steamFaces(missed));
   } else {
-    drawFaces(ctx, x, y, scale, flameFaces(missed));
+    drawFaces(ctx, x, y, flameScale, flameFaces(missed));
   }
   ctx.restore();
 }
@@ -209,7 +210,7 @@ export function drawCarryFlame(ctx, x, y, { out, missed, gated, elapsed }, zone)
  * @param {number} zone
  */
 export function drawCarryBucket(ctx, x, y, { held, gated, missed, face = 1 }, zone) {
-  const scale = 1.16;
+  const scale = 1.5;
   const alpha = gated ? 0.45 : missed ? 0.55 : 1;
   const body = carryShade({ missed, held, hue: "lilac" });
   const water = missed ? facetShade("coral") : facetShade("sky");
@@ -236,7 +237,7 @@ export function drawCarryBucket(ctx, x, y, { held, gated, missed, face = 1 }, zo
  */
 export function bucketLipOffset(face = 1) {
   const fx = face < 0 ? -1 : 1;
-  return { x: 6 * 1.16 * fx, y: -8 * 1.16 };
+  return { x: 8 * 1.5 * fx, y: -10 * 1.5 };
 }
 
 /**
@@ -254,14 +255,14 @@ export function drawCarryStream(ctx, { x0, y0, x1, y1, elapsed, rgb, count = 5 }
   const ribbon = `rgba(${rgb}, ${0.28 + pulse * 0.22})`;
 
   ctx.save();
-  const width = 5;
+  const width = 8;
   fillRibbon(ctx, [x0, y0], [mx, my], width, ribbon);
   fillRibbon(ctx, [mx, my], [x1, y1], width, ribbon);
 
   for (let i = 0; i < count; i += 1) {
     const t = (i / count + (elapsed * 1.7) % 1) % 1;
     const [x, y] = alongChevron(x0, y0, mx, my, x1, y1, t);
-    const size = 3.2 + (i % 2) * 0.8;
+    const size = 5.2 + (i % 2) * 1.2;
     fillDiamond(ctx, x, y, size, color);
   }
   ctx.restore();
@@ -274,14 +275,14 @@ export function drawCarryStream(ctx, { x0, y0, x1, y1, elapsed, rgb, count = 5 }
  */
 function wiltedPlantFaces(moss, bud) {
   return [
-    { pts: [[-3.2, 20], [0, -20], [0, 20]], fill: moss.lit },
-    { pts: [[0, 20], [0, -20], [3.2, 20]], fill: moss.shade },
-    { pts: [[-3, -2], [-24, 8], [-6, 6]], fill: moss.shade },
-    { pts: [[-3, -2], [-20, -8], [-6, 6]], fill: moss.lit },
-    { pts: [[3, -7], [22, 4], [6, 2]], fill: moss.shade },
-    { pts: [[3, -7], [18, -12], [6, 2]], fill: moss.mid },
-    { pts: [[0, -20], [-7, -13], [7, -13]], fill: bud.mid },
-    { pts: [[0, -27], [-5, -20], [5, -20]], fill: bud.lit },
+    { pts: [[-4, 22], [0, -18], [0, 22]], fill: moss.lit },
+    { pts: [[0, 22], [0, -18], [4, 22]], fill: moss.shade },
+    { pts: [[-4, 0], [-26, 12], [-8, 8]], fill: moss.shade },
+    { pts: [[-4, 0], [-22, -8], [-8, 8]], fill: moss.lit },
+    { pts: [[4, -6], [26, 8], [8, 4]], fill: moss.shade },
+    { pts: [[4, -6], [20, -12], [8, 4]], fill: moss.mid },
+    { pts: [[0, -18], [-8, -10], [8, -10]], fill: bud.mid },
+    { pts: [[0, -28], [-6, -18], [6, -18]], fill: bud.lit },
   ];
 }
 
@@ -314,19 +315,20 @@ function grownPlantFaces(moss) {
 function canFaces(body, lip, spout, fx) {
   const flip = (pts) => pts.map(([x, y]) => /** @type {Pt} */ ([x * fx, y]));
   return [
-    { pts: flip([[-18, -6], [10, -8], [-14, 20]]), fill: body.lit },
-    { pts: flip([[10, -8], [16, 20], [-14, 20]]), fill: body.shade },
-    { pts: flip([[-14, 20], [16, 20], [1, 25]]), fill: body.shade },
-    { pts: flip([[-8, 8], [4, -2], [8, 12]]), fill: body.mid },
-    { pts: flip([[-22, -15], [8, -16], [8, -6]]), fill: lip.lit },
-    { pts: flip([[8, -16], [18, -14], [18, -6]]), fill: lip.mid },
-    { pts: flip([[8, -16], [8, -6], [18, -6]]), fill: lip.shade },
-    { pts: flip([[-18, -4], [-31, -10], [-20, 2]]), fill: body.shade },
-    { pts: flip([[-31, -10], [-33, 12], [-24, 4]]), fill: body.mid },
-    { pts: flip([[-20, 8], [-33, 12], [-16, 14]]), fill: body.shade },
-    { pts: flip([[12, -10], [36, -6], [14, 0]]), fill: spout.lit },
-    { pts: flip([[14, -4], [36, -6], [32, 5]]), fill: spout.shade },
-    { pts: flip([[26, -3], [36, -6], [32, 5]]), fill: spout.mid },
+    { pts: flip([[-16, -8], [12, -10], [-13, 22]]), fill: body.lit },
+    { pts: flip([[12, -10], [16, 22], [-13, 22]]), fill: body.shade },
+    { pts: flip([[-13, 22], [16, 22], [1, 28]]), fill: body.shade },
+    { pts: flip([[-7, 6], [6, -2], [9, 12]]), fill: body.mid },
+    { pts: flip([[-20, -18], [14, -20], [14, -8]]), fill: lip.lit },
+    { pts: flip([[14, -20], [20, -16], [20, -8]]), fill: lip.mid },
+    { pts: flip([[14, -20], [14, -8], [20, -8]]), fill: lip.shade },
+    { pts: flip([[-20, -18], [14, -8], [-18, -8]]), fill: lip.lit },
+    { pts: flip([[-16, -6], [-30, -16], [-22, 0]]), fill: body.shade },
+    { pts: flip([[-30, -16], [-32, 8], [-22, 0]]), fill: body.mid },
+    { pts: flip([[-22, 6], [-32, 8], [-14, 14]]), fill: body.shade },
+    { pts: flip([[12, -12], [44, -8], [16, -2]]), fill: spout.lit },
+    { pts: flip([[16, -6], [44, -8], [40, 6]]), fill: spout.shade },
+    { pts: flip([[30, -6], [44, -8], [40, 6]]), fill: spout.mid },
   ];
 }
 
@@ -340,39 +342,41 @@ function canFaces(body, lip, spout, fx) {
 function petFaces(body, ear, muzzle, { happy, missed }) {
   const tail = happy
     ? [
-        { pts: [[16, 4], [30, -10], [18, 10]], fill: body.mid },
-        { pts: [[18, 10], [30, -10], [28, -18]], fill: body.lit },
+        { pts: [[18, 6], [34, -12], [20, 12]], fill: body.mid },
+        { pts: [[20, 12], [34, -12], [32, -20]], fill: body.lit },
       ]
     : [
-        { pts: [[16, 8], [28, 18], [18, 14]], fill: body.mid },
-        { pts: [[18, 14], [28, 18], [24, 26]], fill: body.shade },
+        { pts: [[18, 10], [32, 20], [20, 16]], fill: body.mid },
+        { pts: [[20, 16], [32, 20], [28, 28]], fill: body.shade },
       ];
   const ears = happy
     ? [
-        { pts: [[-14, -24], [-19, -42], [-3, -28]], fill: ear.lit },
-        { pts: [[-14, -24], [-3, -28], [-6, -18]], fill: ear.shade },
-        { pts: [[8, -26], [17, -44], [2, -28]], fill: ear.mid },
-        { pts: [[8, -26], [2, -28], [6, -18]], fill: ear.shade },
+        { pts: [[-16, -26], [-22, -46], [-4, -30]], fill: ear.lit },
+        { pts: [[-16, -26], [-4, -30], [-8, -18]], fill: ear.shade },
+        { pts: [[10, -28], [20, -48], [2, -30]], fill: ear.mid },
+        { pts: [[10, -28], [2, -30], [8, -18]], fill: ear.shade },
       ]
     : [
-        { pts: [[-13, -20], [-20, -32], [-4, -24]], fill: ear.lit },
-        { pts: [[-13, -20], [-4, -24], [-6, -14]], fill: ear.shade },
-        { pts: [[9, -22], [18, -34], [4, -24]], fill: ear.mid },
-        { pts: [[9, -22], [4, -24], [6, -14]], fill: ear.shade },
+        { pts: [[-15, -22], [-24, -36], [-5, -26]], fill: ear.lit },
+        { pts: [[-15, -22], [-5, -26], [-8, -14]], fill: ear.shade },
+        { pts: [[10, -24], [22, -38], [4, -26]], fill: ear.mid },
+        { pts: [[10, -24], [4, -26], [8, -14]], fill: ear.shade },
       ];
   const crest = happy
-    ? [{ pts: [[0, -30], [-6, -40], [6, -39]], fill: missed ? FACET.coral : FACET.ember }]
+    ? [{ pts: [[0, -32], [-7, -44], [7, -42]], fill: missed ? FACET.coral : FACET.ember }]
     : [];
   const nose = missed ? FACET.coral : happy ? FACET.ember : FACET.coral;
 
   return [
-    { pts: [[-18, 8], [0, -6], [0, 26]], fill: body.shade },
-    { pts: [[0, -6], [20, 6], [0, 26]], fill: body.mid },
-    { pts: [[-8, 12], [0, 2], [9, 14]], fill: body.lit },
-    { pts: [[-12, -6], [0, -30], [0, -4]], fill: body.lit },
-    { pts: [[0, -30], [13, -8], [0, -4]], fill: body.shade },
-    { pts: [[-6, -8], [0, -1], [7, -8]], fill: muzzle },
-    { pts: [[-2.2, -3], [0, 1.4], [2.4, -3]], fill: nose },
+    { pts: [[-20, 10], [0, -6], [0, 28]], fill: body.shade },
+    { pts: [[0, -6], [22, 8], [0, 28]], fill: body.mid },
+    { pts: [[-10, 14], [0, 2], [11, 16]], fill: body.lit },
+    { pts: [[-16, 24], [-8, 20], [-6, 32]], fill: body.shade },
+    { pts: [[6, 22], [16, 20], [12, 32]], fill: body.mid },
+    { pts: [[-14, -6], [0, -32], [0, -2]], fill: body.lit },
+    { pts: [[0, -32], [15, -8], [0, -2]], fill: body.shade },
+    { pts: [[-7, -8], [0, 0], [8, -8]], fill: muzzle },
+    { pts: [[-2.6, -3], [0, 2], [2.8, -3]], fill: nose },
     ...ears,
     ...crest,
     ...tail,
@@ -387,18 +391,18 @@ function petFaces(body, ear, muzzle, { happy, missed }) {
  */
 function bowlFaces(dish, well, kibble) {
   return [
-    { pts: [[-28, -6], [0, -14], [0, 6]], fill: dish.lit },
-    { pts: [[0, -14], [28, -6], [0, 6]], fill: dish.mid },
-    { pts: [[-28, -6], [-20, 16], [0, 6]], fill: dish.shade },
-    { pts: [[28, -6], [20, 16], [0, 6]], fill: dish.mid },
-    { pts: [[-20, 16], [20, 16], [0, 6]], fill: dish.shade },
-    { pts: [[-28, -6], [28, -6], [22, 0]], fill: dish.lit },
-    { pts: [[-28, -6], [22, 0], [-22, 0]], fill: dish.lit },
-    { pts: [[-14, -4], [14, -6], [-10, 6]], fill: well },
-    { pts: [[14, -6], [10, 6], [-10, 6]], fill: well },
-    { pts: [[-6, 0], [0, -5], [2, 3]], fill: kibble.lit },
-    { pts: [[4, 1], [9, -3], [8, 5]], fill: kibble.mid },
-    { pts: [[-1, 3], [3, 0], [2, 7]], fill: kibble.shade },
+    { pts: [[-34, -4], [0, -16], [0, 8]], fill: dish.lit },
+    { pts: [[0, -16], [34, -4], [0, 8]], fill: dish.mid },
+    { pts: [[-34, -4], [-24, 20], [0, 8]], fill: dish.shade },
+    { pts: [[34, -4], [24, 20], [0, 8]], fill: dish.mid },
+    { pts: [[-24, 20], [24, 20], [0, 8]], fill: dish.shade },
+    { pts: [[-34, -4], [34, -4], [26, 2]], fill: dish.lit },
+    { pts: [[-34, -4], [26, 2], [-26, 2]], fill: dish.lit },
+    { pts: [[-18, -2], [18, -6], [-12, 8]], fill: well },
+    { pts: [[18, -6], [12, 8], [-12, 8]], fill: well },
+    { pts: [[-10, 0], [-2, -8], [2, 4]], fill: kibble.lit },
+    { pts: [[4, 0], [14, -6], [12, 6]], fill: kibble.mid },
+    { pts: [[-2, 4], [6, 0], [4, 10]], fill: kibble.shade },
   ];
 }
 
@@ -409,11 +413,11 @@ function bowlFaces(dish, well, kibble) {
  */
 function logFaces(log, logDeep) {
   return [
-    { pts: [[-22, 12], [8, 6], [2, 22]], fill: log.shade },
-    { pts: [[8, 6], [20, 14], [2, 22]], fill: log.mid },
-    { pts: [[-10, 10], [24, 12], [16, 24]], fill: logDeep },
-    { pts: [[-10, 10], [16, 24], [-16, 22]], fill: log.shade },
-    { pts: [[-18, 10], [-8, 6], [-6, 14]], fill: log.lit },
+    { pts: [[-26, 12], [10, 4], [4, 24]], fill: log.shade },
+    { pts: [[10, 4], [24, 14], [4, 24]], fill: log.mid },
+    { pts: [[-12, 10], [28, 12], [18, 26]], fill: logDeep },
+    { pts: [[-12, 10], [18, 26], [-20, 24]], fill: log.shade },
+    { pts: [[-22, 10], [-8, 4], [-6, 16]], fill: log.lit },
   ];
 }
 
@@ -447,9 +451,9 @@ function steamFaces(missed) {
   const b = missed ? FACET_STEPS.coralBone : FACET_STEPS.skyBone;
   const c = missed ? FACET_STEPS.coralInk : FACET.mist;
   return [
-    { pts: [[-8, -2], [0, -16], [5, 0]], fill: a },
-    { pts: [[4, -10], [10, -26], [14, -6]], fill: b },
-    { pts: [[-2, -20], [3, -34], [8, -16]], fill: c },
+    { pts: [[-12, 0], [0, -20], [8, 2]], fill: a },
+    { pts: [[4, -8], [14, -30], [18, -4]], fill: b },
+    { pts: [[-4, -18], [4, -38], [12, -14]], fill: c },
   ];
 }
 
@@ -462,17 +466,17 @@ function steamFaces(missed) {
 function bucketFaces(body, water, fx) {
   const flip = (pts) => pts.map(([x, y]) => /** @type {Pt} */ ([x * fx, y]));
   return [
-    { pts: flip([[-14, -10], [0, -30], [-5, -10]]), fill: body.lit },
-    { pts: flip([[14, -10], [0, -30], [5, -10]]), fill: body.shade },
-    { pts: flip([[0, -30], [-5, -22], [5, -22]]), fill: body.mid },
-    { pts: flip([[-18, -4], [18, -4], [-14, 22]]), fill: body.lit },
-    { pts: flip([[18, -4], [14, 22], [-14, 22]]), fill: body.shade },
-    { pts: flip([[-14, 22], [14, 22], [0, 26]]), fill: body.shade },
-    { pts: flip([[-8, 6], [4, 0], [8, 10]]), fill: body.mid },
-    { pts: flip([[-22, -12], [22, -12], [20, -4]]), fill: body.lit },
-    { pts: flip([[-22, -12], [20, -4], [-20, -4]]), fill: body.mid },
-    { pts: flip([[-12, -2], [12, -2], [0, 5]]), fill: water.mid },
-    { pts: flip([[-12, -2], [4, -4], [0, 5]]), fill: water.lit },
+    { pts: flip([[-16, -10], [0, -32], [-6, -10]]), fill: body.lit },
+    { pts: flip([[16, -10], [0, -32], [6, -10]]), fill: body.shade },
+    { pts: flip([[0, -32], [-6, -22], [6, -22]]), fill: body.mid },
+    { pts: flip([[-20, -4], [20, -4], [-16, 24]]), fill: body.lit },
+    { pts: flip([[20, -4], [16, 24], [-16, 24]]), fill: body.shade },
+    { pts: flip([[-16, 24], [16, 24], [0, 28]]), fill: body.shade },
+    { pts: flip([[-8, 6], [5, 0], [9, 12]]), fill: body.mid },
+    { pts: flip([[-24, -14], [24, -14], [22, -4]]), fill: body.lit },
+    { pts: flip([[-24, -14], [22, -4], [-22, -4]]), fill: body.mid },
+    { pts: flip([[-14, -2], [14, -2], [0, 6]]), fill: water.mid },
+    { pts: flip([[-14, -2], [6, -5], [0, 6]]), fill: water.lit },
   ];
 }
 
