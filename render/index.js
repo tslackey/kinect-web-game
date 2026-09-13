@@ -644,7 +644,7 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
     const x = bug.x * width;
     const y = bug.y * height;
     const scurry = squashed ? 0 : Math.sin(elapsed * 8);
-    const scale = squashed ? 1.35 : 1.15;
+    const scale = squashed ? 1.7 : 1.95;
     const alpha = gated ? 0.55 : missed ? 0.5 : 1;
     const body = missed ? FACET.coral : squashed ? FACET.moss : FACET.lilac;
     const shell = missed ? FACET_STEPS.coralBone : squashed ? FACET_STEPS.mossBone : FACET_STEPS.lilacBone;
