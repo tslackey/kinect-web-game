@@ -81,6 +81,7 @@ assert(isPlayOutcome(play.tick(1 / 60, idle())), "tick must return a contract ou
 const startView = play.getView();
 assert(startView.scene?.kind === "douse-fire", "the view should expose the fire scene");
 assert(startView.scene.bucket.held === false, "the bucket starts on the field");
+assert(startView.scene.bucket.offered === false, "the bucket is not offered at rest");
 assert(startView.scene.fire.stage === 0, "the fire starts burning");
 assert(startView.timeLeft != null && startView.timeLeft > 15, "the fire timer should be live");
 
@@ -203,6 +204,82 @@ assert(session.getState().scene.bucket.held === true, "session play should stick
 drainGame(session, DOUSE_DWELL + 0.05, oneBody({ left_wrist: { x: liveFire.x, y: liveFire.y, confidence: 1 } }));
 assert(session.getState().result === "win", "a douse should resolve as a session win");
 assert(session.getState().score === 1, "the session should score the fire win");
+
+const noSteal = DOUSE_FIRE.create({ random: () => 0.2, index: 1, duration: DOUSE_FIRE.duration });
+noSteal.start();
+const stealBucket = noSteal.getView().scene.bucket;
+drainPlay(noSteal, FIRE_PICKUP_DWELL + 0.05, oneBody({ left_wrist: { x: stealBucket.x, y: stealBucket.y, confidence: 1 } }));
+noSteal.tick(
+  1 / 60,
+  twoBodies(
+    { left_wrist: { x: 0.4, y: 0.5, confidence: 1 } },
+    { right_wrist: { x: 0.4, y: 0.5, confidence: 1 } },
+  ),
+);
+assert(noSteal.getView().scene.bucket.heldBy === "p1:left_wrist", "a second body cannot steal the bucket without an offer");
+
+const passPlay = DOUSE_FIRE.create({ random: () => 0.2, index: 1, duration: DOUSE_FIRE.duration });
+passPlay.start();
+const passBucket = passPlay.getView().scene.bucket;
+const passFire = passPlay.getView().scene.fire;
+drainPlay(passPlay, FIRE_PICKUP_DWELL + 0.05, oneBody({ left_wrist: { x: passBucket.x, y: passBucket.y, confidence: 1 } }));
+passPlay.tick(
+  1 / 60,
+  oneBody({
+    left_wrist: { x: 0.5, y: 0.5, confidence: 1 },
+    right_wrist: { x: 0.5, y: 0.5, confidence: 1 },
+  }),
+);
+assert(passPlay.getView().scene.bucket.offered === true, "both owner hands offer the bucket");
+passPlay.tick(
+  1 / 60,
+  twoBodies(
+    {
+      left_wrist: { x: 0.5, y: 0.5, confidence: 1 },
+      right_wrist: { x: 0.5, y: 0.5, confidence: 1 },
+    },
+    { left_wrist: { x: 0.5, y: 0.5, confidence: 1 } },
+  ),
+);
+assert(passPlay.getView().scene.bucket.heldBy === "p2:left_wrist", "the other body accepts the bucket");
+assert(
+  drainPlay(
+    passPlay,
+    DOUSE_DWELL + 0.05,
+    twoBodies(
+      { left_wrist: { x: 0.04, y: 0.96, confidence: 1 } },
+      { left_wrist: { x: passFire.x, y: passFire.y, confidence: 1 } },
+    ),
+  ) === "win",
+  "the new owner can still douse",
+);
+
+const swapPlay = DOUSE_FIRE.create({ random: () => 0.2, index: 1, duration: DOUSE_FIRE.duration });
+swapPlay.start();
+const swapBucket = swapPlay.getView().scene.bucket;
+const swapFire = swapPlay.getView().scene.fire;
+drainPlay(swapPlay, FIRE_PICKUP_DWELL + 0.05, oneBody({ left_wrist: { x: swapBucket.x, y: swapBucket.y, confidence: 1 } }));
+swapPlay.tick(
+  1 / 60,
+  oneBody({
+    left_wrist: { x: 0.48, y: 0.52, confidence: 1 },
+    right_wrist: { x: 0.48, y: 0.52, confidence: 1 },
+  }),
+);
+swapPlay.tick(1 / 60, oneBody({ left_wrist: { x: 0.48, y: 0.52, confidence: 1 } }));
+swapPlay.tick(
+  1 / 60,
+  oneBody({
+    left_wrist: { x: 0.48, y: 0.52, confidence: 1 },
+    right_wrist: { x: 0.48, y: 0.52, confidence: 1 },
+  }),
+);
+assert(swapPlay.getView().scene.bucket.heldBy === "p1:right_wrist", "same-body re-grab swaps the bucket");
+assert(
+  drainPlay(swapPlay, DOUSE_DWELL + 0.05, oneBody({ right_wrist: { x: swapFire.x, y: swapFire.y, confidence: 1 } })) ===
+    "win",
+  "the swapped hand can still douse",
+);
 
 const keys = DOUSE_FIRE.create({ random: () => 0.2, index: 1, duration: DOUSE_FIRE.duration });
 keys.start();

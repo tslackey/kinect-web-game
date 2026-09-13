@@ -96,6 +96,7 @@ assert(shade.mid === FACET.moss, "mid step is the named hue");
 assert(shade.shade === FACET_STEPS.mossInk, "shade step is hue toward Ink");
 
 assert(carryShade({ missed: true }).mid === FACET.coral, "missed marks go Coral");
+assert(carryShade({ offered: true }).mid === FACET.sky, "offered marks go Sky");
 assert(carryShade({ held: true }).mid === FACET.ember, "held marks go Ember");
 assert(carryShade({ happy: true }).mid === FACET.moss, "happy pet goes Moss");
 assert(carryShade({ hue: "lilac" }).mid === FACET.lilac, "idle carry marks stay Lilac");
@@ -104,7 +105,7 @@ const scene = mockCtx();
 drawCarryPlant(scene, 80, 80, { grown: false, missed: false, gated: false }, 40);
 drawCarryPlant(scene, 80, 80, { grown: true, missed: false, gated: false }, 40);
 drawCarryCan(scene, 80, 80, { held: false, gated: false, missed: false, face: 1 }, 40);
-drawCarryCan(scene, 80, 80, { held: true, gated: false, missed: false, face: -1 }, 40);
+drawCarryCan(scene, 80, 80, { held: true, offered: true, gated: false, missed: false, face: -1 }, 40);
 drawCarryPet(scene, 80, 80, { happy: false, missed: false, gated: false }, 40);
 drawCarryPet(scene, 80, 80, { happy: true, missed: true, gated: false }, 40);
 drawCarryBowl(scene, 80, 80, { held: true, gated: false, missed: false }, 40);

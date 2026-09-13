@@ -105,6 +105,7 @@ export {
   listSampleStrikers,
   listStrikers,
 } from "./hit.js";
+export { OFFER_HOLD, createStickyCarry, overlapsCarry } from "./carry.js";
 export {
   START_DWELL,
   START_HOLD,
