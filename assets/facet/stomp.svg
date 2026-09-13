@@ -1,21 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet stomp">
   <!-- 128 grid. Light from upper-left. Flat fills only. -->
-  <polygon fill="#9ece6a" points="8,97 64,80 120,101"/>
-  <polygon fill="#749554" points="8,97 120,101 64,115"/>
-  <polygon fill="#b6d78d" points="33,94 54,83 68,104"/>
-  <polygon fill="#b6d78d" points="78,90 103,87 92,104"/>
-  <polygon fill="#749554" points="47,97 82,101 64,111"/>
-  <polygon fill="#1a1b26" points="50,94 75,108 61,101"/>
-  <polygon fill="#1a1b26" points="75,90 57,108 68,101"/>
-  <polygon fill="#b67450" points="22,108 12,118 36,115"/>
-  <polygon fill="#ff9e64" points="96,108 113,118 103,111"/>
-  <polygon fill="#fcb588" points="54,111 71,118 68,108"/>
-  <polygon fill="#b67450" points="33,90 103,101 92,115"/>
-  <polygon fill="#ff9e64" points="33,90 92,115 36,108"/>
-  <polygon fill="#fcb588" points="26,55 33,90 71,73"/>
-  <polygon fill="#ff9e64" points="71,73 33,90 103,101"/>
-  <polygon fill="#b67450" points="71,73 103,101 92,80"/>
-  <polygon fill="#b6d78d" points="33,27 47,59 71,41"/>
-  <polygon fill="#9ece6a" points="47,59 82,66 71,41"/>
-  <polygon fill="#749554" points="29,20 78,38 57,10"/>
+  <polygon fill="#c8adf3" points="8,95 64,76 120,99"/>
+  <polygon fill="#8771b4" points="8,95 120,99 64,112"/>
+  <polygon fill="#bb9af7" points="31,92 57,79 71,102"/>
+  <polygon fill="#c8adf3" points="77,89 104,82 94,102"/>
+  <polygon fill="#8771b4" points="44,95 84,99 64,108"/>
+  <polygon fill="#1a1b26" points="51,92 74,105 61,99"/>
+  <polygon fill="#1a1b26" points="74,89 57,105 67,99"/>
+  <polygon fill="#b67450" points="24,105 11,115 38,112"/>
+  <polygon fill="#ff9e64" points="94,105 113,115 100,108"/>
+  <polygon fill="#9ece6a" points="57,82 71,69 74,89"/>
+  <polygon fill="#b67450" points="34,89 100,99 90,112"/>
+  <polygon fill="#ff9e64" points="34,89 90,112 38,105"/>
+  <polygon fill="#fcb588" points="28,56 34,89 71,72"/>
+  <polygon fill="#ff9e64" points="71,72 34,89 100,99"/>
+  <polygon fill="#b67450" points="71,72 100,99 90,79"/>
+  <polygon fill="#b6d78d" points="34,29 48,59 71,43"/>
+  <polygon fill="#9ece6a" points="48,59 80,66 71,43"/>
+  <polygon fill="#749554" points="31,23 77,39 57,13"/>
 </svg>

@@ -53,7 +53,7 @@ function mockCtx() {
 }
 
 assert(stompShade().mid === FACET.lilac, "idle bug is Lilac");
-assert(stompShade({ squashed: true }).mid === FACET.moss, "squashed bug is Moss");
+assert(stompShade({ squashed: true }).mid === FACET.lilac, "crushed bug stays Lilac so it reads on the moss terrain");
 assert(stompShade({ missed: true }).mid === FACET.coral, "missed marks go Coral");
 assert(stompShade({ missed: true, squashed: true }).mid === FACET.coral, "missed wins over squash");
 

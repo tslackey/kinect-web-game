@@ -17,7 +17,7 @@ import { drawFaces, facetShade, strokeHex } from "./facet.js";
  */
 export function stompShade({ missed = false, squashed = false } = {}) {
   if (missed) return facetShade("coral");
-  if (squashed) return facetShade("moss");
+  if (squashed) return facetShade("lilac");
   return facetShade("lilac");
 }
 
@@ -31,7 +31,7 @@ export function stompShade({ missed = false, squashed = false } = {}) {
 export function drawStompBug(ctx, x, y, { squashed, squashing, missed, gated, elapsed }, zone) {
   const scurry = squashed ? 0 : Math.sin(elapsed * 8);
   const hop = scurry * 3;
-  const scale = squashed ? 1.7 : 1.95;
+  const scale = squashed ? 1.85 : 1.95;
   const alpha = gated ? 0.55 : missed ? 0.5 : 1;
   const face = squashed ? 1 : Math.cos(elapsed * 2.2) >= 0 ? 1 : -1;
   const body = stompShade({ missed, squashed });
@@ -50,8 +50,8 @@ export function drawStompBug(ctx, x, y, { squashed, squashing, missed, gated, el
   }
 
   if (squashing && !gated) {
-    drawFaces(ctx, x, y, 1.55, impactFaces(missed, elapsed));
-    drawFaces(ctx, x, y, 1.55, stompFootFaces(missed));
+    drawFaces(ctx, x, y, 1.7, impactFaces(missed, elapsed));
+    drawFaces(ctx, x, y, 1.7, stompFootFaces(missed));
   }
   ctx.restore();
 }
@@ -114,17 +114,18 @@ export function bugFaces(body, shell, leg, fx, missed) {
  */
 export function squashFaces(body, leg, missed) {
   const crack = missed ? FACET.coral : FACET.ink;
+  const chip = missed ? FACET.coral : FACET.moss;
   return [
-    { pts: [[-32, 6], [0, -4], [32, 8]], fill: body.mid },
-    { pts: [[-32, 6], [32, 8], [0, 16]], fill: body.shade },
-    { pts: [[-18, 4], [-6, -2], [2, 10]], fill: body.lit },
-    { pts: [[8, 2], [22, 0], [16, 10]], fill: body.lit },
-    { pts: [[-10, 6], [10, 8], [0, 14]], fill: body.shade },
+    { pts: [[-34, 6], [0, -6], [34, 8]], fill: body.lit },
+    { pts: [[-34, 6], [34, 8], [0, 16]], fill: body.shade },
+    { pts: [[-20, 4], [-4, -4], [4, 10]], fill: body.mid },
+    { pts: [[8, 2], [24, -2], [18, 10]], fill: body.lit },
+    { pts: [[-12, 6], [12, 8], [0, 14]], fill: body.shade },
     { pts: [[-8, 4], [6, 12], [-2, 8]], fill: crack },
     { pts: [[6, 2], [-4, 12], [2, 8]], fill: crack },
-    { pts: [[-24, 12], [-30, 18], [-16, 16]], fill: leg.shade },
-    { pts: [[18, 12], [28, 18], [22, 14]], fill: leg.mid },
-    { pts: [[-6, 14], [4, 18], [2, 12]], fill: leg.lit },
+    { pts: [[-24, 12], [-32, 18], [-16, 16]], fill: leg.shade },
+    { pts: [[18, 12], [30, 18], [22, 14]], fill: leg.mid },
+    { pts: [[-4, -2], [4, -10], [6, 2]], fill: chip },
   ];
 }
 
