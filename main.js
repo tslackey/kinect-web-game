@@ -219,7 +219,7 @@ function ledeFor(state) {
   }
   if (state.phase === "prompt") return "Curtain up. Get ready.";
   if (state.phase === "playing") return ledeForGame(state.gameId);
-  return "Open, allow the camera, play. A short curtain, a big title, then about 18 seconds. The session shuffles plant, pet, fire, stomp, orb, and the simple pack. When a camera body is live, the camera is the only player. Pointer and keyboard still play if the camera is off.";
+  return "Open, allow the camera, play. Hold a hand over the on-canvas Play mark, or click Play. A short curtain, a big title, then about 18 seconds. The session shuffles plant, pet, fire, stomp, orb, and the simple pack. When a camera body is live, the camera is the only player. Pointer and keyboard still play if the camera is off.";
 }
 
 /**
@@ -276,9 +276,9 @@ function statusFor(state, cam) {
     return `Game ${state.game} of ${state.games}. ${state.prompt}.`;
   }
   if (cam.camera === "denied" || cam.camera === "unavailable" || cam.camera === "error") {
-    return "Camera is off. Press Play to use the pointer or keyboard.";
+    return "Camera is off. Hold Play or press Play to use the pointer or keyboard.";
   }
-  return "Allow the camera, then press Play.";
+  return "Allow the camera, then hold Play or press Play.";
 }
 
 /**

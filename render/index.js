@@ -5,6 +5,7 @@
  * low-poly marks (hard-edge triangles, token steps, upper-left light);
  * stomp-the-bug draws a Facet low-poly bug and stomp cue.
  * Interstitials use Facet theater drapes, a title placard, and stage sets.
+ * Start and game-over draw the hand-hold Play mark with a progress ring.
  */
 
 import { STICK_BONES } from "../input/joints.js";
@@ -91,10 +92,54 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
       }
     }
     drawMarkers(state);
+    drawStartHold(state);
     drawFlash(state);
     if (state.transition && state.phase === "prompt") {
       drawCurtain(ctx, width, height, state.transition, { reducedMotion });
     }
+  }
+
+  /**
+   * Facet dwell button. Start / game-over only. Progress fill resets
+   * when the hand leaves — see game/start-dwell.js.
+   *
+   * @param {GameState} state
+   */
+  function drawStartHold(state) {
+    const hold = state.startHold;
+    if (!hold?.active) return;
+
+    const x = hold.target.x * width;
+    const y = hold.target.y * height;
+    const zone = HIT_RADIUS * Math.min(width, height);
+    const r = zone * 0.62;
+    const palette = hold.hovering || hold.progress > 0 ? mossCrystal() : emberCrystal();
+
+    ctx.globalAlpha = 0.94;
+    drawCrystal(ctx, x, y, r * 0.72, palette);
+    ctx.globalAlpha = 1;
+    strokeHex(ctx, x, y, r, palette.stroke, 3);
+
+    ctx.beginPath();
+    ctx.strokeStyle = `rgba(${FACET_RGB.mist}, 0.45)`;
+    ctx.lineWidth = 6;
+    ctx.lineCap = "butt";
+    ctx.arc(x, y, r * 0.88, 0, Math.PI * 2);
+    ctx.stroke();
+
+    if (hold.progress > 0) {
+      ctx.beginPath();
+      ctx.strokeStyle = FACET.moss;
+      ctx.lineWidth = 6;
+      ctx.arc(x, y, r * 0.88, -Math.PI / 2, -Math.PI / 2 + hold.progress * Math.PI * 2);
+      ctx.stroke();
+    }
+
+    ctx.font = `700 ${Math.round(Math.min(width, height) * 0.032)}px "Bebas Neue", "Arial Narrow", sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = FACET.bone;
+    ctx.fillText(hold.label.toUpperCase(), x, y + r + 18);
   }
 
   /**
