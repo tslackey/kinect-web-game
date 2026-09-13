@@ -65,6 +65,7 @@ assert(WATER_PLANT.duration === PLANT_DURATION, "pack duration should match the 
 assert(PLANT_DURATION >= 5 && PLANT_DURATION <= 6, "duration is about 5–6s");
 assert(DEFAULT_PACK[0].id === "water-plant", "the session pack should open on this game");
 assert(DEFAULT_PACK.some((def) => def.id === "feed-pet"), "feed the pet should join the pack");
+assert(DEFAULT_PACK.some((def) => def.id === "douse-fire"), "put out the fire should join the pack");
 assert(DEFAULT_PACK.some((def) => def.id === "orb-hit"), "orb-hit should remain another game in the pack");
 
 const play = WATER_PLANT.create({ random: () => 0.2, index: 1, duration: WATER_PLANT.duration });

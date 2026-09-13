@@ -66,6 +66,7 @@ assert(FEED_PET.duration === PET_DURATION, "pack duration should match the pet t
 assert(PET_DURATION >= 5 && PET_DURATION <= 6, "duration is about 5–6s");
 assert(DEFAULT_PACK.some((def) => def.id === "feed-pet"), "the session pack should include this game");
 assert(DEFAULT_PACK.some((def) => def.id === "water-plant"), "water the plant should stay in the pack");
+assert(DEFAULT_PACK.some((def) => def.id === "douse-fire"), "put out the fire should join the pack");
 assert(DEFAULT_PACK.some((def) => def.id === "orb-hit"), "orb-hit should remain another game in the pack");
 assert(DEFAULT_PACK[0].id === "water-plant", "the session pack should still open on water the plant");
 assert(DEFAULT_PACK[1].id === "feed-pet", "feed the pet is the second real microgame");

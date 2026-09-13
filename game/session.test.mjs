@@ -1,4 +1,5 @@
 import {
+  DOUSE_FIRE,
   FEED_PET,
   GAME_COUNT,
   ORB_HIT,
@@ -152,5 +153,11 @@ petOnly.start();
 assert(petOnly.getState().prompt === FEED_PET.prompt, "a pet-only pack should flash Feed pet");
 assert(petOnly.getState().gameId === "feed-pet", "Feed the pet is a pack entry");
 assert(petOnly.getState().scene?.kind === "feed-pet", "the pet scene should be on the session view");
+
+const fireOnly = createGame({ random: () => 0.2, pack: [DOUSE_FIRE], games: 1 });
+fireOnly.start();
+assert(fireOnly.getState().prompt === DOUSE_FIRE.prompt, "a fire-only pack should flash Douse fire");
+assert(fireOnly.getState().gameId === "douse-fire", "Put out the fire is a pack entry");
+assert(fireOnly.getState().scene?.kind === "douse-fire", "the fire scene should be on the session view");
 
 console.log("game/session.test.mjs passed");

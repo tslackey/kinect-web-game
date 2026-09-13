@@ -9,12 +9,13 @@ A motion arcade you can send someone. Open the link, allow the camera, play.
 3. Click **Play**. A short prompt flashes, then one game on a timer.
    First up: **Water plant** — hover a wrist or the pointer over the
    pot, carry it over the plant, pour. Next: **Feed pet** — same
-   sticky carry, bowl to a hungry pet. Later games can still be
-   **Hit orb**. Win or miss, the next game starts.
+   sticky carry, bowl to a hungry pet. Then: **Douse fire** — stick
+   the bucket, carry it over the flame, spray. Later games can still
+   be **Hit orb**. Win or miss, the next game starts.
 
 A session is a short sequence of those games — not 3 rounds of the same
 orb. Win or fail is timeout-or-success, not a wrong gesture. Two people
-in one camera frame share the same pot or bowl and the same win.
+in one camera frame share the same pot, bowl, or bucket and the same win.
 
 If the camera is blocked, click **Play without camera**. The pointer and
 keyboard still play.
@@ -43,8 +44,8 @@ camera hardware).
 | Path | Role |
 | --- | --- |
 | `input/` | Pose sample from one webcam; else mouse or keyboard. `sample()` emits pose maps. |
-| `game/` | Microgame contract and session loop: prompt → play → win/fail → next. Water the plant, Feed the pet, then orb-hit. |
-| `render/` | Draws one or two stick figures, pot/plant, bowl/pet or the orb, markers, and hit flashes. |
+| `game/` | Microgame contract and session loop: prompt → play → win/fail → next. Water the plant, Feed the pet, Put out the fire, then orb-hit. |
+| `render/` | Draws one or two stick figures, pot/plant, bowl/pet, bucket/fire or the orb, markers, and hit flashes. |
 | `feel/` | Optional synthesized hit / miss audio. |
 | `main.js` | Wires the loop, camera prompt, Play, and sound toggle. |
 

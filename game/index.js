@@ -2,8 +2,9 @@
  * Game state owner. A session is a short sequence of microgames:
  * prompt → one game on a short timer → win or fail → next.
  *
- * Water the plant is game 1. Feed the pet is game 2. Orb-hit stays in the pack.
- * Either pose map on the sample can score — one webcam, up to two bodies.
+ * Water the plant is game 1. Feed the pet is game 2. Put out the fire is
+ * game 3. Orb-hit stays in the pack. Either pose map on the sample can
+ * score — one webcam, up to two bodies.
  */
 
 import { posesFromSample } from "../input/poses.js";
@@ -18,6 +19,7 @@ import {
 import { ORB_HIT, driftOrb, driftScaleForGame } from "./orb.js";
 import { WATER_PLANT } from "./plant.js";
 import { FEED_PET } from "./pet.js";
+import { DOUSE_FIRE } from "./fire.js";
 
 /**
  * @typedef {import("../input/index.js").PoseSample} PoseSample
@@ -70,9 +72,16 @@ export {
   PET_PICKUP_DWELL,
   layoutPet,
 } from "./pet.js";
+export {
+  DOUSE_DWELL,
+  DOUSE_FIRE,
+  FIRE_DURATION,
+  FIRE_PICKUP_DWELL,
+  layoutFire,
+} from "./fire.js";
 
-/** Default session pack. Water the plant, then Feed the pet; orb-hit stays in the run. */
-export const DEFAULT_PACK = [WATER_PLANT, FEED_PET, ORB_HIT];
+/** Default session pack. Plant, pet, fire; orb-hit stays in the run. */
+export const DEFAULT_PACK = [WATER_PLANT, FEED_PET, DOUSE_FIRE, ORB_HIT];
 
 /**
  * @typedef {object} Marker
@@ -99,7 +108,7 @@ export const DEFAULT_PACK = [WATER_PLANT, FEED_PET, ORB_HIT];
  * @property {number} lifetime Seconds the current game stays playable.
  * @property {number} driftScale
  * @property {Target} target
- * @property {import("./plant.js").WaterScene | import("./pet.js").FeedScene | null} [scene] Live plant or pet slice, or null for orb games.
+ * @property {import("./plant.js").WaterScene | import("./pet.js").FeedScene | import("./fire.js").FireScene | null} [scene] Live plant, pet, or fire slice, or null for orb games.
  * @property {number | null} timeLeft Seconds left on the live game, or null during prompt.
  * @property {number | null} holdLeft Seconds left in the prompt or result beat.
  * @property {Flash | null} flash Latest hit / miss / game-over cue for juice. Not a mechanic.

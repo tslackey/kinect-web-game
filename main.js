@@ -217,9 +217,10 @@ function ledeFor(state) {
   if (state.phase === "playing") {
     if (state.gameId === "water-plant") return "Hover the pot, carry it over the plant.";
     if (state.gameId === "feed-pet") return "Hover the bowl, carry it over the pet.";
+    if (state.gameId === "douse-fire") return "Hover the bucket, carry it over the fire.";
     return "One hit. Timer is live.";
   }
-  return "Open, allow the camera, play. Water the plant, feed the pet, or hit the orb. Pointer and keyboard still play if the camera is off.";
+  return "Open, allow the camera, play. Water the plant, feed the pet, douse the fire, or hit the orb. Pointer and keyboard still play if the camera is off.";
 }
 
 /**
