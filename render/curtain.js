@@ -51,10 +51,12 @@ export function drawCurtain(ctx, width, height, view, { reducedMotion = false } 
   }
 
   const drop = height * cover;
+  ctx.fillStyle = `rgba(${FACET_RGB.ink}, ${0.55 * cover})`;
+  ctx.fillRect(0, 0, width, drop + 8);
   const panels = [
-    { x0: 0, x1: width * 0.38, fill: FACET_STEPS.lilacInk, extra: 0 },
-    { x0: width * 0.34, x1: width * 0.68, fill: FACET.ink, extra: height * 0.04 * cover },
-    { x0: width * 0.62, x1: width, fill: FACET_STEPS.skyInk, extra: height * 0.02 * cover },
+    { x0: 0, x1: width * 0.4, fill: FACET_STEPS.lilacInk, extra: 0 },
+    { x0: width * 0.32, x1: width * 0.7, fill: FACET.ink, extra: height * 0.06 * cover },
+    { x0: width * 0.6, x1: width, fill: FACET_STEPS.skyInk, extra: height * 0.03 * cover },
   ];
 
   for (const panel of panels) {
@@ -111,7 +113,7 @@ export function drawPlacard(ctx, width, height, view, reducedMotion) {
   fillDiamond(ctx, cx - cardW / 2 + 8, cy, 14, FACET.ember);
   fillDiamond(ctx, cx + cardW / 2 - 8, cy, 14, FACET.ember);
 
-  const size = Math.round(Math.min(width, height) * (reducedMotion ? 0.09 : 0.12));
+  const size = Math.round(Math.min(width, height) * (reducedMotion ? 0.11 : 0.16));
   ctx.font = `700 ${size}px "Bebas Neue", "Arial Narrow", sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";

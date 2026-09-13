@@ -34,18 +34,18 @@
 
 /** @type {Readonly<CurtainTimings>} */
 export const DEFAULT_CURTAIN_TIMINGS = Object.freeze({
-  down: 0.32,
-  covered: 0.1,
-  up: 0.36,
-  hold: 0.42,
+  down: 0.45,
+  covered: 0.14,
+  up: 0.5,
+  hold: 1.05,
 });
 
-/** @type {Readonly<CurtainTimings>} */
+/** Instant cover; keep a readable placard. */
 export const REDUCED_CURTAIN_TIMINGS = Object.freeze({
-  down: 0.04,
-  covered: 0.02,
-  up: 0.04,
-  hold: 0.14,
+  down: 0,
+  covered: 0,
+  up: 0,
+  hold: 0.7,
 });
 
 /**

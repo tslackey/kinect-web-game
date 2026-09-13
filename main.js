@@ -33,7 +33,7 @@ const input = createInput({
   video: video instanceof HTMLVideoElement ? video : null,
   video2: video2 instanceof HTMLVideoElement ? video2 : null,
 });
-const game = createGame();
+const game = createGame({ reducedMotion });
 const renderer = createRenderer(canvas, { reducedMotion });
 const audio = createAudio();
 
