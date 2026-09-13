@@ -1,6 +1,15 @@
 import { createInput } from "./input/index.js";
 import { CAMERA_COPY } from "./input/camera-status.js";
-import { createGame } from "./game/index.js";
+import {
+  DEFAULT_PACK,
+  createGame,
+  loadPlaylist,
+  movePlaylistGame,
+  savePlaylist,
+  sessionOptionsFromPlaylist,
+  setPlayerMode,
+  setPlaylistEnabled,
+} from "./game/index.js";
 import { createRenderer } from "./render/index.js";
 import { createAudio } from "./feel/audio.js";
 
@@ -21,6 +30,10 @@ const scoreValue = document.getElementById("score-value");
 const roundline = document.getElementById("roundline");
 const video = document.getElementById("camera-feed");
 const video2 = document.getElementById("camera-feed-2");
+const sessionMenu = document.getElementById("session-menu");
+const playlistEl = document.getElementById("playlist");
+const mode1pBtn = document.getElementById("mode-1p");
+const mode2pBtn = document.getElementById("mode-2p");
 
 if (!(canvas instanceof HTMLCanvasElement)) {
   throw new Error("Expected #motion-field canvas.");
@@ -33,7 +46,9 @@ const input = createInput({
   video: video instanceof HTMLVideoElement ? video : null,
   video2: video2 instanceof HTMLVideoElement ? video2 : null,
 });
-const game = createGame({ reducedMotion });
+const storage = typeof localStorage !== "undefined" ? localStorage : null;
+let settings = loadPlaylist(storage, DEFAULT_PACK);
+const game = createGame({ reducedMotion, ...sessionOptionsFromPlaylist(settings, DEFAULT_PACK) });
 const renderer = createRenderer(canvas, { reducedMotion });
 const audio = createAudio();
 
@@ -52,6 +67,7 @@ if (startBtn instanceof HTMLButtonElement) {
 if (playBtn instanceof HTMLButtonElement) {
   playBtn.addEventListener("click", () => {
     const cam = input.getStatus();
+    applySettings(settings);
     game.start();
     if (cam.permission === "granted" && cam.camera === "prompt") {
       input.startCamera();
@@ -59,6 +75,13 @@ if (playBtn instanceof HTMLButtonElement) {
     renderer.draw(game.getState());
     updateHud(game.getState());
   });
+}
+
+if (mode1pBtn instanceof HTMLButtonElement) {
+  mode1pBtn.addEventListener("click", () => applySettings(setPlayerMode(settings, "1p")));
+}
+if (mode2pBtn instanceof HTMLButtonElement) {
+  mode2pBtn.addEventListener("click", () => applySettings(setPlayerMode(settings, "2p")));
 }
 
 if (soundBtn instanceof HTMLButtonElement) {
@@ -174,6 +197,10 @@ function updateHud(state) {
     else startBtn.textContent = "Try camera again";
   }
 
+  if (sessionMenu instanceof HTMLElement) {
+    sessionMenu.hidden = !atGate;
+  }
+
   if (playBtn instanceof HTMLButtonElement) {
     playBtn.hidden = !atGate;
     playBtn.classList.toggle("primary", atGate && (cameraReady || cam.camera !== "prompt" || state.phase === "over"));
@@ -183,6 +210,8 @@ function updateHud(state) {
     if (playLabel) playLabel.textContent = playText;
     else playBtn.textContent = playText;
   }
+
+  syncModeButtons();
 
   if (video instanceof HTMLVideoElement) {
     video.classList.toggle("is-live", cam.camera === "ready" || cam.camera === "loading");
@@ -219,7 +248,7 @@ function ledeFor(state) {
   }
   if (state.phase === "prompt") return "Curtain up. Get ready.";
   if (state.phase === "playing") return ledeForGame(state.gameId);
-  return "Open, allow the camera, play. Hold a hand over the on-canvas Play mark, or click Play. A short curtain, a big title, then about 18 seconds. The session shuffles plant, pet, fire, stomp, orb, and the simple pack. When a camera body is live, the camera is the only player. Pointer and keyboard still play if the camera is off.";
+  return "Open, allow the camera, play. The top-right menu saves a playlist and 1P/2P. Hold a hand over the corner Play mark, or click Play. A longer curtain, a big title, then about 18 seconds. When a camera body is live, the camera is the only player. Pointer and keyboard still play if the camera is off.";
 }
 
 /**
@@ -309,6 +338,76 @@ function syncSoundButton() {
   soundBtn.textContent = muted ? "Sound off" : "Sound on";
 }
 
+/**
+ * @param {import("./game/index.js").PlaylistSettings} next
+ */
+function applySettings(next) {
+  settings = savePlaylist(storage, next, DEFAULT_PACK);
+  game.configure(sessionOptionsFromPlaylist(settings, DEFAULT_PACK));
+  renderPlaylist();
+  syncModeButtons();
+}
+
+function syncModeButtons() {
+  const one = settings.playerMode === "1p";
+  if (mode1pBtn instanceof HTMLButtonElement) {
+    mode1pBtn.classList.toggle("is-on", one);
+    mode1pBtn.setAttribute("aria-pressed", one ? "true" : "false");
+  }
+  if (mode2pBtn instanceof HTMLButtonElement) {
+    mode2pBtn.classList.toggle("is-on", !one);
+    mode2pBtn.setAttribute("aria-pressed", one ? "false" : "true");
+  }
+}
+
+function renderPlaylist() {
+  if (!(playlistEl instanceof HTMLOListElement)) return;
+  playlistEl.replaceChildren();
+  const titles = new Map(DEFAULT_PACK.map((def) => [def.id, def.title ?? def.prompt]));
+  const enabledCount = settings.games.filter((entry) => entry.enabled).length;
+  settings.games.forEach((entry, index) => {
+    const row = document.createElement("li");
+    row.className = entry.enabled ? "playlist-row" : "playlist-row is-off";
+    row.dataset.id = entry.id;
+
+    const pick = document.createElement("label");
+    pick.className = "playlist-pick";
+    const box = document.createElement("input");
+    box.type = "checkbox";
+    box.checked = entry.enabled;
+    box.disabled = entry.enabled && enabledCount <= 1;
+    box.addEventListener("change", () => {
+      applySettings(setPlaylistEnabled(settings, entry.id, box.checked));
+    });
+    const name = document.createElement("span");
+    name.textContent = titles.get(entry.id) ?? entry.id;
+    pick.append(box, name);
+
+    const up = document.createElement("button");
+    up.type = "button";
+    up.className = "btn ghost";
+    up.textContent = "Up";
+    up.disabled = index === 0;
+    up.setAttribute("aria-label", `Move ${name.textContent} up`);
+    up.addEventListener("click", () => {
+      applySettings(movePlaylistGame(settings, entry.id, -1));
+    });
+
+    const down = document.createElement("button");
+    down.type = "button";
+    down.className = "btn ghost";
+    down.textContent = "Down";
+    down.disabled = index === settings.games.length - 1;
+    down.setAttribute("aria-label", `Move ${name.textContent} down`);
+    down.addEventListener("click", () => {
+      applySettings(movePlaylistGame(settings, entry.id, 1));
+    });
+
+    row.append(pick, up, down);
+    playlistEl.append(row);
+  });
+}
+
 function onResize() {
   renderer.resize();
   renderer.draw(game.getState());
@@ -316,5 +415,7 @@ function onResize() {
 
 window.addEventListener("resize", onResize);
 renderer.resize();
+renderPlaylist();
+syncModeButtons();
 updateHud(game.getState());
 requestAnimationFrame(frame);

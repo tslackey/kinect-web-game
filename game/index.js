@@ -6,11 +6,14 @@
  * fire, stomp, orb, plus the simple sweep). Either pose map on the sample
  * can score — one webcam, up to two bodies. Curtain wipes live on the
  * session, not on each game. Start and game-over share an on-canvas
- * hand-hold Play mark; click Play stays as the fallback.
+ * hand-hold Play mark on the top-right playlist chrome; click Play
+ * stays as the fallback. 1P uses the first body; 2P is two bodies
+ * in one webcam frame.
  */
 
 import { posesFromSample } from "../input/poses.js";
 import { FOOT_STRIKER_NAMES, STRIKER_NAMES, listStrikers } from "./hit.js";
+import { clipSampleForMode } from "./playlist.js";
 import { createStartDwell, startHoldFor } from "./start-dwell.js";
 import { CATCH_FRUIT } from "./fruit.js";
 import { CLAP_NOW } from "./clap.js";
@@ -43,6 +46,7 @@ import { WAVE_HELLO } from "./wave.js";
  * @typedef {import("./microgame.js").MicrogameDef} MicrogameDef
  * @typedef {import("./microgame.js").MicrogamePlay} MicrogamePlay
  * @typedef {import("./orb.js").Target} Target
+ * @typedef {import("./playlist.js").PlaylistSettings} PlaylistSettings
  */
 
 export {
@@ -63,8 +67,24 @@ export {
   createTransition,
   easeInOutCubic,
   interstitialDuration,
+  placardScaleOf,
   timingsFor,
 } from "./transition.js";
+export {
+  PLAYLIST_KEY,
+  PLAYLIST_VERSION,
+  clipSampleForMode,
+  defaultPlaylist,
+  loadPlaylist,
+  movePlaylistGame,
+  normalizePlaylist,
+  packFromPlaylist,
+  playlistIsCustom,
+  savePlaylist,
+  sessionOptionsFromPlaylist,
+  setPlayerMode,
+  setPlaylistEnabled,
+} from "./playlist.js";
 export { DUCK_BEAM, DUCK_DURATION, BEAM_Y, DUCK_CLEARANCE } from "./duck.js";
 export { JUMP_BAR, JUMP_DURATION, BAR_Y, JUMP_SPIKE } from "./jump.js";
 export { STRIKE_POSE, POSE_DURATION, POSE_DWELL } from "./pose.js";
@@ -188,6 +208,7 @@ const LEAN_GAMES = new Set(["lean-away"]);
  * @property {number | null} holdLeft Seconds left in the prompt or result beat.
  * @property {Flash | null} flash Latest hit / miss / game-over cue for juice. Not a mechanic.
  * @property {import("./start-dwell.js").StartHold} startHold On-canvas dwell Play. Active on start / over only.
+ * @property {"1p" | "2p"} playerMode 2P is two bodies in one webcam frame.
  */
 
 /**
@@ -207,12 +228,19 @@ const LEAN_GAMES = new Set(["lean-away"]);
  *   pack?: MicrogameDef[],
  *   reducedMotion?: boolean,
  *   shuffle?: boolean,
+ *   playerMode?: "1p" | "2p",
  * }} [options]
  * @returns {{
  *   tick: (dt: number, sample: PoseSample) => GameState,
  *   getState: () => GameState,
  *   start: () => GameState,
  *   reset: () => GameState,
+ *   configure: (next?: {
+ *     pack?: MicrogameDef[],
+ *     games?: number,
+ *     shuffle?: boolean,
+ *     playerMode?: "1p" | "2p",
+ *   }) => GameState,
  * }}
  */
 export function createGame({
@@ -221,15 +249,20 @@ export function createGame({
   pack,
   reducedMotion = false,
   shuffle = true,
+  playerMode = "2p",
 } = {}) {
-  const sequence = sequenceFromPack(
-    pack ?? DEFAULT_PACK,
-    games,
+  let activePack = pack ?? DEFAULT_PACK;
+  let gameCount = games;
+  let shuffleOn = shuffle;
+  let mode = playerMode === "1p" ? "1p" : "2p";
+  let sequence = sequenceFromPack(
+    activePack,
+    gameCount,
     WATER_PLANT,
-    shuffle ? random : undefined,
+    shuffleOn ? random : undefined,
   );
-  const sessionGames = sequence.length;
-  const first = sequence[0] ?? WATER_PLANT;
+  let sessionGames = sequence.length;
+  let first = sequence[0] ?? WATER_PLANT;
   const transition = createTransition({ reducedMotion });
   const startDwell = createStartDwell();
   let nextFlashId = 1;
@@ -269,6 +302,7 @@ export function createGame({
     holdLeft: null,
     flash: null,
     startHold: startHoldFor("start"),
+    playerMode: mode,
   };
 
   /**
@@ -277,17 +311,19 @@ export function createGame({
    */
   function tick(dt, sample) {
     const step = Number.isFinite(dt) ? Math.min(0.05, Math.max(0, dt)) : 0;
+    const live = clipSampleForMode(sample, mode);
     state.elapsed += step;
     state.ticks += 1;
-    state.pose = sample;
-    state.inputSource = sample?.source ?? "idle";
+    state.pose = live;
+    state.inputSource = live?.source ?? "idle";
+    state.playerMode = mode;
 
-    const poses = posesFromSample(sample);
+    const poses = posesFromSample(live);
     const follow = 1 - Math.exp(-step * 8);
     followMarkers(state, poses, follow);
 
     if (state.phase === "start" || state.phase === "over") {
-      const hold = startDwell.update(step, sample, state.phase);
+      const hold = startDwell.update(step, live, state.phase);
       state.startHold = hold;
       driftLiveTarget(state, step);
       if (hold.fired) {
@@ -322,7 +358,7 @@ export function createGame({
     }
 
     if (state.phase === "playing" && current) {
-      const outcome = current.tick(step, sample);
+      const outcome = current.tick(step, live);
       syncView();
       if (isPlayOutcome(outcome) && outcome !== "playing") {
         resolveGame(outcome);
@@ -374,6 +410,43 @@ export function createGame({
     state.flash = null;
     state.markers = [];
     state.startHold = startHoldFor("start");
+    state.playerMode = mode;
+    return state;
+  }
+
+  /**
+   * Replace pack / mode on the start or over gate. Live play is a no-op.
+   *
+   * @param {{
+   *   pack?: MicrogameDef[],
+   *   games?: number,
+   *   shuffle?: boolean,
+   *   playerMode?: "1p" | "2p",
+   * }} [next]
+   */
+  function configure(next = {}) {
+    if (state.phase !== "start" && state.phase !== "over") {
+      return state;
+    }
+    if (Array.isArray(next.pack)) activePack = next.pack;
+    if (Number.isFinite(next.games)) gameCount = next.games;
+    if (typeof next.shuffle === "boolean") shuffleOn = next.shuffle;
+    if (next.playerMode === "1p" || next.playerMode === "2p") mode = next.playerMode;
+    sequence = sequenceFromPack(
+      activePack,
+      gameCount,
+      WATER_PLANT,
+      shuffleOn ? random : undefined,
+    );
+    sessionGames = sequence.length;
+    first = sequence[0] ?? WATER_PLANT;
+    state.games = sessionGames;
+    state.game = 1;
+    state.prompt = first.prompt;
+    state.lifetime = first.duration;
+    state.driftScale = driftScaleForGame(1);
+    state.backgroundId = first.backgroundId ?? first.id;
+    state.playerMode = mode;
     return state;
   }
 
@@ -485,7 +558,7 @@ export function createGame({
     };
   }
 
-  return { tick, getState, start, reset };
+  return { tick, getState, start, reset, configure };
 }
 
 /**

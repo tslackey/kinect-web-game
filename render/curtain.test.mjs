@@ -50,15 +50,21 @@ function mockCtx() {
     fillText(...args) {
       calls.push(["fillText", ...args]);
     },
+    measureText(text) {
+      calls.push(["measureText", text]);
+      return { width: String(text).length * 22 };
+    },
     save() {
       calls.push(["save"]);
     },
     restore() {
       calls.push(["restore"]);
     },
-    measureText(text) {
-      calls.push(["measureText", text]);
-      return { width: String(text).length * 22 };
+    translate(...args) {
+      calls.push(["translate", ...args]);
+    },
+    scale(...args) {
+      calls.push(["scale", ...args]);
     },
   };
 }
@@ -134,7 +140,11 @@ assert(
 );
 
 const card = mockCtx();
-drawPlacard(card, 800, 600, { ...up, cover: 0, phase: "hold", subtitle: "Get ready" }, false);
+drawPlacard(card, 800, 600, { ...up, cover: 0, phase: "hold", subtitle: "Get ready", placardScale: 1.04 }, false);
+assert(
+  card.calls.some((call) => call[0] === "scale"),
+  "reveal can apply a modest placard scale",
+);
 assert(hexFills(card.calls).includes(FACET.bone), "placard has a Bone title plate");
 assert(hexFills(card.calls).includes(FACET.ink), "placard frame casts a hard Ink plate");
 assert(

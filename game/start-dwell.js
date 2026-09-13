@@ -9,11 +9,10 @@ import { HIT_RADIUS, hitsTarget, listSampleStrikers } from "./hit.js";
 export const START_DWELL = 0.8;
 
 /**
- * On-canvas mark. Bottom-center, clear of the left HUD, the camera
- * chip, and the default orb / carry props so existing tests and live
- * hits do not start a session by accident.
+ * On-canvas mark. Top-right corner, on the playlist / 1P-2P chrome
+ * so the playfield center stays clear. Same dwell as before.
  */
-export const START_HOLD = { x: 0.5, y: 0.72 };
+export const START_HOLD = { x: 0.86, y: 0.14 };
 
 /** Same strike radius as wrist / pointer games. */
 export const START_HOLD_RADIUS = HIT_RADIUS;

@@ -27,10 +27,13 @@ function drain(game, seconds, sample = idle()) {
   }
 }
 
-assert(DEFAULT_CURTAIN_TIMINGS.down > 0, "curtain down has a duration");
-assert(DEFAULT_CURTAIN_TIMINGS.covered > 0, "the hidden swap beat is real");
-assert(DEFAULT_CURTAIN_TIMINGS.up > 0, "curtain up has a duration");
-assert(DEFAULT_CURTAIN_TIMINGS.hold > 0, "the placard can hold");
+assert(DEFAULT_CURTAIN_TIMINGS.down >= 0.7, "curtain down is a readable drop");
+assert(DEFAULT_CURTAIN_TIMINGS.covered >= 0.22, "the hidden swap beat is a real pause");
+assert(DEFAULT_CURTAIN_TIMINGS.up >= 0.65, "curtain up is a readable rise");
+assert(DEFAULT_CURTAIN_TIMINGS.hold >= 1.45, "the placard hold is long enough to read");
+assert(interstitialDuration() > 2.8, "the interstitial is clearly longer than the old ~2.3s wipe");
+assert(interstitialDuration() <= 4.2, "the beat is longer, not endless");
+assert(REDUCED_CURTAIN_TIMINGS.hold >= 0.95, "reduced-motion still holds a readable title");
 assert(
   Math.abs(PROMPT_DURATION - interstitialDuration()) < 1e-9,
   "the prompt beat is the curtain interstitial",
@@ -73,12 +76,18 @@ view = curtain.tick(DEFAULT_CURTAIN_TIMINGS.covered);
 assert(view.phase === "up" || view.placard === true, "curtain up reveals the placard");
 assert(view.placard === true, "title placard shows as the curtain draws back");
 
-const afterUp = curtain.tick(DEFAULT_CURTAIN_TIMINGS.up + DEFAULT_CURTAIN_TIMINGS.hold);
+const holdStart = curtain.tick(DEFAULT_CURTAIN_TIMINGS.up);
+assert(holdStart.phase === "hold" || holdStart.placard === true, "up hands off to the placard hold");
+assert(holdStart.placardScale > 1 && holdStart.placardScale <= 1.08, "reveal uses a modest scale pulse");
+
+const afterUp = curtain.tick(DEFAULT_CURTAIN_TIMINGS.hold);
 assert(afterUp.done === true, "hold then play — the interstitial completes");
 assert(afterUp.cover === 0, "the curtain is open when done");
+assert(Math.abs(afterUp.placardScale - 1) < 0.02, "the pulse settles before play");
 
 const reduced = createTransition({ reducedMotion: true });
 reduced.toNext({ title: "Jump bar", backgroundId: "bar" });
+assert(reduced.getView().placardScale === 1, "reduced-motion skips the scale pulse");
 const reducedDone = reduced.tick(interstitialDuration({ reducedMotion: true }) + 0.01);
 assert(reducedDone.done === true, "the short path still finishes");
 assert(reduced.getView().title === "Jump bar", "reduced-motion keeps the title");
