@@ -3,7 +3,7 @@
  * Each pose map is its own stick figure. Orb games draw the crystal;
  * water-the-plant draws pot, plant, and a pour cue; feed-the-pet draws
  * bowl, pet, and a feed cue; put-out-the-fire draws bucket, flame, and
- * a spray cue; stomp-the-bug draws a scurrying bug and a squash cue.
+ * a spray cue; stomp-the-bug draws a Facet low-poly bug and stomp cue.
  * Facet tokens stay.
  */
 
@@ -11,6 +11,16 @@ import { STICK_BONES } from "../input/joints.js";
 import { posesFromSample } from "../input/poses.js";
 import { HIT_RADIUS, TARGET_LIFETIME } from "../game/index.js";
 import { FACET, FACET_RGB, FACET_STEPS, PLAYER_RGB, hexToRgb } from "../theme/facet.js";
+import {
+  coralCrystal,
+  drawCrystal,
+  emberCrystal,
+  fillDiamond,
+  hexVertices,
+  mossCrystal,
+  strokeHex,
+} from "./facet.js";
+import { drawStompBug } from "./stomp.js";
 
 /**
  * @typedef {import("../game/index.js").GameState} GameState
@@ -144,16 +154,14 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
     drawCrystal(ctx, x, y, size, palette);
     ctx.globalAlpha = 1;
 
-    const hex = hexVertices(x, y, 36);
-    ctx.beginPath();
-    hex.forEach((point, index) => {
-      if (index === 0) ctx.moveTo(point[0], point[1]);
-      else ctx.lineTo(point[0], point[1]);
-    });
-    ctx.closePath();
-    ctx.strokeStyle = `rgba(${hexToRgb(palette.stroke).css}, ${gated || missed ? 0.35 : 0.9})`;
-    ctx.lineWidth = 3;
-    ctx.stroke();
+    strokeHex(
+      ctx,
+      x,
+      y,
+      36,
+      `rgba(${hexToRgb(palette.stroke).css}, ${gated || missed ? 0.35 : 0.9})`,
+      3,
+    );
 
     if (phase === "playing" && remaining < 1) {
       const ticks = Math.max(1, Math.ceil(6 * remaining));
@@ -641,55 +649,14 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
    * @param {{ squashed: boolean, squashing: boolean, missed: boolean, gated: boolean, elapsed: number }} look
    */
   function drawBug(bug, { squashed, squashing, missed, gated, elapsed }) {
-    const x = bug.x * width;
-    const y = bug.y * height;
-    const scurry = squashed ? 0 : Math.sin(elapsed * 8);
-    const scale = squashed ? 1.7 : 1.95;
-    const alpha = gated ? 0.55 : missed ? 0.5 : 1;
-    const body = missed ? FACET.coral : squashed ? FACET.moss : FACET.lilac;
-    const shell = missed ? FACET_STEPS.coralBone : squashed ? FACET_STEPS.mossBone : FACET_STEPS.lilacBone;
-    const leg = missed ? FACET.coral : squashed ? FACET.moss : FACET.ember;
     const zone = HIT_RADIUS * Math.min(width, height);
-
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    const ring = hexVertices(x, y, zone);
-    ctx.beginPath();
-    ring.forEach((point, index) => {
-      if (index === 0) ctx.moveTo(point[0], point[1]);
-      else ctx.lineTo(point[0], point[1]);
-    });
-    ctx.closePath();
-    ctx.strokeStyle = `rgba(${missed ? FACET_RGB.coral : squashed ? FACET_RGB.moss : FACET_RGB.lilac}, ${gated ? 0.25 : squashing ? 0.85 : 0.55})`;
-    ctx.lineWidth = squashing ? 3 : 2;
-    ctx.stroke();
-
-    if (squashed) {
-      ctx.beginPath();
-      ctx.ellipse(x, y + 4, 28 * scale, 8 * scale, 0, 0, Math.PI * 2);
-      ctx.fillStyle = body;
-      ctx.fill();
-      fillDiamond(ctx, x - 10 * scale, y + 2, 5 * scale, shell);
-      fillDiamond(ctx, x + 10 * scale, y + 2, 5 * scale, shell);
-      fillDiamond(ctx, x, y - 2, 4 * scale, FACET.moss);
-    } else {
-      const hop = scurry * 3;
-      fillDiamond(ctx, x, y + hop, 16 * scale, body);
-      fillDiamond(ctx, x + 14 * scale, y - 2 + hop, 8 * scale, shell);
-      fillDiamond(ctx, x + 20 * scale, y - 4 + hop, 3.2 * scale, FACET.ink);
-      ctx.strokeStyle = leg;
-      ctx.lineWidth = 3;
-      ctx.lineCap = "round";
-      for (const side of [-1, 1]) {
-        ctx.beginPath();
-        ctx.moveTo(x - 4 * scale, y + 4 + hop);
-        ctx.lineTo(x - 16 * scale, y + 12 * scale + side * 4 + hop);
-        ctx.moveTo(x + 2 * scale, y + 6 + hop);
-        ctx.lineTo(x + 12 * scale, y + 14 * scale + side * 5 + hop);
-        ctx.stroke();
-      }
-    }
-    ctx.restore();
+    drawStompBug(
+      ctx,
+      bug.x * width,
+      bug.y * height,
+      { squashed, squashing, missed, gated, elapsed },
+      zone,
+    );
   }
 
   /**
@@ -715,16 +682,7 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
     const pulse = 0.5 + 0.5 * Math.sin(elapsed * 4);
 
     const ring = 22 + pulse * 6;
-    const hex = hexVertices(x, y, ring);
-    ctx.beginPath();
-    hex.forEach((point, index) => {
-      if (index === 0) ctx.moveTo(point[0], point[1]);
-      else ctx.lineTo(point[0], point[1]);
-    });
-    ctx.closePath();
-    ctx.strokeStyle = `rgba(${color}, 0.45)`;
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    strokeHex(ctx, x, y, ring, `rgba(${color}, 0.45)`, 2);
 
     fillDiamond(ctx, x, y, 8, `rgb(${color})`);
     fillDiamond(ctx, x, y, 2.5, FACET.ink);
@@ -763,17 +721,14 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
     const hit = flash.kind === "hit";
     const color = hit ? FACET_RGB.moss : FACET_RGB.coral;
     const ring = reducedMotion ? 28 : 22 + t * 92;
-    const hex = hexVertices(x, y, ring);
-
-    ctx.beginPath();
-    hex.forEach((point, index) => {
-      if (index === 0) ctx.moveTo(point[0], point[1]);
-      else ctx.lineTo(point[0], point[1]);
-    });
-    ctx.closePath();
-    ctx.strokeStyle = `rgba(${color}, ${0.2 + fade * 0.75})`;
-    ctx.lineWidth = reducedMotion ? 3 : Math.max(1.5, 6 * fade);
-    ctx.stroke();
+    strokeHex(
+      ctx,
+      x,
+      y,
+      ring,
+      `rgba(${color}, ${0.2 + fade * 0.75})`,
+      reducedMotion ? 3 : Math.max(1.5, 6 * fade),
+    );
 
     if (hit && !reducedMotion) {
       for (let i = 0; i < 8; i += 1) {
@@ -818,94 +773,3 @@ function usable(joint) {
   return Boolean(joint && Number.isFinite(joint.x) && Number.isFinite(joint.y));
 }
 
-/**
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} x
- * @param {number} y
- * @param {number} r
- * @param {string} fill
- */
-function fillDiamond(ctx, x, y, r, fill) {
-  ctx.beginPath();
-  ctx.moveTo(x, y - r);
-  ctx.lineTo(x + r, y);
-  ctx.lineTo(x, y + r);
-  ctx.lineTo(x - r, y);
-  ctx.closePath();
-  ctx.fillStyle = fill;
-  ctx.fill();
-}
-
-/**
- * @param {number} cx
- * @param {number} cy
- * @param {number} r
- * @returns {number[][]}
- */
-function hexVertices(cx, cy, r) {
-  /** @type {number[][]} */
-  const points = [];
-  for (let i = 0; i < 6; i += 1) {
-    const angle = -Math.PI / 2 + (i * Math.PI) / 3;
-    points.push([cx + Math.cos(angle) * r, cy + Math.sin(angle) * r]);
-  }
-  return points;
-}
-
-/**
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} cx
- * @param {number} cy
- * @param {number} r
- * @param {{ top: string, topRight: string, right: string, bottom: string, left: string, topLeft: string }} palette
- */
-function drawCrystal(ctx, cx, cy, r, palette) {
-  const verts = hexVertices(cx, cy, r);
-  const center = [cx, cy];
-  const fills = [palette.top, palette.topRight, palette.right, palette.bottom, palette.left, palette.topLeft];
-  for (let i = 0; i < 6; i += 1) {
-    ctx.beginPath();
-    ctx.moveTo(center[0], center[1]);
-    ctx.lineTo(verts[i][0], verts[i][1]);
-    ctx.lineTo(verts[(i + 1) % 6][0], verts[(i + 1) % 6][1]);
-    ctx.closePath();
-    ctx.fillStyle = fills[i];
-    ctx.fill();
-  }
-}
-
-function mossCrystal() {
-  return {
-    top: FACET_STEPS.mossBone,
-    topRight: FACET.moss,
-    right: FACET.lilac,
-    bottom: FACET_STEPS.lilacInk,
-    left: FACET.sky,
-    topLeft: FACET_STEPS.skyInk,
-    stroke: FACET.moss,
-  };
-}
-
-function emberCrystal() {
-  return {
-    top: FACET_STEPS.emberBone,
-    topRight: FACET.ember,
-    right: FACET.lilac,
-    bottom: FACET_STEPS.emberInk,
-    left: FACET.sky,
-    topLeft: FACET_STEPS.skyInk,
-    stroke: FACET.ember,
-  };
-}
-
-function coralCrystal() {
-  return {
-    top: FACET_STEPS.coralBone,
-    topRight: FACET.coral,
-    right: FACET_STEPS.lilacInk,
-    bottom: FACET_STEPS.coralInk,
-    left: FACET.coral,
-    topLeft: FACET.ink,
-    stroke: FACET.coral,
-  };
-}
