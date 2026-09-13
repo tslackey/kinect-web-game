@@ -16,7 +16,9 @@ sticky-carry games (**Water plant**, **Feed pet**, **Douse fire**),
 **Stomp bug**, **Hit orb**, and the simple sweep: **Duck beam**,
 **Jump bar**, **Strike pose**, **Lean away**, **Clap now**, **Kick ball**,
 **Stretch wide**, **High five**, **Catch fruit**, **Wave hello**,
-**Squash it**. Placeholder Facet shapes are enough to teach the verb.
+**Squash it**. Between games, Facet theater drapes close, the next
+stage set swaps, then the curtain rises on a big title placard.
+Placeholder Facet shapes are enough to teach the simple-pack verbs.
 
 Each play window is 15–20 seconds (default 18s) so kids have time to
 find the body part and finish. Win or fail is timeout-or-success, not
@@ -53,7 +55,7 @@ camera hardware).
 | --- | --- |
 | `input/` | Pose sample from one webcam; else mouse or keyboard. A live camera pose suppresses stand-ins. `sample()` emits pose maps. |
 | `game/` | Microgame contract and session loop: curtain → 18s play → win/fail → next. `transition.toNext({ title, backgroundId })` is the shared wipe. Expanded pack + shuffle. |
-| `render/` | Stick figures, Facet carry/stomp art, placeholder simple-game marks, curtain panels, and the title placard. |
+| `render/` | Stick figures, Facet carry/stomp art, placeholder simple-game marks, theater curtains, title placard, and stage sets. |
 | `feel/` | Optional synthesized hit / miss audio. |
 | `main.js` | Wires the loop, camera prompt, Play, and sound toggle. |
 
