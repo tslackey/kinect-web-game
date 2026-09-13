@@ -121,10 +121,12 @@ missed.start();
 skipPrompt(missed);
 assert(missed.getState().phase === "playing", "play should be live after the prompt");
 assert(Math.abs((missed.getState().timeLeft ?? 0) - TARGET_LIFETIME) < 0.05, "the orb timer starts with the game");
+assert(TARGET_LIFETIME >= 15 && TARGET_LIFETIME <= 20, "the orb play window is 15–20s");
 const playingOrb = missed.getState().target;
 missed.tick(1 / 60, sample({ nose: { x: 0.05, y: 0.05, confidence: 1 } }));
 assert(missed.getState().phase === "playing", "a far pose is not a wrong-gesture fail");
-for (let i = 0; i < 240; i += 1) {
+const missSteps = Math.ceil((missed.getState().lifetime ?? TARGET_LIFETIME) / (1 / 60)) + 2;
+for (let i = 0; i < missSteps; i += 1) {
   missed.tick(1 / 60, sample({ nose: { x: 0.05, y: 0.05, confidence: 1 } }));
 }
 assert(missed.getState().phase === "result", "timeout without a hit should miss the game");

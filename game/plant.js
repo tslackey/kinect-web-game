@@ -3,10 +3,10 @@
  * Hover the pot, carry it over the plant, pour. Timeout is the only fail.
  */
 
-import { defineMicrogame } from "./microgame.js";
+import { defineMicrogame, PLAY_DURATION } from "./microgame.js";
 import { HIT_RADIUS, listIdentifiedStrikers } from "./hit.js";
 
-export const PLANT_DURATION = 5.5;
+export const PLANT_DURATION = PLAY_DURATION;
 export const PICKUP_DWELL = 0.4;
 export const POUR_DWELL = 0.5;
 

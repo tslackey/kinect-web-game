@@ -3,10 +3,10 @@
  * One success ends the game. Timeout is a miss. Idle / a far hand is not a fail.
  */
 
-import { defineMicrogame } from "./microgame.js";
+import { defineMicrogame, PLAY_DURATION } from "./microgame.js";
 import { hitsTarget, listSampleStrikers } from "./hit.js";
 
-export const TARGET_LIFETIME = 3.6;
+export const TARGET_LIFETIME = PLAY_DURATION;
 export const LIFETIME_STEP = 0.4;
 export const DRIFT_BOOST = 0.25;
 
@@ -34,7 +34,8 @@ const DRIFT_SPAN = 0.045;
  * @param {number} index 1-based game in the session
  */
 export function lifetimeForGame(index) {
-  return Math.max(1.6, TARGET_LIFETIME - Math.max(0, index - 1) * LIFETIME_STEP);
+  void index;
+  return PLAY_DURATION;
 }
 
 /**
@@ -98,8 +99,8 @@ export const ORB_HIT = defineMicrogame({
   id: "orb-hit",
   prompt: "Hit orb",
   duration: TARGET_LIFETIME,
-  create({ random, index }) {
-    const lifetime = lifetimeForGame(index);
+  create({ random, index, duration }) {
+    const lifetime = Number.isFinite(duration) && duration > 0 ? duration : lifetimeForGame(index);
     const driftScale = driftScaleForGame(index);
     let nextId = 1;
     /** @type {Target} */

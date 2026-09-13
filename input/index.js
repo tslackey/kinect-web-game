@@ -1,5 +1,6 @@
 /**
- * Input facade: up to two webcam streams, else pointer / keyboard stand-ins.
+ * Input facade: one webcam (up to two bodies in frame), else pointer /
+ * keyboard stand-ins. A live camera pose suppresses mouse and keyboard.
  * game/ and render/ only see PoseSample.poses — one map per person.
  */
 

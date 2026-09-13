@@ -221,7 +221,7 @@ function ledeFor(state) {
     if (state.gameId === "stomp-bug") return "Hover an ankle over the bug, or stomp through it.";
     return "One hit. Timer is live.";
   }
-  return "Open, allow the camera, play. Water the plant, feed the pet, douse the fire, stomp the bug, or hit the orb. Pointer and keyboard still play if the camera is off.";
+  return "Open, allow the camera, play. Water the plant, feed the pet, douse the fire, stomp the bug, or hit the orb. About 18 seconds per game. When a camera body is live, the camera is the only player. Pointer and keyboard still play if the camera is off.";
 }
 
 /**

@@ -1,6 +1,7 @@
 /**
  * Pose sample contract: up to two independent pose maps.
- * A webcam slot is one person. Pointers and keyboard fill missing cameras.
+ * A usable webcam body is the only player. Pointers and keyboard fill
+ * only when no camera pose is present. Two people share one frame.
  * Never flatten two bodies into one joint dict.
  */
 
@@ -53,7 +54,9 @@ export function posesFromSample(sample) {
 
 /**
  * Build a PoseSample from webcam pose maps plus pointer / keyboard stand-ins.
- * Empty slots fill from extra pointers, then the keyboard. Caps at two maps.
+ * A usable camera body suppresses mouse and keyboard. When no camera pose
+ * is present, empty slots fill from extra pointers, then the keyboard.
+ * Caps at two maps. Two people are two webcam maps, not mouse as player 2.
  *
  * @param {{
  *   webcamPoses?: (Record<string, Joint> | null | undefined)[],
@@ -74,29 +77,32 @@ export function assembleSample({
 
   for (let i = 0; i < MAX_POSES; i += 1) {
     const joints = webcamPoses[i];
-    if (joints && Object.keys(joints).length > 0) {
+    if (usablePose(joints)) {
       slots[i] = { id: POSE_IDS[i], source: WEBCAM_SOURCE, joints };
     }
   }
 
-  const standins = [];
-  for (const pointer of pointers) {
-    if (usable(pointer)) standins.push({ source: MOUSE_SOURCE, joint: pointer });
-  }
-  if (usable(keys)) {
-    standins.push({ source: KEYBOARD_SOURCE, joint: keys });
-  }
+  const cameraLive = slots.some((pose) => pose !== null);
+  if (!cameraLive) {
+    const standins = [];
+    for (const pointer of pointers) {
+      if (usable(pointer)) standins.push({ source: MOUSE_SOURCE, joint: pointer });
+    }
+    if (usable(keys)) {
+      standins.push({ source: KEYBOARD_SOURCE, joint: keys });
+    }
 
-  let standinIndex = 0;
-  for (let i = 0; i < MAX_POSES; i += 1) {
-    if (slots[i] || standinIndex >= standins.length) continue;
-    const standin = standins[standinIndex];
-    standinIndex += 1;
-    slots[i] = {
-      id: POSE_IDS[i],
-      source: standin.source,
-      joints: pointerToPose(standin.joint, { side: i }),
-    };
+    let standinIndex = 0;
+    for (let i = 0; i < MAX_POSES; i += 1) {
+      if (slots[i] || standinIndex >= standins.length) continue;
+      const standin = standins[standinIndex];
+      standinIndex += 1;
+      slots[i] = {
+        id: POSE_IDS[i],
+        source: standin.source,
+        joints: pointerToPose(standin.joint, { side: i }),
+      };
+    }
   }
 
   const poses = slots.filter((pose) => pose !== null);
@@ -180,4 +186,11 @@ function sampleSource(poses) {
  */
 function usable(joint) {
   return Boolean(joint && Number.isFinite(joint.x) && Number.isFinite(joint.y));
+}
+
+/**
+ * @param {Record<string, Joint> | null | undefined} joints
+ */
+function usablePose(joints) {
+  return Boolean(joints && typeof joints === "object" && Object.keys(joints).length > 0);
 }

@@ -62,7 +62,7 @@ assert(isMicrogameDef(WATER_PLANT), "water the plant must satisfy the microgame 
 assert(WATER_PLANT.prompt === "Water plant", "on-screen prompt is Water plant");
 assert(WATER_PLANT.prompt.split(/\s+/).length <= 2, "prompt stays at two words");
 assert(WATER_PLANT.duration === PLANT_DURATION, "pack duration should match the plant timer");
-assert(PLANT_DURATION >= 5 && PLANT_DURATION <= 6, "duration is about 5–6s");
+assert(PLANT_DURATION >= 15 && PLANT_DURATION <= 20, "duration is the 15–20s kids-feel window");
 assert(DEFAULT_PACK[0].id === "water-plant", "the session pack should open on this game");
 assert(DEFAULT_PACK.some((def) => def.id === "feed-pet"), "feed the pet should join the pack");
 assert(DEFAULT_PACK.some((def) => def.id === "douse-fire"), "put out the fire should join the pack");
@@ -76,7 +76,7 @@ const startView = play.getView();
 assert(startView.scene?.kind === "water-plant", "the view should expose the plant scene");
 assert(startView.scene.pot.held === false, "the pot starts on the field");
 assert(startView.scene.plant.stage === 0, "the plant starts small");
-assert(startView.timeLeft != null && startView.timeLeft > 5, "the plant timer should be live");
+assert(startView.timeLeft != null && startView.timeLeft > 15, "the plant timer should be live");
 
 const pot = startView.scene.pot;
 const plant = startView.scene.plant;

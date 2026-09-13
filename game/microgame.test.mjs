@@ -4,6 +4,7 @@ import {
   GAME_COUNT,
   MICROGAME_OUTCOMES,
   ORB_HIT,
+  PLAY_DURATION,
   PROMPT_DURATION,
   RESULT_DURATION,
   STOMP_BUG,
@@ -36,16 +37,19 @@ assert(ORB_HIT.duration > 0, "a microgame must ship a duration");
 assert(typeof ORB_HIT.create === "function", "a microgame must ship create()");
 assert(isMicrogameDef(WATER_PLANT), "water the plant should satisfy the contract");
 assert(WATER_PLANT.prompt === "Water plant", "the plant prompt stays at two words");
-assert(WATER_PLANT.duration >= 5 && WATER_PLANT.duration <= 6, "plant duration should be about 5–6s");
+assert(PLAY_DURATION >= 15 && PLAY_DURATION <= 20, "the shared play window is 15–20s");
+assert(PLAY_DURATION === 18, "the kids-feel default is 18s");
+assert(WATER_PLANT.duration === PLAY_DURATION, "plant duration should be the 15–20s default");
 assert(isMicrogameDef(FEED_PET), "feed the pet should satisfy the contract");
 assert(FEED_PET.prompt === "Feed pet", "the pet prompt stays at two words");
-assert(FEED_PET.duration >= 5 && FEED_PET.duration <= 6, "pet duration should be about 5–6s");
+assert(FEED_PET.duration === PLAY_DURATION, "pet duration should be the 15–20s default");
 assert(isMicrogameDef(DOUSE_FIRE), "put out the fire should satisfy the contract");
 assert(DOUSE_FIRE.prompt === "Douse fire", "the fire prompt stays at two words");
-assert(DOUSE_FIRE.duration >= 5 && DOUSE_FIRE.duration <= 6, "fire duration should be about 5–6s");
+assert(DOUSE_FIRE.duration === PLAY_DURATION, "fire duration should be the 15–20s default");
 assert(isMicrogameDef(STOMP_BUG), "stomp the bug should satisfy the contract");
 assert(STOMP_BUG.prompt === "Stomp bug", "the bug prompt stays at two words");
-assert(STOMP_BUG.duration >= 4 && STOMP_BUG.duration <= 5, "bug duration should be about 4–5s");
+assert(STOMP_BUG.duration === PLAY_DURATION, "bug duration should be the 15–20s default");
+assert(ORB_HIT.duration === PLAY_DURATION, "orb duration should be the 15–20s default");
 
 const play = ORB_HIT.create({ random: () => 0.4, index: 1, duration: ORB_HIT.duration });
 play.start();

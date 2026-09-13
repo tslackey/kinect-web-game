@@ -4,10 +4,10 @@
  * Same sticky-carry + dual-zone grammar as Water the plant and Feed the pet.
  */
 
-import { defineMicrogame } from "./microgame.js";
+import { defineMicrogame, PLAY_DURATION } from "./microgame.js";
 import { HIT_RADIUS, listIdentifiedStrikers } from "./hit.js";
 
-export const FIRE_DURATION = 5.5;
+export const FIRE_DURATION = PLAY_DURATION;
 export const FIRE_PICKUP_DWELL = 0.4;
 export const DOUSE_DWELL = 0.5;
 
