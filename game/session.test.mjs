@@ -5,6 +5,7 @@ import {
   ORB_HIT,
   PROMPT_DURATION,
   RESULT_DURATION,
+  STOMP_BUG,
   WATER_PLANT,
   createGame,
   lifetimeForGame,
@@ -54,13 +55,16 @@ function missCurrent(game) {
   }
 }
 
+assert(GAME_COUNT >= 3 && GAME_COUNT <= 5, "the default session stays a short sequence");
+
 const landed = createGame({
   random: cyclingRandom([0.2, 0.35, 0.8, 0.15, 0.4, 0.6]),
+  games: 3,
   pack: [ORB_HIT],
 });
 assert(landed.getState().phase === "start", "a new game should wait on the start screen");
 assert(landed.getState().game === 1, "the start screen is game 1");
-assert(landed.getState().games === GAME_COUNT, "default session is a short run of games");
+assert(landed.getState().games === 3, "a short session is a run of games");
 assert(landed.getState().round === undefined, "the session is games, not 3 rounds of one orb");
 
 landed.start();
@@ -159,5 +163,11 @@ fireOnly.start();
 assert(fireOnly.getState().prompt === DOUSE_FIRE.prompt, "a fire-only pack should flash Douse fire");
 assert(fireOnly.getState().gameId === "douse-fire", "Put out the fire is a pack entry");
 assert(fireOnly.getState().scene?.kind === "douse-fire", "the fire scene should be on the session view");
+
+const bugOnly = createGame({ random: () => 0.2, pack: [STOMP_BUG], games: 1 });
+bugOnly.start();
+assert(bugOnly.getState().prompt === STOMP_BUG.prompt, "a bug-only pack should flash Stomp bug");
+assert(bugOnly.getState().gameId === "stomp-bug", "Stomp the bug is a pack entry");
+assert(bugOnly.getState().scene?.kind === "stomp-bug", "the bug scene should be on the session view");
 
 console.log("game/session.test.mjs passed");

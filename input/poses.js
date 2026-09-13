@@ -109,8 +109,8 @@ export function assembleSample({
 
 /**
  * Turn a pointer or key stand-in into a readable stick figure.
- * The contact point is both `pointer` and `right_wrist` so the existing
- * verb still scores.
+ * The contact point is `pointer`, `right_wrist`, and `right_ankle` so
+ * hand verbs and the feet stand-in both score.
  *
  * @param {Joint} pointer
  * @param {{ side?: number }} [options]
@@ -143,7 +143,7 @@ export function pointerToPose(pointer, { side = 0 } = {}) {
     left_knee: joint(spineX - 0.04, kneeY),
     right_knee: joint(spineX + 0.04, kneeY),
     left_ankle: joint(spineX - 0.045, ankleY),
-    right_ankle: joint(spineX + 0.045, ankleY),
+    right_ankle: joint(x, y),
     pointer: joint(x, y),
   };
 }

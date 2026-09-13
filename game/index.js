@@ -3,12 +3,12 @@
  * prompt → one game on a short timer → win or fail → next.
  *
  * Water the plant is game 1. Feed the pet is game 2. Put out the fire is
- * game 3. Orb-hit stays in the pack. Either pose map on the sample can
- * score — one webcam, up to two bodies.
+ * game 3. Stomp the bug is game 4. Orb-hit stays in the pack. Either pose
+ * map on the sample can score — one webcam, up to two bodies.
  */
 
 import { posesFromSample } from "../input/poses.js";
-import { listStrikers } from "./hit.js";
+import { FOOT_STRIKER_NAMES, STRIKER_NAMES, listStrikers } from "./hit.js";
 import {
   GAME_COUNT,
   PROMPT_DURATION,
@@ -20,6 +20,7 @@ import { ORB_HIT, driftOrb, driftScaleForGame } from "./orb.js";
 import { WATER_PLANT } from "./plant.js";
 import { FEED_PET } from "./pet.js";
 import { DOUSE_FIRE } from "./fire.js";
+import { STOMP_BUG, driftBug } from "./bug.js";
 
 /**
  * @typedef {import("../input/index.js").PoseSample} PoseSample
@@ -41,6 +42,7 @@ export {
   sequenceFromPack,
 } from "./microgame.js";
 export {
+  FOOT_STRIKER_NAMES,
   HIT_RADIUS,
   STRIKER_NAMES,
   hitsTarget,
@@ -79,9 +81,17 @@ export {
   FIRE_PICKUP_DWELL,
   layoutFire,
 } from "./fire.js";
+export {
+  BUG_DURATION,
+  STOMP_BUG,
+  STOMP_DRIVE,
+  STOMP_DWELL,
+  driftBug,
+  makeBug,
+} from "./bug.js";
 
-/** Default session pack. Plant, pet, fire; orb-hit stays in the run. */
-export const DEFAULT_PACK = [WATER_PLANT, FEED_PET, DOUSE_FIRE, ORB_HIT];
+/** Default session pack. Plant, pet, fire, stomp; orb-hit stays in the run. */
+export const DEFAULT_PACK = [WATER_PLANT, FEED_PET, DOUSE_FIRE, STOMP_BUG, ORB_HIT];
 
 /**
  * @typedef {object} Marker
@@ -108,7 +118,7 @@ export const DEFAULT_PACK = [WATER_PLANT, FEED_PET, DOUSE_FIRE, ORB_HIT];
  * @property {number} lifetime Seconds the current game stays playable.
  * @property {number} driftScale
  * @property {Target} target
- * @property {import("./plant.js").WaterScene | import("./pet.js").FeedScene | import("./fire.js").FireScene | null} [scene] Live plant, pet, or fire slice, or null for orb games.
+ * @property {import("./plant.js").WaterScene | import("./pet.js").FeedScene | import("./fire.js").FireScene | import("./bug.js").BugScene | null} [scene] Live plant, pet, fire, or bug slice, or null for orb games.
  * @property {number | null} timeLeft Seconds left on the live game, or null during prompt.
  * @property {number | null} holdLeft Seconds left in the prompt or result beat.
  * @property {Flash | null} flash Latest hit / miss / game-over cue for juice. Not a mechanic.
@@ -191,12 +201,12 @@ export function createGame({ random = Math.random, games = GAME_COUNT, pack } = 
     followMarkers(state, poses, follow);
 
     if (state.phase === "start" || state.phase === "over") {
-      driftOrb(state.target, step);
+      driftLiveTarget(state, step);
       return state;
     }
 
     if (state.phase === "prompt") {
-      driftOrb(state.target, step);
+      driftLiveTarget(state, step);
       state.holdLeft = Math.max(0, (state.holdLeft ?? PROMPT_DURATION) - step);
       if (state.holdLeft <= 0) {
         beginPlay();
@@ -205,7 +215,7 @@ export function createGame({ random = Math.random, games = GAME_COUNT, pack } = 
     }
 
     if (state.phase === "result") {
-      driftOrb(state.target, step);
+      driftLiveTarget(state, step);
       state.holdLeft = Math.max(0, (state.holdLeft ?? RESULT_DURATION) - step);
       if (state.holdLeft <= 0) {
         advanceAfterResult();
@@ -351,8 +361,9 @@ export function createGame({ random = Math.random, games = GAME_COUNT, pack } = 
  * @param {Target | null} target
  * @returns {Joint | null}
  */
-function pickAim(joints, target) {
-  const strikers = listStrikers(joints);
+function pickAim(joints, target, gameId) {
+  const names = gameId === "stomp-bug" ? FOOT_STRIKER_NAMES : STRIKER_NAMES;
+  const strikers = listStrikers(joints, names);
   if (strikers.length > 0) {
     return nearest(strikers, target ?? strikers[0]);
   }
@@ -385,7 +396,7 @@ function followMarkers(state, poses, follow) {
       x: state.marker.x,
       y: state.marker.y,
     };
-    const aim = pickAim(pose.joints, state.target) ?? idleAim(state.elapsed + i * 0.7);
+    const aim = pickAim(pose.joints, state.target, state.gameId) ?? idleAim(state.elapsed + i * 0.7);
     prev.x += (aim.x - prev.x) * follow;
     prev.y += (aim.y - prev.y) * follow;
     next.push(prev);
@@ -411,6 +422,18 @@ function nearest(points, dest) {
     }
   }
   return best;
+}
+
+/**
+ * @param {GameState} state
+ * @param {number} step
+ */
+function driftLiveTarget(state, step) {
+  if (state.scene?.kind === "stomp-bug") {
+    driftBug(state.target, step);
+    return;
+  }
+  driftOrb(state.target, step);
 }
 
 /**

@@ -88,6 +88,7 @@ assert(fromPoses.length === 2, "posesFromSample keeps two maps");
 const figure = pointerToPose({ x: 0.5, y: 0.4, confidence: 1 });
 assert(figure.pointer.x === 0.5, "pointer joint is the contact point");
 assert(figure.right_wrist.y === 0.4, "right wrist sits on the contact point");
+assert(figure.right_ankle.x === 0.5 && figure.right_ankle.y === 0.4, "right ankle sits on the contact point as a foot stand-in");
 assert(figure.left_shoulder && figure.right_hip, "stand-in has a body");
 
 assert(pickSecondDeviceId(null, "a") === null, "missing device lists yield no second camera");
