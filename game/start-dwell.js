@@ -9,10 +9,10 @@ import { HIT_RADIUS, hitsTarget, listSampleStrikers } from "./hit.js";
 export const START_DWELL = 0.8;
 
 /**
- * On-canvas mark. Top-right corner, on the playlist / 1P-2P chrome
- * so the playfield center stays clear. Same dwell as before.
+ * On-canvas mark. Top-right, just left of the HTML playlist panel so
+ * the fill is visible and the playfield center stays clear.
  */
-export const START_HOLD = { x: 0.86, y: 0.14 };
+export const START_HOLD = { x: 0.64, y: 0.14 };
 
 /** Same strike radius as wrist / pointer games. */
 export const START_HOLD_RADIUS = HIT_RADIUS;

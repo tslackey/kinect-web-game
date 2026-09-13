@@ -383,7 +383,7 @@ body.is-between .camera-invite {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
-  width: min(22rem, calc(100vw - 2rem));
+  width: min(19rem, calc(100vw - 2rem));
   max-height: min(72vh, 38rem);
   overflow: auto;
   padding: 0.8rem 0.9rem 0.95rem;
