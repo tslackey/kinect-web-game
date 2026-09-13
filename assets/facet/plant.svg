@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet plant">
+  <!-- 128 grid. Grown mark. Light from upper-left. -->
+  <polygon fill="#5c7548" points="52,111 68,83 72,110"/>
+  <polygon fill="#9ece6a" points="68,83 99,98 72,110"/>
+  <polygon fill="#b6d78d" points="51,95 68,83 82,98"/>
+  <polygon fill="#5c7548" points="58,105 72,110 85,103"/>
+
+  <polygon fill="#b6d78d" points="58,101 68,13 68,101"/>
+  <polygon fill="#749554" points="68,101 68,13 74,101"/>
+
+  <polygon fill="#749554" points="61,67 20,84 54,84"/>
+  <polygon fill="#b6d78d" points="61,67 31,47 54,84"/>
+  <polygon fill="#749554" points="75,61 116,78 82,81"/>
+  <polygon fill="#9ece6a" points="75,61 105,40 82,81"/>
+  <polygon fill="#749554" points="63,40 31,50 56,54"/>
+  <polygon fill="#b6d78d" points="63,40 41,20 56,54"/>
+  <polygon fill="#9ece6a" points="73,37 105,47 80,50"/>
+  <polygon fill="#b6d78d" points="73,37 95,16 80,50"/>
+
+  <polygon fill="#c8adf3" points="68,3 49,32 68,32"/>
+  <polygon fill="#bb9af7" points="68,3 87,32 68,32"/>
+  <polygon fill="#9ece6a" points="87,32 87,55 68,32"/>
+  <polygon fill="#749554" points="87,55 68,64 68,32"/>
+  <polygon fill="#b6d78d" points="68,64 49,55 68,32"/>
+  <polygon fill="#9ece6a" points="49,55 49,32 68,32"/>
+</svg>

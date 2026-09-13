@@ -45,7 +45,7 @@ camera hardware).
 | --- | --- |
 | `input/` | Pose sample from one webcam; else mouse or keyboard. `sample()` emits pose maps. |
 | `game/` | Microgame contract and session loop: prompt → play → win/fail → next. Water the plant, Feed the pet, Put out the fire, then orb-hit. |
-| `render/` | Draws one or two stick figures, pot/plant, bowl/pet, bucket/fire or the orb, markers, and hit flashes. |
+| `render/` | Stick figures, Facet low-poly plant/can, pet/bowl, flame/bucket or the orb, markers, and hit flashes. |
 | `feel/` | Optional synthesized hit / miss audio. |
 | `main.js` | Wires the loop, camera prompt, Play, and sound toggle. |
 

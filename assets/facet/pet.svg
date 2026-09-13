@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet pet">
+  <!-- 128 grid. Happy mark. Light from upper-left. -->
+  <polygon fill="#749554" points="41,76 64,55 64,103"/>
+  <polygon fill="#9ece6a" points="64,55 94,73 64,103"/>
+  <polygon fill="#b6d78d" points="52,82 64,67 78,85"/>
+
+  <polygon fill="#b6d78d" points="46,55 64,18 64,58"/>
+  <polygon fill="#749554" points="64,18 84,52 64,58"/>
+  <polygon fill="#b6d78d" points="55,52 64,62 75,52"/>
+  <polygon fill="#ff9e64" points="61,59 64,66 68,59"/>
+
+  <polygon fill="#fcb588" points="43,27 35,0 59,21"/>
+  <polygon fill="#b67450" points="43,27 59,21 55,36"/>
+  <polygon fill="#ff9e64" points="76,24 90,2 67,21"/>
+  <polygon fill="#b67450" points="76,24 67,21 73,36"/>
+  <polygon fill="#ff9e64" points="64,18 55,3 73,4"/>
+
+  <polygon fill="#9ece6a" points="88,70 110,49 91,79"/>
+  <polygon fill="#b6d78d" points="91,79 110,49 107,36"/>
+
+  <polygon fill="#1a1b26" points="58,38 61,41 55,41 58,44"/>
+  <polygon fill="#1a1b26" points="72,39 75,42 69,42 72,45"/>
+</svg>
