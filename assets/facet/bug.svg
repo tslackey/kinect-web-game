@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet bug">
+  <!-- 128 grid. Light from upper-left. Flat fills only. -->
+  <polygon fill="#c8adf3" points="23,66 50,31 62,70"/>
+  <polygon fill="#8771b4" points="23,66 62,70 31,93"/>
+  <polygon fill="#8771b4" points="23,66 8,78 31,93"/>
+  <polygon fill="#c8adf3" points="31,58 47,39 58,66"/>
+  <polygon fill="#bb9af7" points="50,31 85,43 62,70"/>
+  <polygon fill="#bb9af7" points="85,43 89,74 62,70"/>
+  <polygon fill="#8771b4" points="62,70 89,74 78,93"/>
+  <polygon fill="#8771b4" points="62,70 78,93 31,93"/>
+  <polygon fill="#c8adf3" points="54,54 78,58 66,78"/>
+  <polygon fill="#c8adf3" points="85,43 108,47 89,66"/>
+  <polygon fill="#bb9af7" points="89,66 108,47 112,78"/>
+  <polygon fill="#8771b4" points="89,66 112,78 85,85"/>
+  <polygon fill="#1a1b26" points="93,50 101,56 93,62"/>
+  <polygon fill="#1a1b26" points="93,50 93,62 86,56"/>
+  <polygon fill="#ff9e64" points="105,54 120,58 108,66"/>
+  <polygon fill="#ff9e64" points="105,74 120,81 108,78"/>
+  <polygon fill="#fcb588" points="97,43 85,16 101,20"/>
+  <polygon fill="#ff9e64" points="101,47 108,20 112,39"/>
+  <polygon fill="#fcb588" points="35,81 39,74 23,108"/>
+  <polygon fill="#ff9e64" points="39,74 50,85 23,108"/>
+  <polygon fill="#ff9e64" points="58,85 62,74 47,112"/>
+  <polygon fill="#b67450" points="62,74 74,85 47,112"/>
+  <polygon fill="#fcb588" points="81,81 85,70 74,108"/>
+  <polygon fill="#b67450" points="85,70 97,85 74,108"/>
+  <polygon fill="#b67450" points="43,89 54,85 50,105"/>
+  <polygon fill="#ff9e64" points="70,89 81,85 78,105"/>
+</svg>
