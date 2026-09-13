@@ -105,7 +105,7 @@ function drawBeam(ctx, width, height, y, ducked, missed) {
 
   const left = width * 0.1;
   const right = width * 0.9;
-  const thick = 14 * s;
+  const thick = 18 * s;
   fillTri(ctx, [left, py - thick], [right, py - thick * 0.45], [left, py], body.lit);
   fillTri(ctx, [left, py], [right, py - thick * 0.45], [right, py + thick * 0.55], body.mid);
   fillTri(ctx, [left, py], [right, py + thick * 0.55], [left, py + thick], body.shade);
@@ -113,10 +113,10 @@ function drawBeam(ctx, width, height, y, ducked, missed) {
     fillTri(ctx, [width * 0.42, py - thick * 0.2], [width * 0.58, py - thick * 0.2], [width * 0.5, py + thick * 0.15], FACET.bone);
   }
 
-  drawFaces(ctx, left, py, 2.1 * s, beamPylonFaces(body, 1, missed));
-  drawFaces(ctx, right, py, 2.1 * s, beamPylonFaces(body, -1, missed));
-  drawHitRing(ctx, left, py, 22 * s, rgb, ducked ? 0.75 : 0.45, ducked ? 3 : 2);
-  drawHitRing(ctx, right, py, 22 * s, rgb, ducked ? 0.75 : 0.45, ducked ? 3 : 2);
+  drawFaces(ctx, left, py, 2.7 * s, beamPylonFaces(body, 1, missed));
+  drawFaces(ctx, right, py, 2.7 * s, beamPylonFaces(body, -1, missed));
+  drawHitRing(ctx, left, py, 26 * s, rgb, ducked ? 0.75 : 0.45, ducked ? 3 : 2);
+  drawHitRing(ctx, right, py, 26 * s, rgb, ducked ? 0.75 : 0.45, ducked ? 3 : 2);
 }
 
 /**
@@ -157,14 +157,14 @@ function drawBar(ctx, width, height, y, cleared, missed) {
   const post = simpleShade({ missed, ready: cleared, hue: "moss" });
   const left = width * 0.2;
   const right = width * 0.8;
-  const thick = 11 * s;
+  const thick = 14 * s;
 
   fillTri(ctx, [left, py - thick], [right, py - thick * 0.4], [left, py + 2], body.lit);
   fillTri(ctx, [left, py + 2], [right, py - thick * 0.4], [right, py + thick], body.shade);
   fillTri(ctx, [left + 8, py - 4], [right - 8, py - 2], [width * 0.5, py + 6], body.mid);
 
-  drawFaces(ctx, left, py, 2.2 * s, hurdlePostFaces(post, 1, missed));
-  drawFaces(ctx, right, py, 2.2 * s, hurdlePostFaces(post, -1, missed));
+  drawFaces(ctx, left, py, 2.7 * s, hurdlePostFaces(post, 1, missed));
+  drawFaces(ctx, right, py, 2.7 * s, hurdlePostFaces(post, -1, missed));
 }
 
 /**
@@ -199,12 +199,12 @@ export function hurdlePostFaces(post, fx, missed) {
  */
 function drawPoseAnchor(ctx, width, height, x, y, held, missed) {
   const s = unit(width, height);
-  const zone = 28 * s;
+  const zone = 32 * s;
   const body = simpleShade({ missed, ready: held, hue: "lilac" });
   const rgb = missed ? FACET_RGB.coral : held ? FACET_RGB.moss : FACET_RGB.lilac;
   drawHitRing(ctx, x, y, zone, rgb, held ? 0.8 : 0.5, held ? 3 : 2);
-  drawFaces(ctx, x, y, 1.7 * s, poseStarFaces(body, missed));
-  drawCrystal(ctx, x, y, 11 * s, held || missed ? (missed ? coralCue() : mossCue()) : lilacCue());
+  drawFaces(ctx, x, y, 2.2 * s, poseStarFaces(body, missed));
+  drawCrystal(ctx, x, y, 14 * s, held || missed ? (missed ? coralCue() : mossCue()) : lilacCue());
 }
 
 /**
@@ -240,7 +240,7 @@ function drawLean(ctx, width, height, side, leaned, missed) {
   const x = side === "left" ? width * 0.18 : width * 0.82;
   const y = height * 0.5;
   const body = simpleShade({ missed, ready: leaned, hue: "ember" });
-  drawFaces(ctx, x, y, 3.1 * s, leanChevronFaces(body, fx, missed));
+  drawFaces(ctx, x, y, 3.8 * s, leanChevronFaces(body, fx, missed));
 }
 
 /**
@@ -278,12 +278,12 @@ function drawClap(ctx, width, height, cue, clapped, missed, elapsed) {
   const x = width * 0.5;
   const y = height * 0.42;
   const body = simpleShade({ missed, ready: clapped, hue: cue ? "ember" : "lilac" });
-  const gap = clapped ? 10 * s : cue ? 22 * s : 34 * s;
+  const gap = clapped ? 14 * s : cue ? 28 * s : 40 * s;
   const pulse = cue && !clapped ? 1 + 0.06 * Math.sin(elapsed * 10) : 1;
   const rgb = missed ? FACET_RGB.coral : clapped ? FACET_RGB.moss : cue ? FACET_RGB.ember : FACET_RGB.lilac;
-  drawHitRing(ctx, x, y, (cue ? 40 : 28) * s * pulse, rgb, cue ? 0.7 : 0.4, cue ? 3 : 2);
-  drawFaces(ctx, x - gap, y, 2.15 * s * pulse, clapHandFaces(body, 1, missed));
-  drawFaces(ctx, x + gap, y, 2.15 * s * pulse, clapHandFaces(body, -1, missed));
+  drawHitRing(ctx, x, y, (cue ? 44 : 30) * s * pulse, rgb, cue ? 0.7 : 0.4, cue ? 3 : 2);
+  drawFaces(ctx, x - gap, y, 2.7 * s * pulse, clapHandFaces(body, 1, missed));
+  drawFaces(ctx, x + gap, y, 2.7 * s * pulse, clapHandFaces(body, -1, missed));
 }
 
 /**
@@ -298,14 +298,15 @@ export function clapHandFaces(body, fx, missed) {
   const flip = (pts) => pts.map(([x, y]) => /** @type {Pt} */ ([x * fx, y]));
   const nail = missed ? FACET.coral : FACET.bone;
   return [
-    { pts: flip([[-8, -8], [10, -6], [6, 12]]), fill: body.lit },
-    { pts: flip([[-8, -8], [6, 12], [-12, 8]]), fill: body.shade },
-    { pts: flip([[6, -16], [16, -20], [12, -4]]), fill: body.lit },
-    { pts: flip([[10, -6], [22, -8], [12, 2]]), fill: body.mid },
-    { pts: flip([[10, 2], [20, 8], [8, 10]]), fill: body.mid },
-    { pts: flip([[6, 10], [14, 18], [2, 16]]), fill: body.shade },
-    { pts: flip([[-10, -2], [-20, 2], [-6, 8]]), fill: body.lit },
-    { pts: flip([[14, -18], [18, -20], [16, -12]]), fill: nail },
+    { pts: flip([[-14, -4], [6, -8], [4, 14]]), fill: body.lit },
+    { pts: flip([[-14, -4], [4, 14], [-16, 12]]), fill: body.shade },
+    { pts: flip([[-16, 8], [-6, 12], [-18, 22]]), fill: body.mid },
+    { pts: flip([[4, -18], [14, -26], [10, -6]]), fill: body.lit },
+    { pts: flip([[8, -8], [22, -12], [12, 2]]), fill: body.mid },
+    { pts: flip([[8, 2], [22, 6], [10, 12]]), fill: body.mid },
+    { pts: flip([[6, 10], [16, 20], [2, 16]]), fill: body.shade },
+    { pts: flip([[-12, -8], [-24, -14], [-8, 2]]), fill: body.lit },
+    { pts: flip([[12, -24], [16, -26], [14, -16]]), fill: nail },
   ];
 }
 
@@ -325,10 +326,10 @@ function drawBall(ctx, width, height, x, y, kicking, missed, elapsed) {
   const body = simpleShade({ missed, ready: kicking, hue: "sky" });
   const rgb = missed ? FACET_RGB.coral : kicking ? FACET_RGB.moss : FACET_RGB.sky;
   drawHitRing(ctx, x, y, zone, rgb, kicking ? 0.85 : 0.5, kicking ? 3 : 2);
-  drawFaces(ctx, x, y, 1.85 * s, ballFaces(body, missed));
+  drawFaces(ctx, x, y, 2.4 * s, ballFaces(body, missed));
   if (kicking) {
-    drawFaces(ctx, x, y, 1.8 * s, impactFaces(missed, elapsed));
-    drawFaces(ctx, x - 10 * s, y + 8 * s, 1.35 * s, stompFootFaces(missed));
+    drawFaces(ctx, x, y, 2 * s, impactFaces(missed, elapsed));
+    drawFaces(ctx, x - 12 * s, y + 10 * s, 1.5 * s, stompFootFaces(missed));
   }
 }
 
@@ -368,8 +369,8 @@ function drawStretchPost(ctx, width, height, x, y, held, missed, fx) {
   const s = unit(width, height);
   const body = simpleShade({ missed, ready: held, hue: "sky" });
   const rgb = missed ? FACET_RGB.coral : held ? FACET_RGB.moss : FACET_RGB.sky;
-  drawHitRing(ctx, x, y, 26 * s, rgb, held ? 0.8 : 0.45, held ? 3 : 2);
-  drawFaces(ctx, x, y, 2 * s, stretchPostFaces(body, fx, missed));
+  drawHitRing(ctx, x, y, 30 * s, rgb, held ? 0.8 : 0.45, held ? 3 : 2);
+  drawFaces(ctx, x, y, 2.6 * s, stretchPostFaces(body, fx, missed));
 }
 
 /**
@@ -407,9 +408,9 @@ function drawHighFive(ctx, width, height, x, y, slapped, missed, elapsed) {
   const s = unit(width, height);
   const body = simpleShade({ missed, ready: slapped, hue: "lilac" });
   const rgb = missed ? FACET_RGB.coral : slapped ? FACET_RGB.moss : FACET_RGB.lilac;
-  drawHitRing(ctx, x, y, 30 * s, rgb, slapped ? 0.85 : 0.5, slapped ? 3 : 2);
-  drawFaces(ctx, x, y, 1.9 * s, highFiveHandFaces(body, missed));
-  if (slapped) drawFaces(ctx, x, y, 1.7 * s, impactFaces(missed, elapsed));
+  drawHitRing(ctx, x, y, 34 * s, rgb, slapped ? 0.85 : 0.5, slapped ? 3 : 2);
+  drawFaces(ctx, x, y, 2.6 * s, highFiveHandFaces(body, missed));
+  if (slapped) drawFaces(ctx, x, y, 2 * s, impactFaces(missed, elapsed));
 }
 
 /**
@@ -447,8 +448,8 @@ function drawFruit(ctx, width, height, x, y, caught, missed) {
   const s = unit(width, height);
   const body = simpleShade({ missed, ready: caught, hue: "ember" });
   const rgb = missed ? FACET_RGB.coral : caught ? FACET_RGB.moss : FACET_RGB.ember;
-  drawHitRing(ctx, x, y, 26 * s, rgb, caught ? 0.8 : 0.5, caught ? 3 : 2);
-  drawFaces(ctx, x, y, 1.9 * s, fruitFaces(body, missed));
+  drawHitRing(ctx, x, y, 30 * s, rgb, caught ? 0.8 : 0.5, caught ? 3 : 2);
+  drawFaces(ctx, x, y, 2.5 * s, fruitFaces(body, missed));
 }
 
 /**
@@ -487,9 +488,9 @@ function drawWave(ctx, width, height, waving, missed, elapsed) {
   const body = simpleShade({ missed, ready: waving, hue: "sky" });
   const tilt = waving ? Math.sin(elapsed * 8) * 6 * s : 0;
   const rgb = missed ? FACET_RGB.coral : waving ? FACET_RGB.moss : FACET_RGB.sky;
-  drawHitRing(ctx, x, y, 28 * s, rgb, waving ? 0.8 : 0.45, waving ? 3 : 2);
-  drawFaces(ctx, x + tilt, y, 1.85 * s, waveHandFaces(body, missed));
-  drawFaces(ctx, x, y - 28 * s, 1.6 * s, waveChevronFaces(body, missed));
+  drawHitRing(ctx, x, y, 32 * s, rgb, waving ? 0.8 : 0.45, waving ? 3 : 2);
+  drawFaces(ctx, x + tilt, y, 2.5 * s, waveHandFaces(body, missed));
+  drawFaces(ctx, x, y - 36 * s, 2 * s, waveChevronFaces(body, missed));
 }
 
 /**
@@ -544,8 +545,8 @@ function drawSquash(ctx, width, height, x, y, squashing, missed) {
   const body = simpleShade({ missed, ready: squashing, hue: "ember" });
   const rgb = missed ? FACET_RGB.coral : squashing ? FACET_RGB.moss : FACET_RGB.ember;
   const squash = squashing ? 0.72 : 1;
-  drawHitRing(ctx, x, y, 34 * s, rgb, squashing ? 0.85 : 0.5, squashing ? 3 : 2);
-  drawFaces(ctx, x, y, 2.05 * s, squashPadFaces(body, missed, squash));
+  drawHitRing(ctx, x, y, 38 * s, rgb, squashing ? 0.85 : 0.5, squashing ? 3 : 2);
+  drawFaces(ctx, x, y, 2.6 * s, squashPadFaces(body, missed, squash));
 }
 
 /**
