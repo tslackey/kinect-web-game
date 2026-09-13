@@ -21,20 +21,28 @@ The pack includes the sticky-carry games (**Water plant**, **Feed pet**,
 **Douse fire**), **Stomp bug**, **Hit orb**, and the simple sweep:
 **Duck beam**, **Jump bar**, **Strike pose**, **Lean away**, **Clap now**,
 **Kick ball**, **Stretch wide**, **High five**, **Catch fruit**,
-**Wave hello**, **Squash it**. Between games, Facet theater drapes close,
-the next stage set swaps, then the curtain rises on a big title placard.
-Simple-pack verbs use Facet low-poly marks and a matching stage set.
+**Wave hello**, **Squash it**. Harder siblings: **Balance the tray**
+(`Steady!` — keep wrists level while carrying to the goal; tip or
+timeout fails), **Mirror me** (`Copy!` — P2 matches P1 wrists, or a
+solo ghost like Strike pose), and **Hot potato** (`Pass!` — offer/accept
+pass; win is at least one successful pass before the timer). Between
+games, Facet theater drapes close, the next stage set swaps, then the
+curtain rises on a big title placard. Simple-pack verbs use Facet
+low-poly marks and a matching stage set.
 
 Each play window is 15–20 seconds (default 18s) so kids have time to
 find the body part and finish. Win or fail is timeout-or-success, not
-a wrong gesture. Two people in one camera frame share the same target
-and the same win.
+a wrong gesture — except **Balance the tray**, which also fails if the
+wrists tip past tolerance. Two people in one camera frame share the
+same target and the same win.
 
-Sticky-carry items (plant pot, pet bowl, fire bucket) stay with the
-hand that picked them up. To pass, the owner puts **both hands** on the
-item (offered — a sky ring for now), then another body — or the same
-body’s other hand after it leaves and re-grabs — puts **one hand** on
-it to accept. Without that two-hand offer, a second hand cannot steal.
+Sticky-carry items (plant pot, pet bowl, fire bucket, tray, potato)
+stay with the hand that picked them up. To pass, the owner puts **both
+hands** on the item (offered — a sky ring for now), then another body —
+or the same body’s other hand after it leaves and re-grabs — puts **one
+hand** on it to accept. Without that two-hand offer, a second hand
+cannot steal. Hot potato uses that rule as the verb: one accepted pass
+wins; overlap-steal does not.
 
 If a camera body is in frame, that skeleton is the only player — moving
 the mouse does not add a second body. Keyboard is also suppressed while
