@@ -3,7 +3,8 @@
  * Each pose map is its own stick figure. Orb games draw the crystal;
  * water-the-plant draws pot, plant, and a pour cue; feed-the-pet draws
  * bowl, pet, and a feed cue; put-out-the-fire draws bucket, flame, and
- * a spray cue. Facet tokens stay.
+ * a spray cue; stomp-the-bug draws a scurrying bug and a squash cue.
+ * Facet tokens stay.
  */
 
 import { STICK_BONES } from "../input/joints.js";
@@ -45,8 +46,9 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
     ctx.clearRect(0, 0, width, height);
     drawFlashVeil(state);
     const poses = posesFromSample(state.pose);
+    const footGame = state.scene?.kind === "stomp-bug";
     poses.forEach((pose, index) => {
-      drawSkeleton(pose.joints, PLAYER_RGB[index % PLAYER_RGB.length], pose.id);
+      drawSkeleton(pose.joints, PLAYER_RGB[index % PLAYER_RGB.length], pose.id, footGame);
     });
     if (state.phase !== "start") {
       if (state.scene?.kind === "water-plant") {
@@ -55,6 +57,8 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
         drawFeedScene(state);
       } else if (state.scene?.kind === "douse-fire") {
         drawFireScene(state);
+      } else if (state.scene?.kind === "stomp-bug") {
+        drawBugScene(state);
       } else {
         drawTarget(state);
       }
@@ -67,8 +71,9 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
    * @param {Record<string, Joint> | undefined | null} joints
    * @param {string} rgb
    * @param {string} [label]
+   * @param {boolean} [footGame]
    */
-  function drawSkeleton(joints, rgb, label) {
+  function drawSkeleton(joints, rgb, label, footGame = false) {
     if (!joints) return;
 
     ctx.lineCap = "butt";
@@ -102,9 +107,10 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
 
     for (const [name, joint] of Object.entries(joints)) {
       if (name === "pointer" || !usable(joint)) continue;
-      const radius = name === "nose" || name.endsWith("wrist") ? 7 : 4.5;
-      const fill =
-        name.endsWith("wrist") || name === "nose" ? `rgb(${rgb})` : FACET.bone;
+      const strike =
+        name.endsWith("wrist") || (footGame && name.endsWith("ankle"));
+      const radius = name === "nose" || strike ? 7 : 4.5;
+      const fill = strike || name === "nose" ? `rgb(${rgb})` : FACET.bone;
       fillDiamond(ctx, joint.x * width, joint.y * height, radius, fill);
     }
 
@@ -613,6 +619,75 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
       const x = x0 + (x1 - x0) * t;
       const y = y0 + (y1 - y0) * t + Math.sin(t * Math.PI) * -18;
       fillDiamond(ctx, x, y, 3.4, `rgba(${FACET_RGB.sky}, ${0.45 + pulse * 0.4})`);
+    }
+    ctx.restore();
+  }
+
+  /**
+   * @param {GameState} state
+   */
+  function drawBugScene(state) {
+    const scene = state.scene;
+    if (!scene || scene.kind !== "stomp-bug") return;
+    const gated = state.phase === "prompt";
+    const missed = state.phase === "over" || (state.phase === "result" && state.result === "fail");
+    const won = state.phase === "result" && state.result === "win";
+    const squashed = scene.bug.stage >= 1 || won;
+    drawBug(scene.bug, { squashed, squashing: scene.squashing || won, missed, gated, elapsed: state.elapsed });
+  }
+
+  /**
+   * @param {{ x: number, y: number }} bug
+   * @param {{ squashed: boolean, squashing: boolean, missed: boolean, gated: boolean, elapsed: number }} look
+   */
+  function drawBug(bug, { squashed, squashing, missed, gated, elapsed }) {
+    const x = bug.x * width;
+    const y = bug.y * height;
+    const scurry = squashed ? 0 : Math.sin(elapsed * 8);
+    const scale = squashed ? 1.35 : 1.15;
+    const alpha = gated ? 0.55 : missed ? 0.5 : 1;
+    const body = missed ? FACET.coral : squashed ? FACET.moss : FACET.lilac;
+    const shell = missed ? FACET_STEPS.coralBone : squashed ? FACET_STEPS.mossBone : FACET_STEPS.lilacBone;
+    const leg = missed ? FACET.coral : squashed ? FACET.moss : FACET.ember;
+    const zone = HIT_RADIUS * Math.min(width, height);
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    const ring = hexVertices(x, y, zone);
+    ctx.beginPath();
+    ring.forEach((point, index) => {
+      if (index === 0) ctx.moveTo(point[0], point[1]);
+      else ctx.lineTo(point[0], point[1]);
+    });
+    ctx.closePath();
+    ctx.strokeStyle = `rgba(${missed ? FACET_RGB.coral : squashed ? FACET_RGB.moss : FACET_RGB.lilac}, ${gated ? 0.25 : squashing ? 0.85 : 0.55})`;
+    ctx.lineWidth = squashing ? 3 : 2;
+    ctx.stroke();
+
+    if (squashed) {
+      ctx.beginPath();
+      ctx.ellipse(x, y + 4, 28 * scale, 8 * scale, 0, 0, Math.PI * 2);
+      ctx.fillStyle = body;
+      ctx.fill();
+      fillDiamond(ctx, x - 10 * scale, y + 2, 5 * scale, shell);
+      fillDiamond(ctx, x + 10 * scale, y + 2, 5 * scale, shell);
+      fillDiamond(ctx, x, y - 2, 4 * scale, FACET.moss);
+    } else {
+      const hop = scurry * 3;
+      fillDiamond(ctx, x, y + hop, 16 * scale, body);
+      fillDiamond(ctx, x + 14 * scale, y - 2 + hop, 8 * scale, shell);
+      fillDiamond(ctx, x + 20 * scale, y - 4 + hop, 3.2 * scale, FACET.ink);
+      ctx.strokeStyle = leg;
+      ctx.lineWidth = 3;
+      ctx.lineCap = "round";
+      for (const side of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(x - 4 * scale, y + 4 + hop);
+        ctx.lineTo(x - 16 * scale, y + 12 * scale + side * 4 + hop);
+        ctx.moveTo(x + 2 * scale, y + 6 + hop);
+        ctx.lineTo(x + 12 * scale, y + 14 * scale + side * 5 + hop);
+        ctx.stroke();
+      }
     }
     ctx.restore();
   }

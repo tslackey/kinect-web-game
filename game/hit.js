@@ -1,5 +1,6 @@
 /**
- * Shared strike helpers. Later microgames reuse the same wrists / pointer.
+ * Shared strike helpers. Wrist games reuse wrists / pointer.
+ * The feet verb passes its own names — ankles stay off the global list.
  * Every pose map on the sample can score — one webcam, up to two bodies.
  */
 
@@ -12,16 +13,19 @@ import { posesFromSample } from "../input/poses.js";
 
 export const HIT_RADIUS = 0.13;
 export const STRIKER_NAMES = ["left_wrist", "right_wrist", "pointer"];
+/** Ankles plus the pointer/keyboard foot stand-in. Used by Stomp the bug only. */
+export const FOOT_STRIKER_NAMES = ["left_ankle", "right_ankle", "pointer"];
 
 /**
  * @param {Record<string, Joint> | undefined} joints
+ * @param {readonly string[]} [names]
  * @returns {Joint[]}
  */
-export function listStrikers(joints) {
+export function listStrikers(joints, names = STRIKER_NAMES) {
   if (!joints) return [];
   /** @type {Joint[]} */
   const strikers = [];
-  for (const name of STRIKER_NAMES) {
+  for (const name of names) {
     const joint = joints[name];
     if (usable(joint) && (joint.confidence ?? 1) >= 0.4) {
       strikers.push(joint);
@@ -31,18 +35,19 @@ export function listStrikers(joints) {
 }
 
 /**
- * Hands from every pose map on the sample.
+ * Hands (or named strikers) from every pose map on the sample.
  *
  * @param {PoseSample | null | undefined} sample
+ * @param {readonly string[]} [names]
  * @returns {Joint[]}
  */
-export function listSampleStrikers(sample) {
-  return posesFromSample(sample).flatMap((pose) => listStrikers(pose.joints));
+export function listSampleStrikers(sample, names = STRIKER_NAMES) {
+  return posesFromSample(sample).flatMap((pose) => listStrikers(pose.joints, names));
 }
 
 /**
  * Same strikers, tagged so a sticky carry can follow one hand.
- * Either body in the sample can pick / pour.
+ * Either body in the sample can pick / pour. Pass foot names for ankles.
  *
  * @typedef {object} IdentifiedStriker
  * @property {string} id
@@ -55,13 +60,14 @@ export function listSampleStrikers(sample) {
 
 /**
  * @param {PoseSample | null | undefined} sample
+ * @param {readonly string[]} [names]
  * @returns {IdentifiedStriker[]}
  */
-export function listIdentifiedStrikers(sample) {
+export function listIdentifiedStrikers(sample, names = STRIKER_NAMES) {
   /** @type {IdentifiedStriker[]} */
   const strikers = [];
   for (const pose of posesFromSample(sample)) {
-    for (const name of STRIKER_NAMES) {
+    for (const name of names) {
       const joint = pose.joints[name];
       if (usable(joint) && (joint.confidence ?? 1) >= 0.4) {
         strikers.push({
