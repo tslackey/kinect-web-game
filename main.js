@@ -102,13 +102,17 @@ function updateHud(state) {
   const cam = input.getStatus();
   const atGate = state.phase === "start" || state.phase === "over";
   const live = state.phase === "prompt" || state.phase === "playing";
+  const curtain = state.phase === "prompt" && Boolean(state.transition);
   const missed = state.phase === "over" || (state.phase === "result" && state.result === "fail");
   const cameraReady = cam.camera === "ready" || cam.camerasReady > 0;
   const cameraBusy = cam.starting || cam.camera === "pending" || cam.camera === "loading";
 
   document.body.classList.toggle("is-start", state.phase === "start");
   document.body.classList.toggle("is-playing", live);
+  document.body.classList.toggle("is-curtain", curtain);
   document.body.classList.toggle("is-between", state.phase === "result");
+  if (state.backgroundId) document.body.dataset.stage = state.backgroundId;
+  else delete document.body.dataset.stage;
   document.body.classList.toggle("is-over", state.phase === "over");
   document.body.classList.toggle("is-camera-prompt", cam.camera === "prompt");
   document.body.classList.toggle("is-camera-denied", cam.camera === "denied" || cam.camera === "unavailable" || cam.camera === "error");
@@ -213,15 +217,31 @@ function ledeFor(state) {
   if (state.phase === "result") {
     return state.game >= state.games ? "Timed out. Session wrapping up." : "Timed out. Next game incoming.";
   }
-  if (state.phase === "prompt") return "Get ready.";
-  if (state.phase === "playing") {
-    if (state.gameId === "water-plant") return "Hover the pot, carry it over the plant.";
-    if (state.gameId === "feed-pet") return "Hover the bowl, carry it over the pet.";
-    if (state.gameId === "douse-fire") return "Hover the bucket, carry it over the fire.";
-    if (state.gameId === "stomp-bug") return "Hover an ankle over the bug, or stomp through it.";
-    return "One hit. Timer is live.";
-  }
-  return "Open, allow the camera, play. Water the plant, feed the pet, douse the fire, stomp the bug, or hit the orb. About 18 seconds per game. When a camera body is live, the camera is the only player. Pointer and keyboard still play if the camera is off.";
+  if (state.phase === "prompt") return "Curtain up. Get ready.";
+  if (state.phase === "playing") return ledeForGame(state.gameId);
+  return "Open, allow the camera, play. A short curtain, a big title, then about 18 seconds. The session shuffles plant, pet, fire, stomp, orb, and the simple pack. When a camera body is live, the camera is the only player. Pointer and keyboard still play if the camera is off.";
+}
+
+/**
+ * @param {string | null} gameId
+ */
+function ledeForGame(gameId) {
+  if (gameId === "water-plant") return "Hover the pot, carry it over the plant.";
+  if (gameId === "feed-pet") return "Hover the bowl, carry it over the pet.";
+  if (gameId === "douse-fire") return "Hover the bucket, carry it over the fire.";
+  if (gameId === "stomp-bug") return "Hover an ankle over the bug, or stomp through it.";
+  if (gameId === "duck-beam") return "Drop your hips or head under the beam.";
+  if (gameId === "jump-bar") return "Pop your hips or head up over the bar.";
+  if (gameId === "strike-pose") return "Hold both wrists on the glowing anchors.";
+  if (gameId === "lean-away") return "Lean your torso toward the lit side.";
+  if (gameId === "clap-now") return "When the mark lights, clap — or tap it.";
+  if (gameId === "kick-ball") return "Drive an ankle through the drifting ball.";
+  if (gameId === "stretch-wide") return "Stretch your wrists apart, or tag both posts.";
+  if (gameId === "high-five") return "Slap the high zone with a wrist.";
+  if (gameId === "catch-fruit") return "Catch the falling fruit with a wrist.";
+  if (gameId === "wave-hello") return "Hold a wrist up above your head.";
+  if (gameId === "squash-it") return "Put both hands on the zone, or dwell with the pointer.";
+  return "One hit. Timer is live.";
 }
 
 /**

@@ -29,6 +29,8 @@ import {
   mossCrystal,
   strokeHex,
 } from "./facet.js";
+import { drawCurtain, drawStageWash } from "./curtain.js";
+import { drawSimpleScene } from "./simple.js";
 import { drawStompBug } from "./stomp.js";
 
 /**
@@ -63,9 +65,12 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
    */
   function draw(state) {
     ctx.clearRect(0, 0, width, height);
+    if (state.phase !== "start") {
+      drawStageWash(ctx, width, height, state.backgroundId);
+    }
     drawFlashVeil(state);
     const poses = posesFromSample(state.pose);
-    const footGame = state.scene?.kind === "stomp-bug";
+    const footGame = state.scene?.kind === "stomp-bug" || state.scene?.kind === "kick-ball";
     poses.forEach((pose, index) => {
       drawSkeleton(pose.joints, PLAYER_RGB[index % PLAYER_RGB.length], pose.id, footGame);
     });
@@ -78,12 +83,17 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
         drawFireScene(state);
       } else if (state.scene?.kind === "stomp-bug") {
         drawBugScene(state);
+      } else if (state.scene?.kind) {
+        drawSimpleScene(ctx, width, height, state);
       } else {
         drawTarget(state);
       }
     }
     drawMarkers(state);
     drawFlash(state);
+    if (state.transition && state.phase === "prompt") {
+      drawCurtain(ctx, width, height, state.transition, { reducedMotion });
+    }
   }
 
   /**
@@ -151,7 +161,8 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
     const x = target.x * width;
     const y = target.y * height;
     const pulse = 0.5 + 0.5 * Math.sin(elapsed * 5);
-    const gated = phase === "start" || phase === "over" || phase === "prompt";
+    const covered = (state.transition?.cover ?? 0) > 0.2;
+    const gated = phase === "start" || phase === "over" || (phase === "prompt" && covered);
     const missed = phase === "over" || (phase === "result" && state.result === "fail");
     const limit = lifetime ?? TARGET_LIFETIME;
     const remaining = phase === "playing" && timeLeft != null ? timeLeft / limit : 1;
@@ -193,7 +204,7 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
   function drawWaterScene(state) {
     const scene = state.scene;
     if (!scene || scene.kind !== "water-plant") return;
-    const gated = state.phase === "prompt";
+    const gated = sceneGated(state);
     const missed = state.phase === "over" || (state.phase === "result" && state.result === "fail");
     const won = state.phase === "result" && state.result === "win";
     const grown = scene.plant.stage >= 1 || won;
@@ -248,7 +259,7 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
   function drawFeedScene(state) {
     const scene = state.scene;
     if (!scene || scene.kind !== "feed-pet") return;
-    const gated = state.phase === "prompt";
+    const gated = sceneGated(state);
     const missed = state.phase === "over" || (state.phase === "result" && state.result === "fail");
     const won = state.phase === "result" && state.result === "win";
     const happy = scene.pet.stage >= 1 || won;
@@ -300,7 +311,7 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
   function drawFireScene(state) {
     const scene = state.scene;
     if (!scene || scene.kind !== "douse-fire") return;
-    const gated = state.phase === "prompt";
+    const gated = sceneGated(state);
     const missed = state.phase === "over" || (state.phase === "result" && state.result === "fail");
     const won = state.phase === "result" && state.result === "win";
     const out = scene.fire.stage >= 1 || won;
@@ -355,7 +366,7 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
   function drawBugScene(state) {
     const scene = state.scene;
     if (!scene || scene.kind !== "stomp-bug") return;
-    const gated = state.phase === "prompt";
+    const gated = sceneGated(state);
     const missed = state.phase === "over" || (state.phase === "result" && state.result === "fail");
     const won = state.phase === "result" && state.result === "win";
     const squashed = scene.bug.stage >= 1 || won;
@@ -474,6 +485,15 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
   }
 
   return { resize, draw };
+}
+
+/**
+ * Dim the stage only while the curtain is still covering it.
+ *
+ * @param {GameState} state
+ */
+function sceneGated(state) {
+  return state.phase === "prompt" && (state.transition?.cover ?? 0) > 0.2;
 }
 
 /**

@@ -82,6 +82,7 @@ export function driftBug(target, step) {
 export const STOMP_BUG = defineMicrogame({
   id: "stomp-bug",
   prompt: "Stomp bug",
+  backgroundId: "dirt",
   duration: BUG_DURATION,
   create({ random, duration }) {
     const lifetime = Number.isFinite(duration) && duration > 0 ? duration : BUG_DURATION;

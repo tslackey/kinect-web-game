@@ -13,7 +13,7 @@ import { posesFromSample } from "../input/poses.js";
 
 export const HIT_RADIUS = 0.13;
 export const STRIKER_NAMES = ["left_wrist", "right_wrist", "pointer"];
-/** Ankles plus the pointer/keyboard foot stand-in. Used by Stomp the bug only. */
+/** Ankles plus the pointer/keyboard foot stand-in. Used by stomp and kick. */
 export const FOOT_STRIKER_NAMES = ["left_ankle", "right_ankle", "pointer"];
 
 /**

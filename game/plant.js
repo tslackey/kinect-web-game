@@ -40,6 +40,7 @@ export function layoutPlant(random) {
 export const WATER_PLANT = defineMicrogame({
   id: "water-plant",
   prompt: "Water plant",
+  backgroundId: "garden",
   duration: PLANT_DURATION,
   create({ random, duration }) {
     const lifetime = Number.isFinite(duration) && duration > 0 ? duration : PLANT_DURATION;

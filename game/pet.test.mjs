@@ -1,4 +1,5 @@
 import {
+  DEFAULT_CURTAIN_TIMINGS,
   DEFAULT_PACK,
   FEED_DWELL,
   FEED_PET,
@@ -176,7 +177,7 @@ assert(
   "the first body can finish the feed",
 );
 
-const session = createGame({ random: () => 0.2, games: 3 });
+const session = createGame({ random: () => 0.2, games: 3, shuffle: false });
 session.start();
 assert(session.getState().prompt === "Water plant", "Play should still flash Water plant first");
 assert(session.getState().gameId === "water-plant", "the live game id should open on water-plant");
@@ -185,9 +186,10 @@ drainGame(session, PLAY_DURATION + 0.1, far);
 assert(session.getState().result === "fail", "timing out water the plant should still resolve");
 drainGame(session, RESULT_DURATION);
 assert(session.getState().prompt === "Feed pet", "Play should flash Feed pet as the second game");
+drainGame(session, DEFAULT_CURTAIN_TIMINGS.down + DEFAULT_CURTAIN_TIMINGS.covered);
 assert(session.getState().gameId === "feed-pet", "the live game id should be feed-pet");
 assert(session.getState().scene?.kind === "feed-pet", "the pet scene should be on the session view");
-drainGame(session, PROMPT_DURATION);
+drainGame(session, DEFAULT_CURTAIN_TIMINGS.up + DEFAULT_CURTAIN_TIMINGS.hold);
 assert(session.getState().phase === "playing", "the prompt should hand off to the pet game");
 const liveBowl = session.getState().scene.bowl;
 const livePet = session.getState().scene.pet;
