@@ -4,6 +4,7 @@
  * water-the-plant, feed-the-pet, and put-out-the-fire use Facet
  * low-poly marks (hard-edge triangles, token steps, upper-left light);
  * stomp-the-bug draws a Facet low-poly bug and stomp cue.
+ * Interstitials use Facet theater drapes, a title placard, and stage sets.
  */
 
 import { STICK_BONES } from "../input/joints.js";
