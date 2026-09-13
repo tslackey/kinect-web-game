@@ -51,12 +51,12 @@ export function drawCurtain(ctx, width, height, view, { reducedMotion = false } 
   }
 
   const drop = height * cover;
-  ctx.fillStyle = `rgba(${FACET_RGB.ink}, ${0.55 * cover})`;
-  ctx.fillRect(0, 0, width, drop + 8);
+  ctx.fillStyle = `rgba(${FACET_RGB.ink}, ${0.72 * cover})`;
+  ctx.fillRect(0, 0, width, Math.max(drop, height * cover));
   const panels = [
-    { x0: 0, x1: width * 0.4, fill: FACET_STEPS.lilacInk, extra: 0 },
-    { x0: width * 0.32, x1: width * 0.7, fill: FACET.ink, extra: height * 0.06 * cover },
-    { x0: width * 0.6, x1: width, fill: FACET_STEPS.skyInk, extra: height * 0.03 * cover },
+    { x0: 0, x1: width * 0.42, fill: FACET.lilac, extra: 0 },
+    { x0: width * 0.3, x1: width * 0.72, fill: FACET.ember, extra: height * 0.05 * cover },
+    { x0: width * 0.58, x1: width, fill: FACET.sky, extra: height * 0.03 * cover },
   ];
 
   for (const panel of panels) {

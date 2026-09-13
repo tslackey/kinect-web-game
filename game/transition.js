@@ -34,8 +34,8 @@
 
 /** @type {Readonly<CurtainTimings>} */
 export const DEFAULT_CURTAIN_TIMINGS = Object.freeze({
-  down: 0.45,
-  covered: 0.14,
+  down: 0.55,
+  covered: 0.16,
   up: 0.5,
   hold: 1.05,
 });

@@ -325,13 +325,8 @@ body.is-camera-ready .camera-invite {
   background: transparent;
 }
 
-body.is-curtain .lede,
-body.is-curtain .brand {
-  opacity: 0.28;
-}
-
-body.is-curtain h1 {
-  opacity: 0.2;
+body.is-curtain .hud {
+  opacity: 0.22;
 }
 
 body[data-stage="garden"] .atmosphere {
