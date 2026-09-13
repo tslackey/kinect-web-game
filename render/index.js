@@ -3,7 +3,8 @@
  * Each pose map is its own stick figure. Orb games draw the crystal;
  * water-the-plant, feed-the-pet, and put-out-the-fire use Facet
  * low-poly marks (hard-edge triangles, token steps, upper-left light);
- * stomp-the-bug draws a Facet low-poly bug and stomp cue.
+ * stomp-the-bug draws a Facet low-poly bug and stomp cue;
+ * the simple pack draws Facet low-poly marks for each verb.
  * Interstitials use Facet theater drapes, a title placard, and stage sets.
  * Start and game-over draw the hand-hold Play mark with a progress ring.
  */

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet duck beam">
+  <!-- 128 grid. Hazard beam with side pylons. Upper-left light. -->
+  <polygon fill="#fcb588" points="20,52 108,56 20,64"/>
+  <polygon fill="#ff9e64" points="20,64 108,56 108,72"/>
+  <polygon fill="#b67450" points="20,64 108,72 20,76"/>
+  <polygon fill="#b67450" points="8,96 28,88 20,108"/>
+  <polygon fill="#ff9e64" points="8,96 12,48 28,88"/>
+  <polygon fill="#fcb588" points="12,48 32,54 28,88"/>
+  <polygon fill="#fcb588" points="12,48 20,20 32,54"/>
+  <polygon fill="#b67450" points="32,54 20,20 40,44"/>
+  <polygon fill="#ff9e64" points="32,56 64,60 36,72"/>
+  <polygon fill="#f4efe6" points="56,58 72,58 64,66"/>
+  <polygon fill="#b67450" points="120,96 100,88 108,108"/>
+  <polygon fill="#ff9e64" points="120,96 116,48 100,88"/>
+  <polygon fill="#fcb588" points="116,48 96,54 100,88"/>
+  <polygon fill="#fcb588" points="116,48 108,20 96,54"/>
+  <polygon fill="#b67450" points="96,54 108,20 88,44"/>
+</svg>

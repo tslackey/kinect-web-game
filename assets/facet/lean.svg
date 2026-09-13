@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet lean away">
+  <!-- 128 grid. Ember chevrons pointing right. Upper-left light. -->
+  <polygon fill="#ff9e64" points="24,16 104,64 24,112"/>
+  <polygon fill="#fcb588" points="24,16 64,64 24,56"/>
+  <polygon fill="#b67450" points="24,72 64,64 24,112"/>
+  <polygon fill="#fcb588" points="44,36 84,64 44,92"/>
+  <polygon fill="#b67450" points="8,44 40,64 8,84"/>
+  <polygon fill="#f4efe6" points="84,52 112,64 84,76"/>
+</svg>

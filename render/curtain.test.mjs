@@ -50,6 +50,12 @@ function mockCtx() {
     fillText(...args) {
       calls.push(["fillText", ...args]);
     },
+    save() {
+      calls.push(["save"]);
+    },
+    restore() {
+      calls.push(["restore"]);
+    },
     measureText(text) {
       calls.push(["measureText", text]);
       return { width: String(text).length * 22 };
@@ -89,7 +95,22 @@ drawStageWash(hearth, 800, 600, "hearth");
 assert(hexFills(hearth.calls).includes(FACET.ember), "hearth stage set uses Ember logs");
 
 assert(stageKitFor("beam").motif === "beams", "duck stage is sky beams");
+assert(stageKitFor("bar").motif === "hurdle", "jump stage is a moss hurdle");
+assert(stageKitFor("pitch").motif === "goals", "kick stage is moss goals");
+assert(stageKitFor("span").motif === "span", "stretch stage is sky reach arms");
+assert(stageKitFor("high").motif === "high", "high-five stage is a lilac stand");
+assert(stageKitFor("hello").motif === "waves", "wave stage is sky chevrons");
+assert(stageKitFor("press").motif === "press", "squash stage is an ember press plate");
+assert(stageKitFor("cue").motif === "hands", "clap stage is coral hands");
 assert(stageKitFor("unknown").hue === "lilac", "unknown stages fall back to crystal");
+
+const pitch = mockCtx();
+drawStageWash(pitch, 800, 600, "pitch");
+assert(hexFills(pitch.calls).includes(FACET.moss), "kick pitch uses Moss goals");
+
+const hello = mockCtx();
+drawStageWash(hello, 800, 600, "hello");
+assert(hexFills(hello.calls).includes(FACET.sky), "wave stage uses Sky chevrons");
 
 const ctx = mockCtx();
 const curtain = createTransition();
@@ -131,7 +152,7 @@ drawSimpleScene(ctx, 800, 600, {
   transition: null,
   scene: { kind: "duck-beam", beam: { y: 0.46 }, ducked: false },
 });
-assert(ctx.calls.length > 4, "placeholder scenes draw something readable");
+assert(ctx.calls.length > 4, "simple-pack scenes draw Facet marks");
 
 for (const fill of [...hexFills(garden.calls), ...hexFills(ctx.calls), ...hexFills(card.calls)]) {
   assert(allowedHex.has(fill), `unexpected fill ${fill}`);
