@@ -146,20 +146,14 @@ const standins = assembleSample({
   ],
 });
 assert(standins.poses.length === 2, "two pointers are two pose maps when the camera is off");
-const pointerDuo = drainPlay(pointers, MIRROR_DWELL + 0.05, standins);
-assert(pointerDuo === "win" || pointers.getView().scene.mode === "duo", "pointer can stand in as the missing second body");
-if (pointerDuo !== "win") {
-  const p1 = standins.poses[0].joints;
-  const copyP1 = {
-    nose: { ...p1.nose },
-    left_shoulder: { ...p1.left_shoulder },
-    right_shoulder: { ...p1.right_shoulder },
-    left_wrist: { x: p1.left_wrist.x + 0.4, y: p1.left_wrist.y, confidence: 1 },
-    right_wrist: { x: p1.right_wrist.x + 0.4, y: p1.right_wrist.y, confidence: 1 },
-  };
-  const aligned = twoBodies(p1, copyP1, "mouse");
-  assert(drainPlay(pointers, MIRROR_DWELL + 0.05, aligned) === "win", "aligned pointer maps can still copy");
-}
+assert(pointers.tick(1 / 60, standins) === "playing", "two camera-off pointers enter play as two bodies");
+assert(pointers.getView().scene.mode === "duo", "pointer can stand in as the missing second body");
+const aligned = twoBodies(
+  arms(0.3, 0.4, -0.1, 0.14, 0.12, -0.08),
+  arms(0.72, 0.42, -0.1, 0.14, 0.12, -0.08),
+  "mouse",
+);
+assert(drainPlay(pointers, MIRROR_DWELL + 0.05, aligned) === "win", "aligned pointer maps can still copy");
 
 const keys = MIRROR_ME.create({ random: () => 0.2, index: 1, duration: MIRROR_ME.duration });
 keys.start();
