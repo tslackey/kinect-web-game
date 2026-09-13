@@ -1,7 +1,8 @@
 /**
  * Draws the current game state onto the existing canvas.
  * Each pose map is its own stick figure. Orb games draw the crystal;
- * water-the-plant draws pot, plant, and a pour cue. Facet tokens stay.
+ * water-the-plant draws pot, plant, and a pour cue; feed-the-pet draws
+ * bowl, pet, and a feed cue. Facet tokens stay.
  */
 
 import { STICK_BONES } from "../input/joints.js";
@@ -49,6 +50,8 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
     if (state.phase !== "start") {
       if (state.scene?.kind === "water-plant") {
         drawWaterScene(state);
+      } else if (state.scene?.kind === "feed-pet") {
+        drawFeedScene(state);
       } else {
         drawTarget(state);
       }
@@ -302,6 +305,159 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
       const x = x0 + (x1 - x0) * t;
       const y = y0 + (y1 - y0) * t + Math.sin(t * Math.PI) * -18;
       fillDiamond(ctx, x, y, 3.4, `rgba(${FACET_RGB.sky}, ${0.45 + pulse * 0.4})`);
+    }
+    ctx.restore();
+  }
+
+  /**
+   * @param {GameState} state
+   */
+  function drawFeedScene(state) {
+    const scene = state.scene;
+    if (!scene || scene.kind !== "feed-pet") return;
+    const gated = state.phase === "prompt";
+    const missed = state.phase === "over" || (state.phase === "result" && state.result === "fail");
+    const won = state.phase === "result" && state.result === "win";
+    const happy = scene.pet.stage >= 1 || won;
+    drawPet(scene.pet, { happy, missed, gated });
+    if (scene.feeding || won) {
+      drawFeed(scene.bowl, scene.pet, state.elapsed);
+    }
+    drawBowl(scene.bowl, { held: scene.bowl.held, gated, missed });
+  }
+
+  /**
+   * @param {{ x: number, y: number }} pet
+   * @param {{ happy: boolean, missed: boolean, gated: boolean }} look
+   */
+  function drawPet(pet, { happy, missed, gated }) {
+    const x = pet.x * width;
+    const y = pet.y * height;
+    const scale = happy ? 1.55 : 1.25;
+    const alpha = gated ? 0.55 : missed ? 0.5 : 1;
+    const body = missed ? FACET.coral : happy ? FACET.moss : FACET.lilac;
+    const muzzle = missed ? FACET_STEPS.coralBone : happy ? FACET_STEPS.mossBone : FACET_STEPS.lilacBone;
+    const ear = missed ? FACET.coral : happy ? FACET.ember : FACET.sky;
+    const zone = HIT_RADIUS * Math.min(width, height);
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    const ring = hexVertices(x, y, zone);
+    ctx.beginPath();
+    ring.forEach((point, index) => {
+      if (index === 0) ctx.moveTo(point[0], point[1]);
+      else ctx.lineTo(point[0], point[1]);
+    });
+    ctx.closePath();
+    ctx.strokeStyle = `rgba(${missed ? FACET_RGB.coral : happy ? FACET_RGB.moss : FACET_RGB.lilac}, ${gated ? 0.25 : 0.55})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    const earLift = happy ? -34 : -20;
+    const earSpread = happy ? 22 : 17;
+    fillDiamond(ctx, x - earSpread * scale, y + (earLift + 4) * scale, 10 * scale, ear);
+    fillDiamond(ctx, x + earSpread * scale, y + earLift * scale, 10 * scale, ear);
+
+    fillDiamond(ctx, x, y + 8 * scale, 24 * scale, body);
+    fillDiamond(ctx, x, y - 12 * scale, 16 * scale, muzzle);
+
+    ctx.strokeStyle = missed ? FACET.coral : happy ? FACET.moss : FACET.lilac;
+    ctx.lineWidth = happy ? 5 : 4;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(x + 16 * scale, y + 8 * scale);
+    ctx.quadraticCurveTo(
+      x + 30 * scale,
+      y + (happy ? -10 : 18) * scale,
+      x + 26 * scale,
+      y + (happy ? -22 : 22) * scale,
+    );
+    ctx.stroke();
+
+    const eyeY = y - 12 * scale;
+    fillDiamond(ctx, x - 5 * scale, eyeY, 2.4 * scale, FACET.ink);
+    fillDiamond(ctx, x + 5 * scale, eyeY, 2.4 * scale, FACET.ink);
+
+    if (happy) {
+      fillDiamond(ctx, x, y - 32 * scale, 7 * scale, FACET.ember);
+    } else {
+      fillDiamond(ctx, x, y - 2 * scale, 3.2 * scale, FACET.coral);
+    }
+    ctx.restore();
+  }
+
+  /**
+   * @param {{ x: number, y: number, held?: boolean }} bowl
+   * @param {{ held: boolean, gated: boolean, missed: boolean }} look
+   */
+  function drawBowl(bowl, { held, gated, missed }) {
+    const x = bowl.x * width;
+    const y = bowl.y * height;
+    const alpha = gated ? 0.45 : missed ? 0.55 : 1;
+    const dish = missed ? FACET.coral : held ? FACET.ember : FACET.lilac;
+    const lip = missed ? FACET_STEPS.coralBone : held ? FACET_STEPS.emberBone : FACET_STEPS.lilacBone;
+    const kibble = missed ? FACET.coral : FACET.ember;
+    const zone = HIT_RADIUS * Math.min(width, height);
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    const ring = hexVertices(x, y, zone);
+    ctx.beginPath();
+    ring.forEach((point, index) => {
+      if (index === 0) ctx.moveTo(point[0], point[1]);
+      else ctx.lineTo(point[0], point[1]);
+    });
+    ctx.closePath();
+    ctx.strokeStyle = `rgba(${missed ? FACET_RGB.coral : held ? FACET_RGB.ember : FACET_RGB.lilac}, ${held ? 0.85 : gated ? 0.28 : 0.7})`;
+    ctx.lineWidth = held ? 3 : 2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(x, y + 6, 26, 12, 0, 0, Math.PI * 2);
+    ctx.fillStyle = dish;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.ellipse(x, y, 28, 10, 0, 0, Math.PI * 2);
+    ctx.fillStyle = lip;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.ellipse(x, y + 1, 18, 6, 0, 0, Math.PI * 2);
+    ctx.fillStyle = FACET.ink;
+    ctx.fill();
+
+    fillDiamond(ctx, x - 6, y + 1, 3.2, kibble);
+    fillDiamond(ctx, x + 5, y + 2, 2.8, kibble);
+    fillDiamond(ctx, x, y - 1, 2.4, FACET.sky);
+    ctx.restore();
+  }
+
+  /**
+   * @param {{ x: number, y: number }} bowl
+   * @param {{ x: number, y: number }} pet
+   * @param {number} elapsed
+   */
+  function drawFeed(bowl, pet, elapsed) {
+    const x0 = bowl.x * width;
+    const y0 = bowl.y * height - 4;
+    const x1 = pet.x * width;
+    const y1 = pet.y * height + 8;
+    const pulse = 0.5 + 0.5 * Math.sin(elapsed * 10);
+
+    ctx.save();
+    ctx.strokeStyle = `rgba(${FACET_RGB.ember}, ${0.35 + pulse * 0.4})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.quadraticCurveTo((x0 + x1) / 2, Math.min(y0, y1) - 24, x1, y1);
+    ctx.stroke();
+
+    for (let i = 0; i < 4; i += 1) {
+      const t = (i / 4 + (elapsed * 1.6) % 1) % 1;
+      const x = x0 + (x1 - x0) * t;
+      const y = y0 + (y1 - y0) * t + Math.sin(t * Math.PI) * -18;
+      fillDiamond(ctx, x, y, 3.4, `rgba(${FACET_RGB.ember}, ${0.45 + pulse * 0.4})`);
     }
     ctx.restore();
   }

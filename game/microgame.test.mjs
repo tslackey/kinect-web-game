@@ -1,4 +1,5 @@
 import {
+  FEED_PET,
   GAME_COUNT,
   MICROGAME_OUTCOMES,
   ORB_HIT,
@@ -34,6 +35,9 @@ assert(typeof ORB_HIT.create === "function", "a microgame must ship create()");
 assert(isMicrogameDef(WATER_PLANT), "water the plant should satisfy the contract");
 assert(WATER_PLANT.prompt === "Water plant", "the plant prompt stays at two words");
 assert(WATER_PLANT.duration >= 5 && WATER_PLANT.duration <= 6, "plant duration should be about 5–6s");
+assert(isMicrogameDef(FEED_PET), "feed the pet should satisfy the contract");
+assert(FEED_PET.prompt === "Feed pet", "the pet prompt stays at two words");
+assert(FEED_PET.duration >= 5 && FEED_PET.duration <= 6, "pet duration should be about 5–6s");
 
 const play = ORB_HIT.create({ random: () => 0.4, index: 1, duration: ORB_HIT.duration });
 play.start();
