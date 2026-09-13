@@ -3,12 +3,12 @@
  * prompt → one game on a 15–20s timer → win or fail → next.
  *
  * Default session shuffles a short run from the expanded pack (plant, pet,
- * fire, stomp, orb, plus the simple sweep). Either pose map on the sample
- * can score — one webcam, up to two bodies. Curtain wipes live on the
- * session, not on each game. Start and game-over share an on-canvas
- * hand-hold Play mark on the top-right playlist chrome; click Play
- * stays as the fallback. 1P uses the first body; 2P is two bodies
- * in one webcam frame.
+ * fire, stomp, orb, the simple sweep, plus tray / mirror / potato). Either
+ * pose map on the sample can score — one webcam, up to two bodies. Curtain
+ * wipes live on the session, not on each game. Start and game-over share
+ * an on-canvas hand-hold Play mark on the top-right playlist chrome;
+ * click Play stays as the fallback. 1P uses the first body; 2P is two
+ * bodies in one webcam frame.
  */
 
 import { posesFromSample } from "../input/poses.js";
@@ -37,6 +37,9 @@ import { SQUASH_IT } from "./squash.js";
 import { STOMP_BUG, driftBug } from "./bug.js";
 import { STRETCH_WIDE } from "./stretch.js";
 import { createTransition } from "./transition.js";
+import { MIRROR_ME } from "./mirror.js";
+import { HOT_POTATO } from "./potato.js";
+import { BALANCE_TRAY } from "./tray.js";
 import { WAVE_HELLO } from "./wave.js";
 
 /**
@@ -96,6 +99,23 @@ export { HIGH_FIVE, HIGH_FIVE_DURATION } from "./highfive.js";
 export { CATCH_FRUIT, FRUIT_DURATION, FRUIT_FALL, makeFruit } from "./fruit.js";
 export { WAVE_HELLO, WAVE_DURATION, WAVE_DWELL } from "./wave.js";
 export { SQUASH_IT, SQUASH_DURATION, SQUASH_DWELL } from "./squash.js";
+export {
+  BALANCE_TRAY,
+  TRAY_ARRIVE_DWELL,
+  TRAY_DURATION,
+  TRAY_PICKUP_DWELL,
+  TRAY_TIP_GRACE,
+  TRAY_TIP_Y,
+  layoutTray,
+} from "./tray.js";
+export { MIRROR_DWELL, MIRROR_DURATION, MIRROR_ME } from "./mirror.js";
+export {
+  HOT_POTATO,
+  POTATO_DURATION,
+  POTATO_PASSES,
+  POTATO_PICKUP_DWELL,
+  layoutPotato,
+} from "./potato.js";
 export {
   FOOT_STRIKER_NAMES,
   HIT_RADIUS,
@@ -171,6 +191,9 @@ export const DEFAULT_PACK = [
   CATCH_FRUIT,
   WAVE_HELLO,
   SQUASH_IT,
+  BALANCE_TRAY,
+  MIRROR_ME,
+  HOT_POTATO,
 ];
 
 const FOOT_GAMES = new Set(["stomp-bug", "kick-ball"]);

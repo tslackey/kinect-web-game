@@ -270,6 +270,9 @@ function ledeForGame(gameId) {
   if (gameId === "catch-fruit") return "Catch the falling fruit with a wrist.";
   if (gameId === "wave-hello") return "Hold a wrist up above your head.";
   if (gameId === "squash-it") return "Put both hands on the zone, or dwell with the pointer.";
+  if (gameId === "balance-tray") return "Keep the tray level and carry it to the mark.";
+  if (gameId === "mirror-me") return "Copy the other wrists, or hold the ghost marks.";
+  if (gameId === "hot-potato") return "Offer with both hands, then one hand accepts the pass.";
   return "One hit. Timer is live.";
 }
 

@@ -14,6 +14,9 @@ import {
   simpleShade,
   squashPadFaces,
   stretchPostFaces,
+  trayFaces,
+  trayGoalFaces,
+  potatoFaces,
   waveChevronFaces,
   waveHandFaces,
 } from "./simple.js";
@@ -83,6 +86,9 @@ const builders = [
   ["wave hand", waveHandFaces(sky, false)],
   ["wave chevrons", waveChevronFaces(sky, false)],
   ["squash pad", squashPadFaces(ember, false, 1)],
+  ["tray", trayFaces(lilac, false)],
+  ["tray goal", trayGoalFaces(facetShade("moss"), false)],
+  ["potato", potatoFaces(ember, false)],
 ];
 
 for (const [name, faces] of builders) {
@@ -114,6 +120,25 @@ const scenes = [
   { kind: "catch-fruit", fruit: { x: 0.4, y: 0.3, stage: 0 }, caught: false },
   { kind: "wave-hello", waving: true, held: 0.2 },
   { kind: "squash-it", zone: { x: 0.5, y: 0.4 }, hands: 2, squashing: true },
+  {
+    kind: "balance-tray",
+    tray: { x: 0.24, y: 0.62, held: true, offered: false, heldBy: "p1:left_wrist", tipped: false },
+    goal: { x: 0.76, y: 0.56 },
+    tilt: 0.02,
+    arriving: true,
+  },
+  {
+    kind: "mirror-me",
+    mode: "solo",
+    left: { x: 0.24, y: 0.38, held: true },
+    right: { x: 0.76, y: 0.38, held: false },
+    matched: false,
+  },
+  {
+    kind: "hot-potato",
+    potato: { x: 0.4, y: 0.5, held: true, offered: true, heldBy: "p1:left_wrist" },
+    passes: 0,
+  },
 ];
 
 const scene = mockCtx();

@@ -63,6 +63,33 @@ export function drawSimpleScene(ctx, width, height, state) {
     drawWave(ctx, width, height, scene.waving || won, missed, elapsed);
   } else if (scene.kind === "squash-it") {
     drawSquash(ctx, width, height, scene.zone.x * width, scene.zone.y * height, scene.squashing || won, missed);
+  } else if (scene.kind === "balance-tray") {
+    drawTrayGoal(ctx, width, height, scene.goal.x * width, scene.goal.y * height, scene.arriving || won, missed);
+    drawTray(
+      ctx,
+      width,
+      height,
+      scene.tray.x * width,
+      scene.tray.y * height,
+      scene.tray.held || won,
+      scene.tray.offered,
+      scene.tray.tipped || missed,
+      missed,
+    );
+  } else if (scene.kind === "mirror-me") {
+    drawPoseAnchor(ctx, width, height, scene.left.x * width, scene.left.y * height, scene.left.held || won, missed);
+    drawPoseAnchor(ctx, width, height, scene.right.x * width, scene.right.y * height, scene.right.held || won, missed);
+  } else if (scene.kind === "hot-potato") {
+    drawPotato(
+      ctx,
+      width,
+      height,
+      scene.potato.x * width,
+      scene.potato.y * height,
+      scene.potato.held || won,
+      scene.potato.offered,
+      missed,
+    );
   }
 
   ctx.restore();
@@ -547,6 +574,122 @@ function drawSquash(ctx, width, height, x, y, squashing, missed) {
   const squash = squashing ? 0.72 : 1;
   drawHitRing(ctx, x, y, 38 * s, rgb, squashing ? 0.85 : 0.5, squashing ? 3 : 2);
   drawFaces(ctx, x, y, 2.6 * s, squashPadFaces(body, missed, squash));
+}
+
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} width
+ * @param {number} height
+ * @param {number} x
+ * @param {number} y
+ * @param {boolean} arriving
+ * @param {boolean} missed
+ */
+function drawTrayGoal(ctx, width, height, x, y, arriving, missed) {
+  const s = unit(width, height);
+  const body = simpleShade({ missed, ready: arriving, hue: "moss" });
+  const rgb = missed ? FACET_RGB.coral : arriving ? FACET_RGB.moss : FACET_RGB.sky;
+  drawHitRing(ctx, x, y, 32 * s, rgb, arriving ? 0.8 : 0.45, arriving ? 3 : 2);
+  drawFaces(ctx, x, y, 2.4 * s, trayGoalFaces(body, missed));
+}
+
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} width
+ * @param {number} height
+ * @param {number} x
+ * @param {number} y
+ * @param {boolean} held
+ * @param {boolean} offered
+ * @param {boolean} tipped
+ * @param {boolean} missed
+ */
+function drawTray(ctx, width, height, x, y, held, offered, tipped, missed) {
+  const s = unit(width, height);
+  const fail = missed || tipped;
+  const body = simpleShade({ missed: fail, ready: held && !tipped, hue: offered ? "sky" : "lilac" });
+  const rgb = fail ? FACET_RGB.coral : offered ? FACET_RGB.sky : held ? FACET_RGB.ember : FACET_RGB.lilac;
+  drawHitRing(ctx, x, y, 34 * s, rgb, offered ? 0.95 : held ? 0.8 : 0.5, offered ? 4 : held ? 3 : 2);
+  if (offered && !fail) drawHitRing(ctx, x, y, 42 * s, FACET_RGB.sky, 0.45, 2);
+  drawFaces(ctx, x, y, 2.5 * s, trayFaces(body, fail));
+}
+
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} width
+ * @param {number} height
+ * @param {number} x
+ * @param {number} y
+ * @param {boolean} held
+ * @param {boolean} offered
+ * @param {boolean} missed
+ */
+function drawPotato(ctx, width, height, x, y, held, offered, missed) {
+  const s = unit(width, height);
+  const body = simpleShade({ missed, ready: held && !offered, hue: offered ? "sky" : "ember" });
+  const rgb = missed ? FACET_RGB.coral : offered ? FACET_RGB.sky : held ? FACET_RGB.ember : FACET_RGB.lilac;
+  drawHitRing(ctx, x, y, 30 * s, rgb, offered ? 0.95 : held ? 0.85 : 0.5, offered ? 4 : held ? 3 : 2);
+  if (offered && !missed) drawHitRing(ctx, x, y, 38 * s, FACET_RGB.sky, 0.45, 2);
+  drawFaces(ctx, x, y, 2.4 * s, potatoFaces(body, missed));
+}
+
+/**
+ * Placeholder tray plate with two handle nubs.
+ *
+ * @param {ReturnType<typeof facetShade>} body
+ * @param {boolean} missed
+ * @returns {Face[]}
+ */
+export function trayFaces(body, missed) {
+  const lip = missed ? FACET.coral : FACET.bone;
+  return [
+    { pts: [[-22, 2], [0, -10], [22, 4]], fill: body.lit },
+    { pts: [[-22, 2], [22, 4], [0, 12]], fill: body.shade },
+    { pts: [[-16, 0], [14, -2], [0, 8]], fill: body.mid },
+    { pts: [[-26, -2], [-18, -8], [-14, 4]], fill: body.shade },
+    { pts: [[26, 0], [18, -6], [14, 6]], fill: body.mid },
+    { pts: [[-10, -6], [0, -14], [10, -4]], fill: lip },
+  ];
+}
+
+/**
+ * Goal stand the tray lands on.
+ *
+ * @param {ReturnType<typeof facetShade>} body
+ * @param {boolean} missed
+ * @returns {Face[]}
+ */
+export function trayGoalFaces(body, missed) {
+  const plate = missed ? FACET.coral : FACET.bone;
+  return [
+    { pts: [[-6, 22], [-2, -8], [2, 22]], fill: body.lit },
+    { pts: [[-2, -8], [6, -4], [2, 22]], fill: body.shade },
+    { pts: [[-18, -6], [0, -16], [18, -4]], fill: body.mid },
+    { pts: [[-18, -6], [18, -4], [0, 4]], fill: body.shade },
+    { pts: [[-12, -8], [10, -10], [0, -2]], fill: plate },
+    { pts: [[-10, 18], [10, 16], [0, 26]], fill: body.shade },
+  ];
+}
+
+/**
+ * Placeholder hot potato — lumpy ember shard.
+ *
+ * @param {ReturnType<typeof facetShade>} body
+ * @param {boolean} missed
+ * @returns {Face[]}
+ */
+export function potatoFaces(body, missed) {
+  const eye = missed ? FACET.coral : FACET.ink;
+  const sprout = missed ? FACET.coral : FACET.moss;
+  return [
+    { pts: [[0, -16], [-14, -2], [4, 2]], fill: body.lit },
+    { pts: [[0, -16], [16, -4], [4, 2]], fill: body.mid },
+    { pts: [[-14, -2], [4, 2], [0, 16]], fill: body.shade },
+    { pts: [[16, -4], [4, 2], [0, 16]], fill: body.shade },
+    { pts: [[-8, 6], [10, 4], [2, 14]], fill: body.mid },
+    { pts: [[-4, -6], [2, -2], [0, 4]], fill: eye },
+    { pts: [[2, -16], [8, -24], [8, -10]], fill: sprout },
+  ];
 }
 
 /**
