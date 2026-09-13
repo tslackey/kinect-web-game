@@ -97,18 +97,20 @@ function drawTheaterDrapes(ctx, width, height, cover) {
       [width, drop],
       [0, drop],
     ],
-    `rgba(${FACET_RGB.ink}, ${0.62 * cover})`,
+    `rgba(${FACET_RGB.ink}, ${0.7 * cover})`,
   );
 
   const mid = width * 0.5;
-  const overlap = width * 0.035 * cover;
-  drawDrapePanel(ctx, 0, mid + overlap, drop, cover, cloth, lining, 1);
-  drawDrapePanel(ctx, mid - overlap, width, drop, cover, cloth, lining, -1);
-  drawValance(ctx, width, Math.min(height * 0.12, 86, drop));
+  const overlap = width * 0.028 * cover;
+  drawDrapePanel(ctx, 0, mid + overlap, drop, cover, cloth, 1);
+  drawDrapePanel(ctx, mid - overlap, width, drop, cover, cloth, -1);
+  drawCenterLining(ctx, mid, drop, cover, lining);
+  drawValance(ctx, width, Math.min(height * 0.2, 128, Math.max(drop * 0.34, 44 * cover)));
 }
 
 /**
- * One traveler half. `face` is +1 for the left panel (lining on the right).
+ * One drop-curtain half. Ridges lean so each fold reads as two triangles.
+ * `face` is +1 for the left panel.
  *
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} x0
@@ -116,42 +118,51 @@ function drawTheaterDrapes(ctx, width, height, cover) {
  * @param {number} drop
  * @param {number} cover
  * @param {ReturnType<typeof facetShade>} cloth
- * @param {ReturnType<typeof facetShade>} lining
  * @param {number} face
  */
-function drawDrapePanel(ctx, x0, x1, drop, cover, cloth, lining, face) {
-  const folds = 6;
+function drawDrapePanel(ctx, x0, x1, drop, cover, cloth, face) {
+  const folds = 4;
   const span = x1 - x0;
   const foldW = span / folds;
-  const hem = 22 * cover;
+  const hem = Math.max(48, drop * 0.12) * cover;
 
   for (let i = 0; i < folds; i += 1) {
     const a = x0 + i * foldW;
     const b = a + foldW;
-    const ridge = a + foldW * 0.38;
-    const dip = i % 2 === 0 ? hem : hem * 0.35;
-    const dipB = i % 2 === 1 ? hem : hem * 0.4;
-    const inner = face > 0 ? i === folds - 1 : i === 0;
-    const outer = face > 0 ? i === 0 : i === folds - 1;
-    const litFill = inner ? lining.lit : cloth.lit;
-    const midFill = inner ? lining.mid : outer ? CLOTH_DEEP : cloth.mid;
-    const shadeFill = inner ? lining.shade : outer ? CLOTH_DEEP : cloth.shade;
-
-    fillTri(ctx, [a, 0], [ridge, 0], [ridge, drop + dip * 0.55], litFill);
-    fillTri(ctx, [a, 0], [ridge, drop + dip * 0.55], [a, drop + dip], litFill);
-    fillTri(ctx, [ridge, 0], [b, 0], [b, drop + dipB], midFill);
-    fillTri(ctx, [ridge, 0], [b, drop + dipB], [ridge, drop + dip * 0.55], shadeFill);
+    const slash = (i + (face > 0 ? 0 : 1)) % 2 === 0;
+    const dip = i % 2 === 0 ? hem : hem * 0.45;
+    const lit = slash ? cloth.lit : cloth.mid;
+    const shade = slash ? cloth.shade : CLOTH_DEEP;
+    if (slash) {
+      fillTri(ctx, [a, 0], [b, 0], [a, drop + dip], lit);
+      fillTri(ctx, [b, 0], [b, drop + dip * 0.7], [a, drop + dip], shade);
+    } else {
+      fillTri(ctx, [a, 0], [b, 0], [b, drop + dip], lit);
+      fillTri(ctx, [a, 0], [b, drop + dip], [a, drop + dip * 0.7], shade);
+    }
+    fillTri(
+      ctx,
+      [a, drop + (slash ? dip : dip * 0.7)],
+      [b, drop + (slash ? dip * 0.7 : dip)],
+      [(a + b) / 2, drop + hem * 1.25],
+      i % 2 === 0 ? CLOTH_DEEP : cloth.shade,
+    );
   }
+}
 
-  const innerX = face > 0 ? x1 : x0;
-  const inward = face > 0 ? -14 : 14;
-  fillTri(
-    ctx,
-    [innerX, drop * 0.12],
-    [innerX + inward, drop * 0.5],
-    [innerX, drop * 0.88],
-    lining.mid,
-  );
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} mid
+ * @param {number} drop
+ * @param {number} cover
+ * @param {ReturnType<typeof facetShade>} lining
+ */
+function drawCenterLining(ctx, mid, drop, cover, lining) {
+  const w = 18 * Math.max(cover, 0.4);
+  fillTri(ctx, [mid - w, 0], [mid, 0], [mid - w * 0.35, drop], lining.lit);
+  fillTri(ctx, [mid, 0], [mid + w, 0], [mid + w * 0.35, drop], lining.mid);
+  fillTri(ctx, [mid - w, 0], [mid - w * 0.35, drop], [mid, drop + 12 * cover], lining.shade);
+  fillTri(ctx, [mid, drop + 12 * cover], [mid + w * 0.35, drop], [mid + w, 0], lining.shade);
 }
 
 /**
@@ -160,28 +171,29 @@ function drawDrapePanel(ctx, x0, x1, drop, cover, cloth, lining, face) {
  * @param {number} valH
  */
 function drawValance(ctx, width, valH) {
-  if (valH < 8) return;
+  if (valH < 10) return;
   const cloth = facetShade("ember");
   fillPoly(
     ctx,
     [
       [0, 0],
       [width, 0],
-      [width, valH * 0.38],
-      [0, valH * 0.38],
+      [width, valH * 0.42],
+      [0, valH * 0.42],
     ],
-    cloth.shade,
+    FACET.ink,
   );
 
-  const swags = 8;
+  const swags = 7;
   const swagW = width / swags;
   for (let i = 0; i < swags; i += 1) {
     const a = i * swagW;
     const b = a + swagW;
     const mid = (a + b) / 2;
-    const tip = valH * (i % 2 === 0 ? 1 : 0.78);
-    fillTri(ctx, [a, 0], [b, 0], [mid, tip], i % 2 === 0 ? cloth.mid : cloth.lit);
-    fillTri(ctx, [a, 0], [mid, tip * 0.55], [a + swagW * 0.22, valH * 0.2], cloth.lit);
+    const tip = valH * (i % 2 === 0 ? 1 : 0.7);
+    fillTri(ctx, [a, 8], [b, 8], [mid, tip], CLOTH_DEEP);
+    fillTri(ctx, [a, 8], [mid, tip], [mid - swagW * 0.18, 8], cloth.shade);
+    fillDiamond(ctx, mid, tip - 5, 7, FACET.bone);
   }
 
   fillPoly(
@@ -189,17 +201,11 @@ function drawValance(ctx, width, valH) {
     [
       [0, 0],
       [width, 0],
-      [width, 7],
-      [0, 7],
+      [width, 10],
+      [0, 10],
     ],
     FACET.ink,
   );
-
-  const tassels = 4;
-  for (let i = 0; i < tassels; i += 1) {
-    const x = ((i + 0.5) / tassels) * width;
-    fillDiamond(ctx, x, valH * 0.42, 7, FACET.ember);
-  }
 }
 
 /**
@@ -216,14 +222,14 @@ export function drawPlacard(ctx, width, height, view, reducedMotion) {
   if (reveal <= 0.08) return;
 
   const cx = width / 2;
-  const cy = height * 0.46;
-  const cardW = Math.min(width * 0.74, 680);
-  const cardH = Math.min(height * 0.3, 236);
+  const cy = height * 0.44;
+  const cardW = Math.min(width * 0.78, 720);
+  const cardH = Math.max(Math.min(height * 0.36, 268), Math.min(168, height * 0.48));
   const left = cx - cardW / 2;
   const top = cy - cardH / 2;
   const right = cx + cardW / 2;
   const bottom = cy + cardH / 2;
-  const cut = Math.min(28, cardW * 0.06);
+  const cut = Math.min(44, cardW * 0.1);
 
   ctx.globalAlpha = 0.28 + reveal * 0.72;
 
@@ -261,7 +267,7 @@ export function drawPlacard(ctx, width, height, view, reducedMotion) {
     FACET_STEPS.emberBone,
   );
 
-  const inset = 14;
+  const inset = Math.max(18, cardH * 0.12);
   fillPoly(
     ctx,
     [
@@ -275,12 +281,13 @@ export function drawPlacard(ctx, width, height, view, reducedMotion) {
     FACET.bone,
   );
 
-  fillTri(ctx, [cx - 36, top - 6], [cx + 36, top - 6], [cx, top - 28], FACET.ember);
-  fillTri(ctx, [cx - 18, top - 6], [cx + 18, top - 6], [cx, top - 20], FACET_STEPS.emberBone);
+  fillTri(ctx, [cx - 78, top + 2], [cx + 78, top + 2], [cx, top - 52], FACET.ember);
+  fillTri(ctx, [cx - 36, top + 2], [cx + 36, top + 2], [cx, top - 34], FACET_STEPS.emberBone);
+  fillDiamond(ctx, cx, top - 14, 9, FACET.bone);
 
-  fillDiamond(ctx, left + 10, cy, 12, FACET.ember);
-  fillDiamond(ctx, right - 10, cy, 12, FACET.ember);
-  drawCrystal(ctx, left - 6, cy, 16, {
+  fillDiamond(ctx, left + 14, cy, 14, FACET.ember);
+  fillDiamond(ctx, right - 14, cy, 14, FACET.ember);
+  drawCrystal(ctx, left - 18, cy, 28, {
     top: FACET_STEPS.emberBone,
     topRight: FACET.ember,
     right: FACET.lilac,
@@ -288,7 +295,7 @@ export function drawPlacard(ctx, width, height, view, reducedMotion) {
     left: FACET.sky,
     topLeft: FACET_STEPS.skyInk,
   });
-  drawCrystal(ctx, right + 6, cy, 16, {
+  drawCrystal(ctx, right + 18, cy, 28, {
     top: FACET_STEPS.lilacBone,
     topRight: FACET.lilac,
     right: FACET.moss,
@@ -310,10 +317,10 @@ export function drawPlacard(ctx, width, height, view, reducedMotion) {
     }
   }
   ctx.fillStyle = FACET.ink;
-  ctx.fillText(label, cx, cy - (view.subtitle ? 16 : 0));
+  ctx.fillText(label, cx, cy - (view.subtitle ? 22 : 0));
 
   if (view.subtitle) {
-    ctx.font = `600 ${Math.round(size * 0.28)}px "DM Sans", "Segoe UI", sans-serif`;
+    ctx.font = `600 ${Math.max(16, Math.round(size * 0.34))}px "DM Sans", "Segoe UI", sans-serif`;
     ctx.fillStyle = FACET_STEPS.emberInk;
     ctx.fillText(view.subtitle, cx, cy + size * 0.42);
   }
@@ -327,35 +334,25 @@ export function drawPlacard(ctx, width, height, view, reducedMotion) {
  * @param {StageKit} kit
  */
 function drawFloorRange(ctx, width, height, kit) {
-  const band = Math.min(height * 0.24, 176);
+  const band = Math.min(height * 0.28, 200);
   const y = height;
 
-  fillTri(ctx, [0, y], [width * 0.18, y - band * 0.92], [width * 0.34, y], kit.mid);
-  fillTri(ctx, [0, y], [width * 0.07, y - band * 0.42], [width * 0.18, y - band * 0.92], kit.lit);
-  fillTri(
-    ctx,
-    [width * 0.155, y - band * 0.72],
-    [width * 0.18, y - band * 0.92],
-    [width * 0.205, y - band * 0.72],
-    FACET.bone,
-  );
+  fillTri(ctx, [0, y], [width * 0.16, y - band * 0.95], [width * 0.32, y], kit.mid);
+  fillTri(ctx, [0, y], [width * 0.06, y - band * 0.48], [width * 0.16, y - band * 0.95], kit.lit);
+  fillTri(ctx, [width * 0.13, y - band * 0.72], [width * 0.16, y - band * 0.95], [width * 0.2, y - band * 0.7], FACET.bone);
 
-  fillTri(ctx, [width * 0.3, y], [width * 0.5, y - band * 0.78], [width * 0.68, y], kit.mid);
-  fillTri(ctx, [width * 0.5, y - band * 0.78], [width * 0.62, y - band * 0.4], [width * 0.68, y], kit.shade);
+  fillTri(ctx, [width * 0.28, y], [width * 0.48, y - band * 0.82], [width * 0.64, y], kit.mid);
+  fillTri(ctx, [width * 0.48, y - band * 0.82], [width * 0.58, y - band * 0.38], [width * 0.64, y], kit.shade);
+  fillTri(ctx, [width * 0.45, y - band * 0.62], [width * 0.48, y - band * 0.82], [width * 0.52, y - band * 0.6], FACET.bone);
 
-  fillTri(ctx, [width * 0.66, y], [width * 0.86, y - band], [width, y], kit.mid);
-  fillTri(ctx, [width * 0.86, y - band], [width, y - band * 0.48], [width, y], kit.shade);
-  fillTri(
-    ctx,
-    [width * 0.835, y - band * 0.78],
-    [width * 0.86, y - band],
-    [width * 0.885, y - band * 0.78],
-    FACET.bone,
-  );
+  fillTri(ctx, [width * 0.62, y], [width * 0.84, y - band], [width, y], kit.mid);
+  fillTri(ctx, [width * 0.84, y - band], [width, y - band * 0.5], [width, y], kit.shade);
+  fillTri(ctx, [width * 0.81, y - band * 0.76], [width * 0.84, y - band], [width * 0.88, y - band * 0.74], FACET.bone);
 
-  fillTri(ctx, [0, y], [width * 0.22, y - band * 0.5], [width * 0.4, y], kit.deep);
-  fillTri(ctx, [width * 0.36, y], [width * 0.58, y - band * 0.42], [width * 0.78, y], kit.shade);
-  fillTri(ctx, [width * 0.72, y], [width * 0.92, y - band * 0.46], [width, y], kit.deep);
+  fillTri(ctx, [0, y], [width * 0.2, y - band * 0.52], [width * 0.38, y], kit.deep);
+  fillTri(ctx, [width * 0.2, y - band * 0.52], [width * 0.3, y - band * 0.22], [width * 0.38, y], kit.shade);
+  fillTri(ctx, [width * 0.34, y], [width * 0.56, y - band * 0.46], [width * 0.76, y], kit.shade);
+  fillTri(ctx, [width * 0.7, y], [width * 0.9, y - band * 0.5], [width, y], kit.deep);
 }
 
 /**
@@ -382,19 +379,19 @@ function drawStageMotif(ctx, width, height, kit) {
     return;
   }
   if (motif === "shards") {
-    drawCrystal(ctx, width * 0.08, height * 0.78, 28, crystalPalette(kit));
-    drawCrystal(ctx, width * 0.93, height * 0.74, 22, crystalPalette(kit));
+    drawCrystal(ctx, width * 0.09, height * 0.76, 36, crystalPalette(kit));
+    drawCrystal(ctx, width * 0.92, height * 0.72, 28, crystalPalette(kit));
     return;
   }
   if (motif === "beams") {
-    fillTri(ctx, [0, 0], [width * 0.2, 0], [0, height * 0.42], kit.lit);
-    fillTri(ctx, [width * 0.08, 0], [width * 0.3, 0], [width * 0.04, height * 0.36], kit.mid);
-    fillTri(ctx, [width * 0.78, 0], [width, 0], [width, height * 0.28], kit.shade);
+    fillTri(ctx, [0, 0], [width * 0.24, 0], [0, height * 0.48], kit.lit);
+    fillTri(ctx, [width * 0.1, 0], [width * 0.36, 0], [width * 0.05, height * 0.4], kit.mid);
+    fillTri(ctx, [width * 0.74, 0], [width, 0], [width, height * 0.32], kit.shade);
     return;
   }
   if (motif === "posts") {
-    drawPost(ctx, width * 0.1, height * 0.42, height * 0.46, kit);
-    drawPost(ctx, width * 0.9, height * 0.4, height * 0.48, kit);
+    drawPost(ctx, width * 0.09, height * 0.36, height * 0.52, kit);
+    drawPost(ctx, width * 0.91, height * 0.34, height * 0.54, kit);
     return;
   }
   if (motif === "flats") {
@@ -426,9 +423,10 @@ function drawStageMotif(ctx, width, height, kit) {
  * @param {number} scale
  */
 function drawCornerPlant(ctx, x, y, kit, scale) {
-  fillTri(ctx, [x - 18 * scale, y + 22 * scale], [x, y - 8 * scale], [x + 4 * scale, y + 24 * scale], kit.shade);
-  fillTri(ctx, [x, y - 8 * scale], [x + 22 * scale, y + 16 * scale], [x + 4 * scale, y + 24 * scale], kit.mid);
-  fillTri(ctx, [x - 10 * scale, y], [x, y - 28 * scale], [x + 10 * scale, y], kit.lit);
+  fillTri(ctx, [x - 28 * scale, y + 30 * scale], [x, y - 6 * scale], [x + 8 * scale, y + 32 * scale], kit.shade);
+  fillTri(ctx, [x, y - 6 * scale], [x + 32 * scale, y + 22 * scale], [x + 8 * scale, y + 32 * scale], kit.mid);
+  fillTri(ctx, [x - 16 * scale, y + 4 * scale], [x, y - 40 * scale], [x + 16 * scale, y + 4 * scale], kit.lit);
+  fillTri(ctx, [x - 8 * scale, y - 8 * scale], [x, y - 40 * scale], [x + 4 * scale, y - 8 * scale], FACET.bone);
 }
 
 /**
@@ -439,10 +437,11 @@ function drawCornerPlant(ctx, x, y, kit, scale) {
  * @param {number} scale
  */
 function drawTree(ctx, x, y, kit, scale) {
-  fillTri(ctx, [x - 8 * scale, y + 36 * scale], [x, y + 8 * scale], [x + 8 * scale, y + 36 * scale], kit.deep);
-  fillTri(ctx, [x - 28 * scale, y + 16 * scale], [x, y - 36 * scale], [x + 6 * scale, y + 16 * scale], kit.mid);
-  fillTri(ctx, [x - 6 * scale, y + 16 * scale], [x, y - 36 * scale], [x + 28 * scale, y + 18 * scale], kit.shade);
-  fillTri(ctx, [x - 10 * scale, y - 12 * scale], [x, y - 36 * scale], [x + 10 * scale, y - 12 * scale], kit.lit);
+  fillTri(ctx, [x - 12 * scale, y + 48 * scale], [x, y + 10 * scale], [x + 12 * scale, y + 48 * scale], kit.deep);
+  fillTri(ctx, [x - 40 * scale, y + 22 * scale], [x, y - 52 * scale], [x + 8 * scale, y + 22 * scale], kit.mid);
+  fillTri(ctx, [x - 8 * scale, y + 22 * scale], [x, y - 52 * scale], [x + 40 * scale, y + 24 * scale], kit.shade);
+  fillTri(ctx, [x - 16 * scale, y - 14 * scale], [x, y - 52 * scale], [x + 16 * scale, y - 14 * scale], kit.lit);
+  fillTri(ctx, [x - 8 * scale, y - 28 * scale], [x, y - 52 * scale], [x + 8 * scale, y - 28 * scale], FACET.bone);
 }
 
 /**
@@ -452,9 +451,10 @@ function drawTree(ctx, x, y, kit, scale) {
  * @param {StageKit} kit
  */
 function drawLogStack(ctx, x, y, kit) {
-  fillTri(ctx, [x - 34, y + 10], [x + 36, y - 4], [x + 30, y + 16], kit.shade);
-  fillTri(ctx, [x - 34, y + 10], [x - 28, y - 8], [x + 36, y - 4], kit.mid);
-  fillTri(ctx, [x - 22, y - 2], [x + 24, y - 18], [x + 18, y + 2], kit.lit);
+  fillTri(ctx, [x - 48, y + 16], [x + 52, y - 4], [x + 42, y + 24], FACET.ink);
+  fillTri(ctx, [x - 48, y + 16], [x - 38, y - 10], [x + 52, y - 4], kit.deep);
+  fillTri(ctx, [x - 32, y + 2], [x + 34, y - 24], [x + 26, y + 8], kit.lit);
+  fillTri(ctx, [x - 20, y - 6], [x + 8, y - 24], [x + 16, y], FACET.ink);
 }
 
 /**
@@ -464,9 +464,9 @@ function drawLogStack(ctx, x, y, kit) {
  * @param {StageKit} kit
  */
 function drawFlameShard(ctx, x, y, kit) {
-  fillTri(ctx, [x - 16, y + 18], [x, y - 32], [x + 4, y + 16], kit.lit);
-  fillTri(ctx, [x, y - 32], [x + 18, y + 14], [x + 4, y + 16], kit.mid);
-  fillTri(ctx, [x - 8, y + 6], [x, y - 14], [x + 8, y + 6], FACET.bone);
+  fillTri(ctx, [x - 24, y + 28], [x, y - 48], [x + 8, y + 24], kit.lit);
+  fillTri(ctx, [x, y - 48], [x + 26, y + 22], [x + 8, y + 24], kit.mid);
+  fillTri(ctx, [x - 12, y + 8], [x, y - 22], [x + 12, y + 8], FACET.bone);
 }
 
 /**
@@ -499,14 +499,14 @@ function drawFlat(ctx, x, y, w, h, kit) {
 /**
  * @param {StageKit} kit
  */
-function crystalPalette(kit) {
+function crystalPalette(_kit) {
   return {
-    top: kit.lit,
-    topRight: kit.mid,
+    top: FACET.ember,
+    topRight: FACET.sky,
     right: FACET.lilac,
-    bottom: kit.shade,
-    left: FACET.sky,
-    topLeft: kit.lit,
+    bottom: FACET_STEPS.skyInk,
+    left: FACET.moss,
+    topLeft: FACET_STEPS.emberBone,
   };
 }
 
