@@ -49,7 +49,9 @@ function skipResult(game, sample = pose({})) {
 }
 
 assert(START_DWELL >= 0.6 && START_DWELL <= 1, "dwell is the 0.6–1.0s hold");
-assert(START_HOLD.x === 0.5 && START_HOLD.y === 0.72, "the mark stays bottom-center");
+assert(START_HOLD.y <= 0.28, "the mark hugs the top");
+assert(START_HOLD.x >= 0.6 && START_HOLD.x <= 0.78, "the mark hugs the right corner, left of the menu");
+assert(!(START_HOLD.x === 0.5 && START_HOLD.y > 0.55), "the mark is not bottom-center");
 assert(startHoldFor("prompt").active === false, "prompt is not a dwell gate");
 assert(startHoldFor("start").active === true, "start shows the mark");
 assert(startHoldFor("over").label === "Play again", "game-over label is Play again");

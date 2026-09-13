@@ -30,22 +30,23 @@
  * @property {boolean} readyToSwap True on the covered beat until consumeSwap()
  * @property {boolean} swapped
  * @property {boolean} done
+ * @property {number} placardScale Modest reveal pulse. 1 when reduced-motion.
  */
 
 /** @type {Readonly<CurtainTimings>} */
 export const DEFAULT_CURTAIN_TIMINGS = Object.freeze({
-  down: 0.55,
-  covered: 0.16,
-  up: 0.5,
-  hold: 1.05,
+  down: 0.78,
+  covered: 0.28,
+  up: 0.72,
+  hold: 1.65,
 });
 
-/** Instant cover; keep a readable placard. */
+/** Instant cover; keep a readable placard, still shorter than default. */
 export const REDUCED_CURTAIN_TIMINGS = Object.freeze({
   down: 0,
   covered: 0,
   up: 0,
-  hold: 0.7,
+  hold: 1.05,
 });
 
 /**
@@ -78,6 +79,7 @@ export function interstitialDuration(options = {}) {
  */
 export function createTransition(options = {}) {
   const timings = timingsFor(options);
+  const reducedMotion = Boolean(options.reducedMotion);
   /** @type {CurtainPhase} */
   let phase = "idle";
   let elapsed = 0;
@@ -153,6 +155,7 @@ export function createTransition(options = {}) {
       readyToSwap: (phase === "covered" || phase === "up" || phase === "hold" || phase === "done") && !swapped,
       swapped,
       done: phase === "done",
+      placardScale: placardScaleOf(phase, elapsed, timings, reducedMotion),
     };
   }
 
@@ -214,6 +217,28 @@ function remainingOf(phase, elapsed, timings) {
     if (walk !== "done") left += durationOf(walk, timings);
   }
   return left;
+}
+
+/**
+ * Modest scale pulse as the title lands. Reduced-motion stays at 1.
+ *
+ * @param {CurtainPhase} phase
+ * @param {number} elapsed
+ * @param {CurtainTimings} timings
+ * @param {boolean} reducedMotion
+ */
+export function placardScaleOf(phase, elapsed, timings, reducedMotion) {
+  if (reducedMotion) return 1;
+  if (phase === "up") {
+    const t = clamp01(elapsed / Math.max(timings.up, 1e-6));
+    return 0.96 + 0.06 * easeInOutCubic(t);
+  }
+  if (phase === "hold") {
+    const span = Math.min(0.4, Math.max(timings.hold, 1e-6));
+    const t = clamp01(elapsed / span);
+    return 1 + 0.055 * (1 - t) * (1 - t);
+  }
+  return 1;
 }
 
 /**

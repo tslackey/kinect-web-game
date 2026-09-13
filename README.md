@@ -6,19 +6,23 @@ A motion arcade you can send someone. Open the link, allow the camera, play.
 
 1. Open that URL.
 2. Click **Allow camera**. Hands stay on-device. Nothing is uploaded.
-3. Hold a hand over the on-canvas **Play** mark until it fills, or click
-   **Play**. A **curtain** drops, the next stage swaps while you are
-   covered, then the curtain rises on a **big title placard**. After
-   that, one game for about **18 seconds**.
+3. Use the **top-right playlist** to turn games on or off, reorder them,
+   and pick **1P** or **2P**. Hold a hand over the corner **Play** mark
+   until it fills, or click **Play**. A longer **curtain** drops, the
+   next stage swaps while you are covered, then the curtain rises on a
+   **big title placard** held long enough to read. After that, one game
+   for about **18 seconds**.
 
-A session shuffles a short run from the expanded pack — not every game
-every time, and not 3 rounds of the same orb. The pack includes the
-sticky-carry games (**Water plant**, **Feed pet**, **Douse fire**),
-**Stomp bug**, **Hit orb**, and the simple sweep: **Duck beam**,
-**Jump bar**, **Strike pose**, **Lean away**, **Clap now**, **Kick ball**,
-**Stretch wide**, **High five**, **Catch fruit**, **Wave hello**,
-**Squash it**. Between games, Facet theater drapes close, the next
-stage set swaps, then the curtain rises on a big title placard.
+A first visit shuffles a short run from the expanded pack — not every
+game every time, and not 3 rounds of the same orb. The top-right menu
+saves your playlist and 1P/2P in `localStorage`, so the next session
+uses it. 2P is two bodies in one webcam frame, not a second camera.
+The pack includes the sticky-carry games (**Water plant**, **Feed pet**,
+**Douse fire**), **Stomp bug**, **Hit orb**, and the simple sweep:
+**Duck beam**, **Jump bar**, **Strike pose**, **Lean away**, **Clap now**,
+**Kick ball**, **Stretch wide**, **High five**, **Catch fruit**,
+**Wave hello**, **Squash it**. Between games, Facet theater drapes close,
+the next stage set swaps, then the curtain rises on a big title placard.
 Simple-pack verbs use Facet low-poly marks and a matching stage set.
 
 Each play window is 15–20 seconds (default 18s) so kids have time to
@@ -34,9 +38,10 @@ Pointer and keyboard stay crisp.
 
 If the camera is blocked or has no usable pose, click **Play without
 camera**. The pointer and keyboard still play. On start and game-over,
-hold a wrist (or the pointer when the camera is off) over the on-canvas
-Play mark until the fill completes. Leaving the mark resets the fill.
-Click **Play** stays as the fallback. The hold does not fire mid-game.
+hold a wrist (or the pointer when the camera is off) over the
+**top-right Play mark** until the fill completes. Leaving the mark
+resets the fill. Click **Play** stays as the fallback. The hold does
+not fire mid-game.
 
 Sound is optional. Use **Sound on** / **Sound off**.
 
@@ -62,10 +67,10 @@ camera hardware).
 | Path | Role |
 | --- | --- |
 | `input/` | Pose sample from one webcam; else mouse or keyboard. Webcam joints are exponentially smoothed with last-known-good (`SMOOTH_RATE`, `LKG_HOLD_MS`, `MIN_CONFIDENCE` in `input/smooth.js`). A live camera pose suppresses stand-ins. `sample()` emits pose maps. |
-| `game/` | Microgame contract and session loop: curtain → 18s play → win/fail → next. `transition.toNext({ title, backgroundId })` is the shared wipe. Start / game-over share a hand-hold Play mark (`START_DWELL` in `game/start-dwell.js`). Expanded pack + shuffle. |
+| `game/` | Microgame contract and session loop: curtain → 18s play → win/fail → next. `transition.toNext({ title, backgroundId })` is the shared wipe (timings in `game/transition.js`). Start / game-over share a corner hand-hold Play mark (`START_DWELL` in `game/start-dwell.js`). Playlist + 1P/2P persist in `game/playlist.js`. |
 | `render/` | Stick figures, Facet carry/stomp/simple-pack marks, theater curtains, title placard, verb-matched stage sets, and the start-hold ring. |
 | `feel/` | Optional synthesized hit / miss audio. |
-| `main.js` | Wires the loop, camera prompt, Play, and sound toggle. |
+| `main.js` | Wires the loop, camera prompt, corner playlist menu, Play, and sound toggle. |
 
 ## GitHub Pages
 

@@ -223,6 +223,13 @@ export function drawPlacard(ctx, width, height, view, reducedMotion) {
 
   const cx = width / 2;
   const cy = height * 0.44;
+  const pulse = reducedMotion ? 1 : Number.isFinite(view.placardScale) ? view.placardScale : 1;
+  if (typeof ctx.save === "function") {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(pulse, pulse);
+    ctx.translate(-cx, -cy);
+  }
   const cardW = Math.min(width * 0.78, 720);
   const cardH = Math.max(Math.min(height * 0.36, 268), Math.min(168, height * 0.48));
   const left = cx - cardW / 2;
@@ -325,6 +332,7 @@ export function drawPlacard(ctx, width, height, view, reducedMotion) {
     ctx.fillText(view.subtitle, cx, cy + size * 0.42);
   }
   ctx.globalAlpha = 1;
+  if (typeof ctx.restore === "function") ctx.restore();
 }
 
 /**

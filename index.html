@@ -37,12 +37,11 @@
       </p>
       <h1 id="headline">Short games</h1>
       <p class="lede" id="lede">
-        Open, allow the camera, play. Hold a hand over the on-canvas
-        Play mark, or click Play. A curtain, a big title, then about
-        18 seconds. The session shuffles plant, pet, fire, stomp, orb,
-        and the simple pack. When a camera body is live, the camera is
-        the only player. Pointer and keyboard still play if the camera
-        is off.
+        Open, allow the camera, play. The top-right menu saves a
+        playlist and 1P/2P. Hold a hand over the corner Play mark, or
+        click Play. A longer curtain, a big title, then about 18
+        seconds. When a camera body is live, the camera is the only
+        player. Pointer and keyboard still play if the camera is off.
       </p>
       <div class="scoreboard" id="scoreboard" hidden>
         <div class="score-head">
@@ -81,16 +80,6 @@
           <button type="button" class="btn primary" id="start-camera">
             Allow camera
           </button>
-          <button type="button" class="btn ghost" id="play">
-            <img
-              class="btn-icon"
-              src="./assets/facet/play.svg"
-              width="16"
-              height="16"
-              alt=""
-            />
-            <span id="play-label">Play without camera</span>
-          </button>
           <button type="button" class="btn ghost" id="toggle-sound" aria-pressed="true">
             Sound on
           </button>
@@ -102,6 +91,35 @@
         </div>
       </section>
     </header>
+
+    <aside class="session-menu" id="session-menu" aria-label="Playlist and players">
+      <p class="menu-kicker">Playlist</p>
+      <div class="menu-toolbar">
+        <button type="button" class="btn ghost" id="play">
+          <img
+            class="btn-icon"
+            src="./assets/facet/play.svg"
+            width="16"
+            height="16"
+            alt=""
+          />
+          <span id="play-label">Play without camera</span>
+        </button>
+        <div class="mode-toggle" role="group" aria-label="Players">
+          <button type="button" class="btn ghost" id="mode-1p" aria-pressed="false">
+            1P
+          </button>
+          <button type="button" class="btn ghost is-on" id="mode-2p" aria-pressed="true">
+            2P
+          </button>
+        </div>
+      </div>
+      <p class="menu-hint">
+        Hold the corner Play mark, or click. 2P is two bodies in one
+        camera.
+      </p>
+      <ol class="playlist" id="playlist"></ol>
+    </aside>
 
     <div class="camera-feeds" aria-hidden="true">
       <video
