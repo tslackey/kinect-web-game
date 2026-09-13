@@ -27,7 +27,7 @@ export const MICROGAME_OUTCOMES = Object.freeze(["playing", "win", "fail"]);
  * @property {number | null} [timeLeft]
  * @property {number} [lifetime]
  * @property {number} [driftScale]
- * @property {import("./plant.js").WaterScene | import("./pet.js").FeedScene | null} [scene]
+ * @property {import("./plant.js").WaterScene | import("./pet.js").FeedScene | import("./fire.js").FireScene | null} [scene]
  */
 
 /**

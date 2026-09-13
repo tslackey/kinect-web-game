@@ -1,4 +1,5 @@
 import {
+  DOUSE_FIRE,
   FEED_PET,
   GAME_COUNT,
   MICROGAME_OUTCOMES,
@@ -38,6 +39,9 @@ assert(WATER_PLANT.duration >= 5 && WATER_PLANT.duration <= 6, "plant duration s
 assert(isMicrogameDef(FEED_PET), "feed the pet should satisfy the contract");
 assert(FEED_PET.prompt === "Feed pet", "the pet prompt stays at two words");
 assert(FEED_PET.duration >= 5 && FEED_PET.duration <= 6, "pet duration should be about 5–6s");
+assert(isMicrogameDef(DOUSE_FIRE), "put out the fire should satisfy the contract");
+assert(DOUSE_FIRE.prompt === "Douse fire", "the fire prompt stays at two words");
+assert(DOUSE_FIRE.duration >= 5 && DOUSE_FIRE.duration <= 6, "fire duration should be about 5–6s");
 
 const play = ORB_HIT.create({ random: () => 0.4, index: 1, duration: ORB_HIT.duration });
 play.start();
