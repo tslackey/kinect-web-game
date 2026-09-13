@@ -490,7 +490,7 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
     const x = fire.x * width;
     const y = fire.y * height;
     const flicker = 0.5 + 0.5 * Math.sin(elapsed * 9);
-    const scale = out ? 0.85 : 1.35 + flicker * 0.12;
+    const scale = out ? 1.05 : 1.75 + flicker * 0.14;
     const alpha = gated ? 0.55 : missed ? 0.5 : 1;
     const zone = HIT_RADIUS * Math.min(width, height);
 
