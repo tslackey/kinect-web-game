@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet watering can">
+  <!-- 128 grid. Upright body, left handle, long spout. Upper-left light. -->
+  <polygon fill="#c8adf3" points="32,48 88,44 38,108"/>
+  <polygon fill="#8771b4" points="88,44 96,108 38,108"/>
+  <polygon fill="#8771b4" points="38,108 96,108 66,120"/>
+  <polygon fill="#bb9af7" points="50,76 76,60 82,88"/>
+
+  <polygon fill="#fcb588" points="24,28 92,24 92,48"/>
+  <polygon fill="#ff9e64" points="92,24 104,32 104,48"/>
+  <polygon fill="#b67450" points="92,24 92,48 104,48"/>
+  <polygon fill="#fcb588" points="24,28 92,48 28,48"/>
+
+  <polygon fill="#8771b4" points="36,48 12,28 36,64"/>
+  <polygon fill="#bb9af7" points="12,28 8,92 36,68"/>
+  <polygon fill="#8771b4" points="36,72 8,92 40,96"/>
+
+  <polygon fill="#9cb8f2" points="88,40 126,48 96,60"/>
+  <polygon fill="#5b77b4" points="96,52 126,48 118,76"/>
+  <polygon fill="#7aa2f7" points="108,52 126,48 118,76"/>
+</svg>

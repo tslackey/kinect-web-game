@@ -1,4 +1,5 @@
-import { FACET, FACET_STEPS } from "../theme/facet.js";
+import { readFileSync } from "node:fs";
+import { FACET, FACET_STEPS, mixHex } from "../theme/facet.js";
 import {
   coralCrystal,
   drawCrystal,
@@ -12,6 +13,18 @@ import {
   mossCrystal,
   strokeHex,
 } from "./facet.js";
+import {
+  bucketLipOffset,
+  canSpoutOffset,
+  carryShade,
+  drawCarryBowl,
+  drawCarryBucket,
+  drawCarryCan,
+  drawCarryFlame,
+  drawCarryPet,
+  drawCarryPlant,
+  drawCarryStream,
+} from "./carry.js";
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -81,5 +94,75 @@ const shade = facetShade("moss");
 assert(shade.lit === FACET_STEPS.mossBone, "lit step is hue toward Bone");
 assert(shade.mid === FACET.moss, "mid step is the named hue");
 assert(shade.shade === FACET_STEPS.mossInk, "shade step is hue toward Ink");
+
+assert(carryShade({ missed: true }).mid === FACET.coral, "missed marks go Coral");
+assert(carryShade({ held: true }).mid === FACET.ember, "held marks go Ember");
+assert(carryShade({ happy: true }).mid === FACET.moss, "happy pet goes Moss");
+assert(carryShade({ hue: "lilac" }).mid === FACET.lilac, "idle carry marks stay Lilac");
+
+const scene = mockCtx();
+drawCarryPlant(scene, 80, 80, { grown: false, missed: false, gated: false }, 40);
+drawCarryPlant(scene, 80, 80, { grown: true, missed: false, gated: false }, 40);
+drawCarryCan(scene, 80, 80, { held: false, gated: false, missed: false, face: 1 }, 40);
+drawCarryCan(scene, 80, 80, { held: true, gated: false, missed: false, face: -1 }, 40);
+drawCarryPet(scene, 80, 80, { happy: false, missed: false, gated: false }, 40);
+drawCarryPet(scene, 80, 80, { happy: true, missed: true, gated: false }, 40);
+drawCarryBowl(scene, 80, 80, { held: true, gated: false, missed: false }, 40);
+drawCarryFlame(scene, 80, 80, { out: false, missed: false, gated: false, elapsed: 0.4 }, 40);
+drawCarryFlame(scene, 80, 80, { out: true, missed: false, gated: false, elapsed: 0.4 }, 40);
+drawCarryBucket(scene, 80, 80, { held: false, gated: true, missed: false, face: -1 }, 40);
+drawCarryStream(scene, {
+  x0: 10,
+  y0: 10,
+  x1: 80,
+  y1: 40,
+  elapsed: 0.3,
+  rgb: "122, 162, 247",
+  count: 4,
+});
+
+const fills = scene.calls.filter((call) => Array.isArray(call) && call[0] === "fill").map((call) => call[1]);
+assert(fills.length > 40, "carry sprites fill many hard faces");
+assert(
+  fills.every((fill) => typeof fill === "string" && (fill.startsWith("#") || fill.startsWith("rgba("))),
+  "every fill is a flat hex or token rgba — no gradients",
+);
+
+const allowedHex = new Set([
+  ...Object.values(FACET),
+  ...Object.values(FACET_STEPS),
+  mixHex(FACET.moss, FACET.ink, 0.55),
+  mixHex(FACET.ember, FACET.ink, 0.58),
+]);
+const hexFills = fills.filter((fill) => fill.startsWith("#"));
+for (const fill of hexFills) {
+  assert(allowedHex.has(fill), `unexpected fill ${fill}`);
+}
+
+const leftSpout = canSpoutOffset(-1);
+const rightSpout = canSpoutOffset(1);
+assert(rightSpout.x > 0 && leftSpout.x < 0, "watering can spout faces the plant");
+assert(bucketLipOffset(1).y < 0, "bucket stream starts at the lip");
+
+const carrySource = readFileSync(new URL("./carry.js", import.meta.url), "utf8");
+for (const banned of ["quadraticCurveTo", "bezierCurveTo", "ellipse(", "arc(", "createLinearGradient", "createRadialGradient"]) {
+  assert(!carrySource.includes(banned), `carry sprites must not use ${banned}`);
+}
+
+const marks = ["plant.svg", "can.svg", "pet.svg", "bowl.svg", "flame.svg", "bucket.svg"];
+const svgHex = /#[0-9a-fA-F]{6}/g;
+const svgAllowed = new Set([
+  ...allowedHex,
+  mixHex(FACET.ember, FACET.ink, 0.5),
+  mixHex(FACET.moss, FACET.ink, 0.5),
+]);
+for (const name of marks) {
+  const svg = readFileSync(new URL(`../assets/facet/${name}`, import.meta.url), "utf8");
+  assert(svg.includes("polygon"), `${name} is triangle faces`);
+  assert(!/gradient|filter|opacity=/i.test(svg), `${name} stays flat fills`);
+  for (const hex of svg.match(svgHex) ?? []) {
+    assert(svgAllowed.has(hex.toLowerCase()) || svgAllowed.has(hex), `${name} uses unknown ${hex}`);
+  }
+}
 
 console.log("render/facet.test.mjs passed");

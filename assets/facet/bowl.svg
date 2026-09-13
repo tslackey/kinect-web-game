@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet bowl">
+  <!-- 128 grid. Wide dish, dark well, ember kibble. Upper-left light. -->
+  <polygon fill="#c8adf3" points="16,56 64,32 64,80"/>
+  <polygon fill="#bb9af7" points="64,32 112,56 64,80"/>
+  <polygon fill="#8771b4" points="16,56 32,104 64,80"/>
+  <polygon fill="#bb9af7" points="112,56 96,104 64,80"/>
+  <polygon fill="#8771b4" points="32,104 96,104 64,80"/>
+  <polygon fill="#c8adf3" points="16,56 112,56 96,68"/>
+  <polygon fill="#c8adf3" points="16,56 96,68 32,68"/>
+
+  <polygon fill="#1a1b26" points="36,60 92,52 44,84"/>
+  <polygon fill="#1a1b26" points="92,52 84,84 44,84"/>
+
+  <polygon fill="#fcb588" points="44,64 60,48 68,72"/>
+  <polygon fill="#ff9e64" points="72,64 92,52 88,76"/>
+  <polygon fill="#b67450" points="60,72 76,64 72,88"/>
+</svg>

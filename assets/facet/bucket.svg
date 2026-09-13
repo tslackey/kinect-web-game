@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet bucket">
+  <!-- 128 grid. Hard-edge handle, tapered pail, sky water. Upper-left light. -->
+  <polygon fill="#c8adf3" points="40,48 64,8 52,48"/>
+  <polygon fill="#8771b4" points="88,48 64,8 76,48"/>
+  <polygon fill="#bb9af7" points="64,8 52,28 76,28"/>
+
+  <polygon fill="#c8adf3" points="28,56 100,56 36,108"/>
+  <polygon fill="#8771b4" points="100,56 92,108 36,108"/>
+  <polygon fill="#8771b4" points="36,108 92,108 64,116"/>
+  <polygon fill="#bb9af7" points="48,76 74,64 82,88"/>
+
+  <polygon fill="#c8adf3" points="20,36 108,36 104,56"/>
+  <polygon fill="#bb9af7" points="20,36 104,56 24,56"/>
+
+  <polygon fill="#7aa2f7" points="40,60 88,60 64,76"/>
+  <polygon fill="#9cb8f2" points="40,60 76,54 64,76"/>
+</svg>
