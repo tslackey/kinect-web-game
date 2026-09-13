@@ -333,7 +333,7 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
   function drawPet(pet, { happy, missed, gated }) {
     const x = pet.x * width;
     const y = pet.y * height;
-    const scale = happy ? 1.35 : 1;
+    const scale = happy ? 1.55 : 1.25;
     const alpha = gated ? 0.55 : missed ? 0.5 : 1;
     const body = missed ? FACET.coral : happy ? FACET.moss : FACET.lilac;
     const muzzle = missed ? FACET_STEPS.coralBone : happy ? FACET_STEPS.mossBone : FACET_STEPS.lilacBone;
@@ -353,13 +353,13 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    const earLift = happy ? -28 : -16;
-    const earSpread = happy ? 18 : 14;
-    fillDiamond(ctx, x - earSpread * scale, y + (earLift + 4) * scale, 8 * scale, ear);
-    fillDiamond(ctx, x + earSpread * scale, y + earLift * scale, 8 * scale, ear);
+    const earLift = happy ? -34 : -20;
+    const earSpread = happy ? 22 : 17;
+    fillDiamond(ctx, x - earSpread * scale, y + (earLift + 4) * scale, 10 * scale, ear);
+    fillDiamond(ctx, x + earSpread * scale, y + earLift * scale, 10 * scale, ear);
 
-    fillDiamond(ctx, x, y + 6 * scale, 20 * scale, body);
-    fillDiamond(ctx, x, y - 10 * scale, 13 * scale, muzzle);
+    fillDiamond(ctx, x, y + 8 * scale, 24 * scale, body);
+    fillDiamond(ctx, x, y - 12 * scale, 16 * scale, muzzle);
 
     ctx.strokeStyle = missed ? FACET.coral : happy ? FACET.moss : FACET.lilac;
     ctx.lineWidth = happy ? 5 : 4;
