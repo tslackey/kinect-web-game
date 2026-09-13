@@ -195,7 +195,7 @@ export function drawCarryFlame(ctx, x, y, { out, missed, gated, elapsed }, zone)
   );
   drawFaces(ctx, x, y, logScale, logFaces(log, logDeep));
   if (out) {
-    drawFaces(ctx, x, y, 1.35, steamFaces(missed));
+    drawFaces(ctx, x, y, 1.65, steamFaces(missed));
   } else {
     drawFaces(ctx, x, y, flameScale, flameFaces(missed));
   }
@@ -323,9 +323,9 @@ function canFaces(body, lip, spout, fx) {
     { pts: flip([[14, -20], [20, -16], [20, -8]]), fill: lip.mid },
     { pts: flip([[14, -20], [14, -8], [20, -8]]), fill: lip.shade },
     { pts: flip([[-20, -18], [14, -8], [-18, -8]]), fill: lip.lit },
-    { pts: flip([[-16, -6], [-30, -16], [-22, 0]]), fill: body.shade },
-    { pts: flip([[-30, -16], [-32, 8], [-22, 0]]), fill: body.mid },
-    { pts: flip([[-22, 6], [-32, 8], [-14, 14]]), fill: body.shade },
+    { pts: flip([[-14, -8], [-26, -18], [-14, 0]]), fill: body.shade },
+    { pts: flip([[-26, -18], [-28, 14], [-14, 2]]), fill: body.mid },
+    { pts: flip([[-14, 4], [-28, 14], [-12, 16]]), fill: body.shade },
     { pts: flip([[12, -12], [44, -8], [16, -2]]), fill: spout.lit },
     { pts: flip([[16, -6], [44, -8], [40, 6]]), fill: spout.shade },
     { pts: flip([[30, -6], [44, -8], [40, 6]]), fill: spout.mid },
