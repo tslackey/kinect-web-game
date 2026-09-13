@@ -1,4 +1,5 @@
 import {
+  DEFAULT_PACK,
   DOUSE_FIRE,
   FEED_PET,
   GAME_COUNT,
@@ -14,6 +15,7 @@ import {
   isMicrogameDef,
   isPlayOutcome,
   sequenceFromPack,
+  shufflePack,
 } from "./index.js";
 
 function assert(condition, message) {
@@ -95,6 +97,11 @@ assert(
   "the session should keep the plugged-in game",
 );
 assert(sequenceFromPack([], GAME_COUNT, ORB_HIT).every((def) => def.id === "orb-hit"), "an empty pack falls back to the orb");
+assert(shufflePack(DEFAULT_PACK, () => 0.1).length === DEFAULT_PACK.length, "shuffle keeps the full pack");
+assert(
+  sequenceFromPack(DEFAULT_PACK, GAME_COUNT, WATER_PLANT, () => 0.7).length === GAME_COUNT,
+  "a shuffled pack still fills a short session",
+);
 
 const stubbed = createGame({ pack: [named, named], games: 2 });
 stubbed.start();

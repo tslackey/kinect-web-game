@@ -41,6 +41,7 @@ export function layoutPet(random) {
 export const FEED_PET = defineMicrogame({
   id: "feed-pet",
   prompt: "Feed pet",
+  backgroundId: "hearth",
   duration: PET_DURATION,
   create({ random, duration }) {
     const lifetime = Number.isFinite(duration) && duration > 0 ? duration : PET_DURATION;

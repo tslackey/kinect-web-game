@@ -41,6 +41,7 @@ export function layoutFire(random) {
 export const DOUSE_FIRE = defineMicrogame({
   id: "douse-fire",
   prompt: "Douse fire",
+  backgroundId: "ash",
   duration: FIRE_DURATION,
   create({ random, duration }) {
     const lifetime = Number.isFinite(duration) && duration > 0 ? duration : FIRE_DURATION;

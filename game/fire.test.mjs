@@ -1,4 +1,5 @@
 import {
+  DEFAULT_CURTAIN_TIMINGS,
   DEFAULT_PACK,
   DOUSE_DWELL,
   DOUSE_FIRE,
@@ -177,7 +178,7 @@ assert(
   "the first body can finish the douse",
 );
 
-const session = createGame({ random: () => 0.2, games: 3 });
+const session = createGame({ random: () => 0.2, games: 3, shuffle: false });
 session.start();
 assert(session.getState().prompt === "Water plant", "Play should still flash Water plant first");
 assert(session.getState().gameId === "water-plant", "the live game id should open on water-plant");
@@ -190,9 +191,10 @@ drainGame(session, PROMPT_DURATION);
 drainGame(session, PLAY_DURATION + 0.1, far);
 drainGame(session, RESULT_DURATION);
 assert(session.getState().prompt === "Douse fire", "Play should flash Douse fire as the third game");
+drainGame(session, DEFAULT_CURTAIN_TIMINGS.down + DEFAULT_CURTAIN_TIMINGS.covered);
 assert(session.getState().gameId === "douse-fire", "the live game id should be douse-fire");
 assert(session.getState().scene?.kind === "douse-fire", "the fire scene should be on the session view");
-drainGame(session, PROMPT_DURATION);
+drainGame(session, DEFAULT_CURTAIN_TIMINGS.up + DEFAULT_CURTAIN_TIMINGS.hold);
 assert(session.getState().phase === "playing", "the prompt should hand off to the fire game");
 const liveBucket = session.getState().scene.bucket;
 const liveFire = session.getState().scene.fire;

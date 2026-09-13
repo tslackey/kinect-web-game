@@ -2,16 +2,23 @@
  * Game state owner. A session is a short sequence of microgames:
  * prompt → one game on a 15–20s timer → win or fail → next.
  *
- * Water the plant is game 1. Feed the pet is game 2. Put out the fire is
- * game 3. Stomp the bug is game 4. Orb-hit stays in the pack. Either pose
- * map on the sample can score — one webcam, up to two bodies.
+ * Default session shuffles a short run from the expanded pack (plant, pet,
+ * fire, stomp, orb, plus the simple sweep). Either pose map on the sample
+ * can score — one webcam, up to two bodies. Curtain wipes live on the
+ * session, not on each game.
  */
 
 import { posesFromSample } from "../input/poses.js";
 import { FOOT_STRIKER_NAMES, STRIKER_NAMES, listStrikers } from "./hit.js";
+import { CATCH_FRUIT } from "./fruit.js";
+import { CLAP_NOW } from "./clap.js";
+import { DUCK_BEAM } from "./duck.js";
+import { HIGH_FIVE } from "./highfive.js";
+import { JUMP_BAR } from "./jump.js";
+import { KICK_BALL, driftBall } from "./kick.js";
+import { LEAN_AWAY } from "./lean.js";
 import {
   GAME_COUNT,
-  PROMPT_DURATION,
   RESULT_DURATION,
   isPlayOutcome,
   sequenceFromPack,
@@ -20,7 +27,12 @@ import { ORB_HIT, driftOrb, driftScaleForGame } from "./orb.js";
 import { WATER_PLANT } from "./plant.js";
 import { FEED_PET } from "./pet.js";
 import { DOUSE_FIRE } from "./fire.js";
+import { STRIKE_POSE } from "./pose.js";
+import { SQUASH_IT } from "./squash.js";
 import { STOMP_BUG, driftBug } from "./bug.js";
+import { STRETCH_WIDE } from "./stretch.js";
+import { createTransition } from "./transition.js";
+import { WAVE_HELLO } from "./wave.js";
 
 /**
  * @typedef {import("../input/index.js").PoseSample} PoseSample
@@ -41,7 +53,27 @@ export {
   isMicrogameDef,
   isPlayOutcome,
   sequenceFromPack,
+  shufflePack,
 } from "./microgame.js";
+export {
+  DEFAULT_CURTAIN_TIMINGS,
+  REDUCED_CURTAIN_TIMINGS,
+  createTransition,
+  easeInOutCubic,
+  interstitialDuration,
+  timingsFor,
+} from "./transition.js";
+export { DUCK_BEAM, DUCK_DURATION, BEAM_Y, DUCK_CLEARANCE } from "./duck.js";
+export { JUMP_BAR, JUMP_DURATION, BAR_Y, JUMP_SPIKE } from "./jump.js";
+export { STRIKE_POSE, POSE_DURATION, POSE_DWELL } from "./pose.js";
+export { LEAN_AWAY, LEAN_DURATION, LEAN_EDGE } from "./lean.js";
+export { CLAP_NOW, CLAP_DURATION, CLAP_CUE_AT, CLAP_SPAN } from "./clap.js";
+export { KICK_BALL, KICK_DURATION, KICK_DWELL, driftBall, makeBall } from "./kick.js";
+export { STRETCH_WIDE, STRETCH_DURATION, STRETCH_SPAN } from "./stretch.js";
+export { HIGH_FIVE, HIGH_FIVE_DURATION } from "./highfive.js";
+export { CATCH_FRUIT, FRUIT_DURATION, FRUIT_FALL, makeFruit } from "./fruit.js";
+export { WAVE_HELLO, WAVE_DURATION, WAVE_DWELL } from "./wave.js";
+export { SQUASH_IT, SQUASH_DURATION, SQUASH_DWELL } from "./squash.js";
 export {
   FOOT_STRIKER_NAMES,
   HIT_RADIUS,
@@ -91,8 +123,29 @@ export {
   makeBug,
 } from "./bug.js";
 
-/** Default session pack. Plant, pet, fire, stomp; orb-hit stays in the run. */
-export const DEFAULT_PACK = [WATER_PLANT, FEED_PET, DOUSE_FIRE, STOMP_BUG, ORB_HIT];
+/** Full pack. Session shuffles a short run so a play stays kid-length. */
+export const DEFAULT_PACK = [
+  WATER_PLANT,
+  FEED_PET,
+  DOUSE_FIRE,
+  STOMP_BUG,
+  ORB_HIT,
+  DUCK_BEAM,
+  JUMP_BAR,
+  STRIKE_POSE,
+  LEAN_AWAY,
+  CLAP_NOW,
+  KICK_BALL,
+  STRETCH_WIDE,
+  HIGH_FIVE,
+  CATCH_FRUIT,
+  WAVE_HELLO,
+  SQUASH_IT,
+];
+
+const FOOT_GAMES = new Set(["stomp-bug", "kick-ball"]);
+const HEIGHT_GAMES = new Set(["duck-beam", "jump-bar"]);
+const LEAN_GAMES = new Set(["lean-away"]);
 
 /**
  * @typedef {object} Marker
@@ -119,7 +172,9 @@ export const DEFAULT_PACK = [WATER_PLANT, FEED_PET, DOUSE_FIRE, STOMP_BUG, ORB_H
  * @property {number} lifetime Seconds the current game stays playable.
  * @property {number} driftScale
  * @property {Target} target
- * @property {import("./plant.js").WaterScene | import("./pet.js").FeedScene | import("./fire.js").FireScene | import("./bug.js").BugScene | null} [scene] Live plant, pet, fire, or bug slice, or null for orb games.
+ * @property {object | null} [scene] Live stage slice, or null for orb games.
+ * @property {string | null} backgroundId Stage set id; swapped while the curtain is closed.
+ * @property {import("./transition.js").CurtainView | null} transition Live curtain, or null outside the interstitial.
  * @property {number | null} timeLeft Seconds left on the live game, or null during prompt.
  * @property {number | null} holdLeft Seconds left in the prompt or result beat.
  * @property {Flash | null} flash Latest hit / miss / game-over cue for juice. Not a mechanic.
@@ -140,6 +195,8 @@ export const DEFAULT_PACK = [WATER_PLANT, FEED_PET, DOUSE_FIRE, STOMP_BUG, ORB_H
  *   random?: () => number,
  *   games?: number,
  *   pack?: MicrogameDef[],
+ *   reducedMotion?: boolean,
+ *   shuffle?: boolean,
  * }} [options]
  * @returns {{
  *   tick: (dt: number, sample: PoseSample) => GameState,
@@ -148,13 +205,27 @@ export const DEFAULT_PACK = [WATER_PLANT, FEED_PET, DOUSE_FIRE, STOMP_BUG, ORB_H
  *   reset: () => GameState,
  * }}
  */
-export function createGame({ random = Math.random, games = GAME_COUNT, pack } = {}) {
-  const sequence = sequenceFromPack(pack ?? DEFAULT_PACK, games, WATER_PLANT);
+export function createGame({
+  random = Math.random,
+  games = GAME_COUNT,
+  pack,
+  reducedMotion = false,
+  shuffle = true,
+} = {}) {
+  const sequence = sequenceFromPack(
+    pack ?? DEFAULT_PACK,
+    games,
+    WATER_PLANT,
+    shuffle ? random : undefined,
+  );
   const sessionGames = sequence.length;
   const first = sequence[0] ?? WATER_PLANT;
+  const transition = createTransition({ reducedMotion });
   let nextFlashId = 1;
   /** @type {MicrogamePlay | null} */
   let current = null;
+  /** @type {number | null} */
+  let pendingIndex = null;
 
   /** @type {GameState} */
   const state = {
@@ -181,6 +252,8 @@ export function createGame({ random = Math.random, games = GAME_COUNT, pack } = 
       vy: 0,
     },
     scene: null,
+    backgroundId: first.backgroundId ?? first.id,
+    transition: null,
     timeLeft: null,
     holdLeft: null,
     flash: null,
@@ -207,9 +280,14 @@ export function createGame({ random = Math.random, games = GAME_COUNT, pack } = 
     }
 
     if (state.phase === "prompt") {
+      const view = transition.tick(step);
+      state.transition = view;
+      state.holdLeft = view.remaining;
+      if (view.readyToSwap) {
+        revealGame();
+      }
       driftLiveTarget(state, step);
-      state.holdLeft = Math.max(0, (state.holdLeft ?? PROMPT_DURATION) - step);
-      if (state.holdLeft <= 0) {
+      if (view.done) {
         beginPlay();
       }
       return state;
@@ -247,13 +325,15 @@ export function createGame({ random = Math.random, games = GAME_COUNT, pack } = 
     state.elapsed = 0;
     state.score = 0;
     state.flash = null;
-    beginGame(1);
+    queueGame(1, { revealNow: true });
     return state;
   }
 
   function reset() {
     current = null;
+    pendingIndex = null;
     nextFlashId = 1;
+    transition.reset();
     state.elapsed = 0;
     state.ticks = 0;
     state.phase = "start";
@@ -265,6 +345,8 @@ export function createGame({ random = Math.random, games = GAME_COUNT, pack } = 
     state.lifetime = first.duration;
     state.driftScale = driftScaleForGame(1);
     state.scene = null;
+    state.backgroundId = first.backgroundId ?? first.id;
+    state.transition = null;
     state.timeLeft = null;
     state.holdLeft = null;
     state.flash = null;
@@ -273,26 +355,52 @@ export function createGame({ random = Math.random, games = GAME_COUNT, pack } = 
   }
 
   /**
+   * Announce the next game and start the curtain. Scene swaps on the
+   * covered beat unless this is session start (`revealNow`).
+   *
    * @param {number} index
+   * @param {{ revealNow?: boolean }} [options]
    */
-  function beginGame(index) {
+  function queueGame(index, { revealNow = false } = {}) {
+    const def = sequence[index - 1] ?? first;
+    pendingIndex = index;
+    state.game = index;
+    state.phase = "prompt";
+    state.prompt = def.title ?? def.prompt;
+    state.result = null;
+    state.timeLeft = null;
+    state.lifetime = def.duration;
+    state.driftScale = driftScaleForGame(index);
+    const view = transition.toNext({
+      title: def.title ?? def.prompt,
+      backgroundId: def.backgroundId ?? def.id,
+      subtitle: def.subtitle ?? "",
+    });
+    state.transition = view;
+    state.holdLeft = view.remaining;
+    if (revealNow || view.readyToSwap) {
+      revealGame();
+    }
+  }
+
+  function revealGame() {
+    const index = pendingIndex ?? state.game;
     const def = sequence[index - 1] ?? first;
     current = def.create({ random, index, duration: def.duration });
     current.start();
-    state.game = index;
-    state.phase = "prompt";
-    state.prompt = def.prompt;
     state.gameId = def.id;
-    state.result = null;
-    state.timeLeft = null;
-    state.holdLeft = PROMPT_DURATION;
+    state.backgroundId = def.backgroundId ?? def.id;
     syncView();
     state.timeLeft = null;
+    const view = transition.consumeSwap();
+    state.transition = view;
   }
 
   function beginPlay() {
+    if (!current) revealGame();
     state.phase = "playing";
     state.holdLeft = null;
+    state.transition = null;
     syncView();
     if (state.timeLeft == null) {
       state.timeLeft = state.lifetime;
@@ -323,7 +431,7 @@ export function createGame({ random = Math.random, games = GAME_COUNT, pack } = 
       }
       return;
     }
-    beginGame(state.game + 1);
+    queueGame(state.game + 1, { revealNow: false });
   }
 
   function syncView() {
@@ -363,7 +471,7 @@ export function createGame({ random = Math.random, games = GAME_COUNT, pack } = 
  * @returns {Joint | null}
  */
 function pickAim(joints, target, gameId) {
-  const names = gameId === "stomp-bug" ? FOOT_STRIKER_NAMES : STRIKER_NAMES;
+  const names = strikerNamesFor(gameId);
   const strikers = listStrikers(joints, names);
   if (strikers.length > 0) {
     return nearest(strikers, target ?? strikers[0]);
@@ -434,7 +542,27 @@ function driftLiveTarget(state, step) {
     driftBug(state.target, step);
     return;
   }
+  if (state.scene?.kind === "kick-ball") {
+    driftBall(state.target, step);
+    return;
+  }
+  if (state.scene?.kind === "catch-fruit") {
+    return;
+  }
+  if (state.scene && state.scene.kind !== undefined && state.scene.kind !== "orb-hit") {
+    return;
+  }
   driftOrb(state.target, step);
+}
+
+/**
+ * @param {string | null | undefined} gameId
+ */
+function strikerNamesFor(gameId) {
+  if (gameId && FOOT_GAMES.has(gameId)) return FOOT_STRIKER_NAMES;
+  if (gameId && HEIGHT_GAMES.has(gameId)) return ["left_hip", "right_hip", "nose", "pointer"];
+  if (gameId && LEAN_GAMES.has(gameId)) return ["nose", "left_shoulder", "right_shoulder", "pointer"];
+  return STRIKER_NAMES;
 }
 
 /**

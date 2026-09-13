@@ -98,6 +98,7 @@ export function driftOrb(target, step) {
 export const ORB_HIT = defineMicrogame({
   id: "orb-hit",
   prompt: "Hit orb",
+  backgroundId: "crystal",
   duration: TARGET_LIFETIME,
   create({ random, index, duration }) {
     const lifetime = Number.isFinite(duration) && duration > 0 ? duration : lifetimeForGame(index);

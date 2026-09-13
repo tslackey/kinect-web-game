@@ -2,13 +2,16 @@
  * Microgame contract. A later pack plugs into the session with these fields:
  * prompt, duration, win, fail, next.
  *
- * Loop: short on-screen prompt → one game on a 15–20s timer → win or fail → next.
+ * Loop: curtain + title placard → one game on a 15–20s timer → win or fail → next.
  * Win / fail are timeout-or-success, never “wrong gesture.”
  * Play ticks see 1 or 2 pose maps from one webcam sample (not one cam per player).
  */
 
+import { interstitialDuration } from "./transition.js";
+
 export const GAME_COUNT = 4;
-export const PROMPT_DURATION = 1.05;
+/** Curtain down → swap → curtain up + placard hold. Lives in transition.js. */
+export const PROMPT_DURATION = interstitialDuration();
 export const RESULT_DURATION = 0.9;
 /** Default play window after the prompt. Kids-feel floor is 15s; stay in 15–20. */
 export const PLAY_DURATION = 18;
@@ -29,7 +32,7 @@ export const MICROGAME_OUTCOMES = Object.freeze(["playing", "win", "fail"]);
  * @property {number | null} [timeLeft]
  * @property {number} [lifetime]
  * @property {number} [driftScale]
- * @property {import("./plant.js").WaterScene | import("./pet.js").FeedScene | import("./fire.js").FireScene | import("./bug.js").BugScene | null} [scene]
+ * @property {object | null} [scene]
  */
 
 /**
@@ -54,6 +57,9 @@ export const MICROGAME_OUTCOMES = Object.freeze(["playing", "win", "fail"]);
  * @typedef {object} MicrogameDef
  * @property {string} id
  * @property {string} prompt Short on-screen cue
+ * @property {string} [title] Placard text; defaults to prompt
+ * @property {string} [backgroundId] Stage set swapped while the curtain is closed
+ * @property {string} [subtitle]
  * @property {number} duration Seconds of play after the prompt
  * @property {(ctx: MicrogameCreateContext) => MicrogamePlay} create
  */
@@ -96,18 +102,41 @@ export function isPlayOutcome(value) {
 }
 
 /**
+ * Fisher-Yates shuffle using the session random.
+ *
+ * @param {MicrogameDef[]} pack
+ * @param {() => number} [random]
+ * @returns {MicrogameDef[]}
+ */
+export function shufflePack(pack, random) {
+  const list = pack.slice();
+  if (typeof random !== "function" || list.length < 2) return list;
+  for (let i = list.length - 1; i > 0; i -= 1) {
+    const roll = random();
+    const j = Math.min(i, Math.max(0, Math.floor((Number.isFinite(roll) ? roll : 0) * (i + 1))));
+    const tmp = list[i];
+    list[i] = list[j];
+    list[j] = tmp;
+  }
+  return list;
+}
+
+/**
  * Build the session sequence. A pack is a list of defs; it repeats to fill
- * `games` if needed. Invalid defs are skipped. The session, not the pack,
+ * `games` if needed. Invalid defs are skipped. Pass `random` to shuffle so
+ * a long pack can feed a short default session. The session, not the pack,
  * advances to next after win or fail.
  *
  * @param {unknown} pack
  * @param {number} games
  * @param {MicrogameDef} fallback
+ * @param {() => number} [random]
  * @returns {MicrogameDef[]}
  */
-export function sequenceFromPack(pack, games, fallback) {
+export function sequenceFromPack(pack, games, fallback, random) {
   const count = Math.max(1, Math.floor(games) || GAME_COUNT);
   const valid = Array.isArray(pack) ? pack.filter(isMicrogameDef) : [];
   const source = valid.length > 0 ? valid : [fallback];
-  return Array.from({ length: count }, (_, i) => source[i % source.length]);
+  const ordered = shufflePack(source, random);
+  return Array.from({ length: count }, (_, i) => ordered[i % ordered.length]);
 }

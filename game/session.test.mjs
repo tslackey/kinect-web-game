@@ -1,4 +1,5 @@
 import {
+  DEFAULT_PACK,
   DOUSE_FIRE,
   FEED_PET,
   GAME_COUNT,
@@ -150,7 +151,7 @@ short.start();
 assert(short.getState().phase === "result", "start during a live session should be a no-op");
 assert(short.getState().score === 1, "a no-op start should not reset a live game");
 
-const mixed = createGame({ random: () => 0.2 });
+const mixed = createGame({ random: () => 0.2, shuffle: false });
 mixed.start();
 assert(mixed.getState().prompt === WATER_PLANT.prompt, "the default pack should open on Water plant");
 assert(mixed.getState().gameId === "water-plant", "Water the plant is game 1");
@@ -173,5 +174,11 @@ bugOnly.start();
 assert(bugOnly.getState().prompt === STOMP_BUG.prompt, "a bug-only pack should flash Stomp bug");
 assert(bugOnly.getState().gameId === "stomp-bug", "Stomp the bug is a pack entry");
 assert(bugOnly.getState().scene?.kind === "stomp-bug", "the bug scene should be on the session view");
+
+assert(
+  DEFAULT_PACK.some((def) => def.id === "duck-beam") && DEFAULT_PACK.some((def) => def.id === "catch-fruit"),
+  "the expanded pack includes the simple sweep",
+);
+assert(DEFAULT_PACK.length > 8, "the pack is larger than one session");
 
 console.log("game/session.test.mjs passed");

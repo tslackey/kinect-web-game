@@ -325,7 +325,36 @@ body.is-camera-ready .camera-invite {
   background: transparent;
 }
 
+body.is-curtain .hud {
+  opacity: 0.22;
+}
+
+body[data-stage="garden"] .atmosphere {
+  background-color: color-mix(in srgb, var(--moss) 10%, var(--ink));
+}
+
+body[data-stage="hearth"] .atmosphere,
+body[data-stage="ash"] .atmosphere,
+body[data-stage="cue"] .atmosphere,
+body[data-stage="tilt"] .atmosphere,
+body[data-stage="press"] .atmosphere {
+  background-color: color-mix(in srgb, var(--ember) 10%, var(--ink));
+}
+
+body[data-stage="beam"] .atmosphere,
+body[data-stage="span"] .atmosphere,
+body[data-stage="hello"] .atmosphere {
+  background-color: color-mix(in srgb, var(--sky) 10%, var(--ink));
+}
+
+body[data-stage="stage"] .atmosphere,
+body[data-stage="high"] .atmosphere,
+body[data-stage="crystal"] .atmosphere {
+  background-color: color-mix(in srgb, var(--lilac) 10%, var(--ink));
+}
+
 body.is-playing .camera-invite,
+body.is-curtain .camera-invite,
 body.is-between .camera-invite {
   padding: 0.55rem 0 0;
   border: none;

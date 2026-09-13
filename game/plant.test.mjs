@@ -172,7 +172,7 @@ assert(
   "the first body can finish the pour",
 );
 
-const session = createGame({ random: () => 0.2, games: 2 });
+const session = createGame({ random: () => 0.2, games: 2, shuffle: false });
 session.start();
 assert(session.getState().prompt === "Water plant", "Play should flash Water plant");
 assert(session.getState().gameId === "water-plant", "the live game id should be water-plant");

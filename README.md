@@ -6,20 +6,22 @@ A motion arcade you can send someone. Open the link, allow the camera, play.
 
 1. Open that URL.
 2. Click **Allow camera**. Hands stay on-device. Nothing is uploaded.
-3. Click **Play**. A short prompt flashes, then one game for about
-   **18 seconds**. First up: **Water plant** — hover a wrist or the
-   pointer over the pot, carry it over the plant, pour. Next:
-   **Feed pet** — same sticky carry, bowl to a hungry pet. Then:
-   **Douse fire** — stick the bucket, carry it over the flame, spray.
-   Then: **Stomp bug** — hover an ankle (or the pointer as a foot)
-   over the bug, or drive a foot through it. Later games can still be
-   **Hit orb**. Win or miss, the next game starts.
+3. Click **Play**. A **curtain** drops, the next stage swaps while you
+   are covered, then the curtain rises on a **big title placard**. After
+   that, one game for about **18 seconds**.
 
-A session is a short sequence of those games — not 3 rounds of the same
-orb. Each play window is 15–20 seconds (default 18s) so kids have time
-to find the body part and finish. Win or fail is timeout-or-success, not
-a wrong gesture. Two people in one camera frame share the same pot,
-bowl, bucket, or bug and the same win.
+A session shuffles a short run from the expanded pack — not every game
+every time, and not 3 rounds of the same orb. The pack includes the
+sticky-carry games (**Water plant**, **Feed pet**, **Douse fire**),
+**Stomp bug**, **Hit orb**, and the simple sweep: **Duck beam**,
+**Jump bar**, **Strike pose**, **Lean away**, **Clap now**, **Kick ball**,
+**Stretch wide**, **High five**, **Catch fruit**, **Wave hello**,
+**Squash it**. Placeholder Facet shapes are enough to teach the verb.
+
+Each play window is 15–20 seconds (default 18s) so kids have time to
+find the body part and finish. Win or fail is timeout-or-success, not
+a wrong gesture. Two people in one camera frame share the same target
+and the same win.
 
 If a camera body is in frame, that skeleton is the only player — moving
 the mouse does not add a second body. Keyboard is also suppressed while
@@ -50,8 +52,8 @@ camera hardware).
 | Path | Role |
 | --- | --- |
 | `input/` | Pose sample from one webcam; else mouse or keyboard. A live camera pose suppresses stand-ins. `sample()` emits pose maps. |
-| `game/` | Microgame contract and session loop: prompt → 18s play → win/fail → next. Water the plant, Feed the pet, Put out the fire, Stomp the bug, then orb-hit. |
-| `render/` | Stick figures, Facet low-poly plant/can, pet/bowl, flame/bucket, bug, or the orb, markers, and hit flashes. |
+| `game/` | Microgame contract and session loop: curtain → 18s play → win/fail → next. `transition.toNext({ title, backgroundId })` is the shared wipe. Expanded pack + shuffle. |
+| `render/` | Stick figures, Facet carry/stomp art, placeholder simple-game marks, curtain panels, and the title placard. |
 | `feel/` | Optional synthesized hit / miss audio. |
 | `main.js` | Wires the loop, camera prompt, Play, and sound toggle. |
 

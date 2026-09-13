@@ -6,6 +6,7 @@ import {
   PLAY_DURATION,
   PROMPT_DURATION,
   RESULT_DURATION,
+  DEFAULT_CURTAIN_TIMINGS,
   STOMP_BUG,
   STOMP_DWELL,
   STRIKER_NAMES,
@@ -208,7 +209,7 @@ assert(
   "the first body can squash while a second map is present",
 );
 
-const session = createGame({ random: () => 0.2, games: 4 });
+const session = createGame({ random: () => 0.2, games: 4, shuffle: false });
 session.start();
 assert(session.getState().prompt === "Water plant", "Play should still flash Water plant first");
 drainGame(session, PROMPT_DURATION);
@@ -223,9 +224,10 @@ drainGame(session, PROMPT_DURATION);
 drainGame(session, PLAY_DURATION + 0.1, far);
 drainGame(session, RESULT_DURATION);
 assert(session.getState().prompt === "Stomp bug", "Play should flash Stomp bug as the fourth game");
+drainGame(session, DEFAULT_CURTAIN_TIMINGS.down + DEFAULT_CURTAIN_TIMINGS.covered);
 assert(session.getState().gameId === "stomp-bug", "the live game id should be stomp-bug");
 assert(session.getState().scene?.kind === "stomp-bug", "the bug scene should be on the session view");
-drainGame(session, PROMPT_DURATION);
+drainGame(session, DEFAULT_CURTAIN_TIMINGS.up + DEFAULT_CURTAIN_TIMINGS.hold);
 assert(session.getState().phase === "playing", "the prompt should hand off to the bug game");
 const sessionBug = session.getState().scene.bug;
 drainGame(session, STOMP_DWELL + 0.05, oneBody({ left_ankle: { x: sessionBug.x, y: sessionBug.y, confidence: 1 } }));
