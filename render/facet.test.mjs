@@ -76,7 +76,7 @@ const moss = mossCrystal();
 assert(moss.top === FACET_STEPS.mossBone, "orb crystal uses moss-bone");
 assert(emberCrystal().stroke === FACET.ember, "ember crystal stroke");
 assert(coralCrystal().stroke === FACET.coral, "coral crystal stroke");
-assert(lilacCrystal().top === FACET_STEPS.lilacBone, "plant bloom is a lilac crystal");
+assert(lilacCrystal().top === FACET_STEPS.lilacBone, "lilac crystal uses lilac-bone");
 
 const ctx = mockCtx();
 fillPoly(ctx, [[0, 0], [4, 0], [2, 3]], FACET.moss);

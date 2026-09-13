@@ -7,7 +7,7 @@
  * Play ticks see 1 or 2 pose maps from one webcam sample (not one cam per player).
  */
 
-export const GAME_COUNT = 3;
+export const GAME_COUNT = 4;
 export const PROMPT_DURATION = 1.05;
 export const RESULT_DURATION = 0.9;
 
@@ -27,7 +27,7 @@ export const MICROGAME_OUTCOMES = Object.freeze(["playing", "win", "fail"]);
  * @property {number | null} [timeLeft]
  * @property {number} [lifetime]
  * @property {number} [driftScale]
- * @property {import("./plant.js").WaterScene | import("./pet.js").FeedScene | import("./fire.js").FireScene | null} [scene]
+ * @property {import("./plant.js").WaterScene | import("./pet.js").FeedScene | import("./fire.js").FireScene | import("./bug.js").BugScene | null} [scene]
  */
 
 /**

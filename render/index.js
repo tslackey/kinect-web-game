@@ -2,7 +2,8 @@
  * Draws the current game state onto the existing canvas.
  * Each pose map is its own stick figure. Orb games draw the crystal;
  * water-the-plant, feed-the-pet, and put-out-the-fire use Facet
- * low-poly marks (hard-edge triangles, token steps, upper-left light).
+ * low-poly marks (hard-edge triangles, token steps, upper-left light);
+ * stomp-the-bug draws a Facet low-poly bug and stomp cue.
  */
 
 import { STICK_BONES } from "../input/joints.js";
@@ -28,6 +29,7 @@ import {
   mossCrystal,
   strokeHex,
 } from "./facet.js";
+import { drawStompBug } from "./stomp.js";
 
 /**
  * @typedef {import("../game/index.js").GameState} GameState
@@ -63,8 +65,9 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
     ctx.clearRect(0, 0, width, height);
     drawFlashVeil(state);
     const poses = posesFromSample(state.pose);
+    const footGame = state.scene?.kind === "stomp-bug";
     poses.forEach((pose, index) => {
-      drawSkeleton(pose.joints, PLAYER_RGB[index % PLAYER_RGB.length], pose.id);
+      drawSkeleton(pose.joints, PLAYER_RGB[index % PLAYER_RGB.length], pose.id, footGame);
     });
     if (state.phase !== "start") {
       if (state.scene?.kind === "water-plant") {
@@ -73,6 +76,8 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
         drawFeedScene(state);
       } else if (state.scene?.kind === "douse-fire") {
         drawFireScene(state);
+      } else if (state.scene?.kind === "stomp-bug") {
+        drawBugScene(state);
       } else {
         drawTarget(state);
       }
@@ -85,8 +90,9 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
    * @param {Record<string, Joint> | undefined | null} joints
    * @param {string} rgb
    * @param {string} [label]
+   * @param {boolean} [footGame]
    */
-  function drawSkeleton(joints, rgb, label) {
+  function drawSkeleton(joints, rgb, label, footGame = false) {
     if (!joints) return;
 
     ctx.lineCap = "butt";
@@ -120,9 +126,10 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
 
     for (const [name, joint] of Object.entries(joints)) {
       if (name === "pointer" || !usable(joint)) continue;
-      const radius = name === "nose" || name.endsWith("wrist") ? 7 : 4.5;
-      const fill =
-        name.endsWith("wrist") || name === "nose" ? `rgb(${rgb})` : FACET.bone;
+      const strike =
+        name.endsWith("wrist") || (footGame && name.endsWith("ankle"));
+      const radius = name === "nose" || strike ? 7 : 4.5;
+      const fill = strike || name === "nose" ? `rgb(${rgb})` : FACET.bone;
       fillDiamond(ctx, joint.x * width, joint.y * height, radius, fill);
     }
 
@@ -345,6 +352,34 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
   /**
    * @param {GameState} state
    */
+  function drawBugScene(state) {
+    const scene = state.scene;
+    if (!scene || scene.kind !== "stomp-bug") return;
+    const gated = state.phase === "prompt";
+    const missed = state.phase === "over" || (state.phase === "result" && state.result === "fail");
+    const won = state.phase === "result" && state.result === "win";
+    const squashed = scene.bug.stage >= 1 || won;
+    drawBug(scene.bug, { squashed, squashing: scene.squashing || won, missed, gated, elapsed: state.elapsed });
+  }
+
+  /**
+   * @param {{ x: number, y: number }} bug
+   * @param {{ squashed: boolean, squashing: boolean, missed: boolean, gated: boolean, elapsed: number }} look
+   */
+  function drawBug(bug, { squashed, squashing, missed, gated, elapsed }) {
+    const zone = HIT_RADIUS * Math.min(width, height);
+    drawStompBug(
+      ctx,
+      bug.x * width,
+      bug.y * height,
+      { squashed, squashing, missed, gated, elapsed },
+      zone,
+    );
+  }
+
+  /**
+   * @param {GameState} state
+   */
   function drawMarkers(state) {
     const missed = state.phase === "over" || (state.phase === "result" && state.result === "fail");
     const markers = state.markers?.length ? state.markers : [{ id: "p1", x: state.marker.x, y: state.marker.y }];
@@ -404,7 +439,14 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
     const hit = flash.kind === "hit";
     const color = hit ? FACET_RGB.moss : FACET_RGB.coral;
     const ring = reducedMotion ? 28 : 22 + t * 92;
-    strokeHex(ctx, x, y, ring, `rgba(${color}, ${0.2 + fade * 0.75})`, reducedMotion ? 3 : Math.max(1.5, 6 * fade));
+    strokeHex(
+      ctx,
+      x,
+      y,
+      ring,
+      `rgba(${color}, ${0.2 + fade * 0.75})`,
+      reducedMotion ? 3 : Math.max(1.5, 6 * fade),
+    );
 
     if (hit && !reducedMotion) {
       for (let i = 0; i < 8; i += 1) {
