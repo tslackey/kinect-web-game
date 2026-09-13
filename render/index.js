@@ -260,7 +260,7 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
     if (scene.pouring || won) {
       drawPour(scene.pot, scene.plant, state.elapsed);
     }
-    drawPot(scene.pot, { held: scene.pot.held, gated, missed, face });
+    drawPot(scene.pot, { held: scene.pot.held, offered: scene.pot.offered, gated, missed, face });
   }
 
   /**
@@ -273,12 +273,12 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
   }
 
   /**
-   * @param {{ x: number, y: number, held?: boolean }} pot
-   * @param {{ held: boolean, gated: boolean, missed: boolean, face?: number }} look
+   * @param {{ x: number, y: number, held?: boolean, offered?: boolean }} pot
+   * @param {{ held: boolean, offered?: boolean, gated: boolean, missed: boolean, face?: number }} look
    */
-  function drawPot(pot, { held, gated, missed, face = 1 }) {
+  function drawPot(pot, { held, offered = false, gated, missed, face = 1 }) {
     const zone = HIT_RADIUS * Math.min(width, height);
-    drawCarryCan(ctx, pot.x * width, pot.y * height, { held, gated, missed, face }, zone);
+    drawCarryCan(ctx, pot.x * width, pot.y * height, { held, offered, gated, missed, face }, zone);
   }
 
   /**
@@ -314,7 +314,7 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
     if (scene.feeding || won) {
       drawFeed(scene.bowl, scene.pet, state.elapsed);
     }
-    drawBowl(scene.bowl, { held: scene.bowl.held, gated, missed });
+    drawBowl(scene.bowl, { held: scene.bowl.held, offered: scene.bowl.offered, gated, missed });
   }
 
   /**
@@ -327,12 +327,12 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
   }
 
   /**
-   * @param {{ x: number, y: number, held?: boolean }} bowl
-   * @param {{ held: boolean, gated: boolean, missed: boolean }} look
+   * @param {{ x: number, y: number, held?: boolean, offered?: boolean }} bowl
+   * @param {{ held: boolean, offered?: boolean, gated: boolean, missed: boolean }} look
    */
-  function drawBowl(bowl, { held, gated, missed }) {
+  function drawBowl(bowl, { held, offered = false, gated, missed }) {
     const zone = HIT_RADIUS * Math.min(width, height);
-    drawCarryBowl(ctx, bowl.x * width, bowl.y * height, { held, gated, missed }, zone);
+    drawCarryBowl(ctx, bowl.x * width, bowl.y * height, { held, offered, gated, missed }, zone);
   }
 
   /**
@@ -367,7 +367,7 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
     if (scene.dousing || won) {
       drawSpray(scene.bucket, scene.fire, state.elapsed);
     }
-    drawBucket(scene.bucket, { held: scene.bucket.held, gated, missed, face });
+    drawBucket(scene.bucket, { held: scene.bucket.held, offered: scene.bucket.offered, gated, missed, face });
   }
 
   /**
@@ -380,12 +380,12 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
   }
 
   /**
-   * @param {{ x: number, y: number, held?: boolean }} bucket
-   * @param {{ held: boolean, gated: boolean, missed: boolean, face?: number }} look
+   * @param {{ x: number, y: number, held?: boolean, offered?: boolean }} bucket
+   * @param {{ held: boolean, offered?: boolean, gated: boolean, missed: boolean, face?: number }} look
    */
-  function drawBucket(bucket, { held, gated, missed, face = 1 }) {
+  function drawBucket(bucket, { held, offered = false, gated, missed, face = 1 }) {
     const zone = HIT_RADIUS * Math.min(width, height);
-    drawCarryBucket(ctx, bucket.x * width, bucket.y * height, { held, gated, missed, face }, zone);
+    drawCarryBucket(ctx, bucket.x * width, bucket.y * height, { held, offered, gated, missed, face }, zone);
   }
 
   /**

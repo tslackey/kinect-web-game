@@ -75,6 +75,7 @@ assert(isPlayOutcome(play.tick(1 / 60, idle())), "tick must return a contract ou
 const startView = play.getView();
 assert(startView.scene?.kind === "water-plant", "the view should expose the plant scene");
 assert(startView.scene.pot.held === false, "the pot starts on the field");
+assert(startView.scene.pot.offered === false, "the pot is not offered at rest");
 assert(startView.scene.plant.stage === 0, "the plant starts small");
 assert(startView.timeLeft != null && startView.timeLeft > 15, "the plant timer should be live");
 
@@ -185,6 +186,88 @@ assert(session.getState().scene.pot.held === true, "session play should stick th
 drainGame(session, POUR_DWELL + 0.05, oneBody({ left_wrist: { x: livePlant.x, y: livePlant.y, confidence: 1 } }));
 assert(session.getState().result === "win", "a pour should resolve as a session win");
 assert(session.getState().score === 1, "the session should score the plant win");
+
+const noSteal = WATER_PLANT.create({ random: () => 0.2, index: 1, duration: WATER_PLANT.duration });
+noSteal.start();
+const stealPot = noSteal.getView().scene.pot;
+drainPlay(noSteal, PICKUP_DWELL + 0.05, oneBody({ left_wrist: { x: stealPot.x, y: stealPot.y, confidence: 1 } }));
+assert(noSteal.getView().scene.pot.heldBy === "p1:left_wrist", "first wrist owns the pot");
+assert(noSteal.getView().scene.pot.offered === false, "one hand is not an offer");
+noSteal.tick(
+  1 / 60,
+  twoBodies(
+    { left_wrist: { x: 0.42, y: 0.5, confidence: 1 } },
+    { right_wrist: { x: 0.42, y: 0.5, confidence: 1 } },
+  ),
+);
+assert(noSteal.getView().scene.pot.heldBy === "p1:left_wrist", "a second body cannot steal without an offer");
+assert(noSteal.getView().scene.pot.offered === false, "a thief hand does not offer the pot");
+
+const passPlay = WATER_PLANT.create({ random: () => 0.2, index: 1, duration: WATER_PLANT.duration });
+passPlay.start();
+const passPot = passPlay.getView().scene.pot;
+const passPlant = passPlay.getView().scene.plant;
+drainPlay(passPlay, PICKUP_DWELL + 0.05, oneBody({ left_wrist: { x: passPot.x, y: passPot.y, confidence: 1 } }));
+passPlay.tick(
+  1 / 60,
+  oneBody({
+    left_wrist: { x: 0.5, y: 0.5, confidence: 1 },
+    right_wrist: { x: 0.5, y: 0.5, confidence: 1 },
+  }),
+);
+assert(passPlay.getView().scene.pot.offered === true, "both owner hands latch the offered cue");
+assert(passPlay.getView().scene.pot.heldBy === "p1:left_wrist", "the offering hand does not instantly take the pot");
+passPlay.tick(
+  1 / 60,
+  twoBodies(
+    {
+      left_wrist: { x: 0.5, y: 0.5, confidence: 1 },
+      right_wrist: { x: 0.5, y: 0.5, confidence: 1 },
+    },
+    { left_wrist: { x: 0.5, y: 0.5, confidence: 1 } },
+  ),
+);
+assert(passPlay.getView().scene.pot.heldBy === "p2:left_wrist", "one hand from the other body accepts");
+assert(passPlay.getView().scene.pot.offered === false, "accept clears the offer");
+assert(
+  drainPlay(
+    passPlay,
+    POUR_DWELL + 0.05,
+    twoBodies(
+      { left_wrist: { x: 0.04, y: 0.96, confidence: 1 } },
+      { left_wrist: { x: passPlant.x, y: passPlant.y, confidence: 1 } },
+    ),
+  ) === "win",
+  "the new owner can still pour",
+);
+
+const swapPlay = WATER_PLANT.create({ random: () => 0.2, index: 1, duration: WATER_PLANT.duration });
+swapPlay.start();
+const swapPot = swapPlay.getView().scene.pot;
+const swapPlant = swapPlay.getView().scene.plant;
+drainPlay(swapPlay, PICKUP_DWELL + 0.05, oneBody({ left_wrist: { x: swapPot.x, y: swapPot.y, confidence: 1 } }));
+swapPlay.tick(
+  1 / 60,
+  oneBody({
+    left_wrist: { x: 0.48, y: 0.52, confidence: 1 },
+    right_wrist: { x: 0.48, y: 0.52, confidence: 1 },
+  }),
+);
+assert(swapPlay.getView().scene.pot.offered === true, "same-body two-hand contact offers");
+swapPlay.tick(1 / 60, oneBody({ left_wrist: { x: 0.48, y: 0.52, confidence: 1 } }));
+swapPlay.tick(
+  1 / 60,
+  oneBody({
+    left_wrist: { x: 0.48, y: 0.52, confidence: 1 },
+    right_wrist: { x: 0.48, y: 0.52, confidence: 1 },
+  }),
+);
+assert(swapPlay.getView().scene.pot.heldBy === "p1:right_wrist", "re-grab with the other hand swaps on the same body");
+assert(
+  drainPlay(swapPlay, POUR_DWELL + 0.05, oneBody({ right_wrist: { x: swapPlant.x, y: swapPlant.y, confidence: 1 } })) ===
+    "win",
+  "the swapped hand can still pour",
+);
 
 const keys = WATER_PLANT.create({ random: () => 0.2, index: 1, duration: WATER_PLANT.duration });
 keys.start();

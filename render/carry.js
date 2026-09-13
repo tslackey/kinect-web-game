@@ -13,10 +13,11 @@ import { drawCrystal, drawFaces, facetShade, fillDiamond, fillPoly, lilacCrystal
  */
 
 /**
- * @param {{ missed?: boolean, held?: boolean, happy?: boolean, hue?: "moss" | "sky" | "lilac" | "ember" }} look
+ * @param {{ missed?: boolean, held?: boolean, offered?: boolean, happy?: boolean, hue?: "moss" | "sky" | "lilac" | "ember" }} look
  */
-export function carryShade({ missed = false, held = false, happy = false, hue = "lilac" } = {}) {
+export function carryShade({ missed = false, held = false, offered = false, happy = false, hue = "lilac" } = {}) {
   if (missed) return facetShade("coral");
+  if (offered) return facetShade("sky");
   if (held) return facetShade("ember");
   if (happy) return facetShade("moss");
   return facetShade(hue);
@@ -74,28 +75,20 @@ export function drawCarryPlant(ctx, x, y, { grown, missed, gated }, zone) {
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} x
  * @param {number} y
- * @param {{ held: boolean, gated: boolean, missed: boolean, face?: number }} look
+ * @param {{ held: boolean, gated: boolean, missed: boolean, offered?: boolean, face?: number }} look
  * @param {number} zone
  */
-export function drawCarryCan(ctx, x, y, { held, gated, missed, face = 1 }, zone) {
+export function drawCarryCan(ctx, x, y, { held, gated, missed, offered = false, face = 1 }, zone) {
   const scale = 1.55;
   const alpha = gated ? 0.45 : missed ? 0.55 : 1;
-  const body = carryShade({ missed, held, hue: "lilac" });
-  const lip = missed ? facetShade("coral") : held ? facetShade("ember") : facetShade("ember");
+  const body = carryShade({ missed, held, offered, hue: "lilac" });
+  const lip = missed ? facetShade("coral") : offered ? facetShade("sky") : held ? facetShade("ember") : facetShade("ember");
   const spout = missed ? facetShade("coral") : facetShade("sky");
   const fx = face < 0 ? -1 : 1;
 
   ctx.save();
   ctx.globalAlpha = alpha;
-  drawHitRing(
-    ctx,
-    x,
-    y,
-    zone,
-    missed ? FACET_RGB.coral : held ? FACET_RGB.ember : FACET_RGB.lilac,
-    held ? 0.85 : gated ? 0.28 : 0.7,
-    held ? 3 : 2,
-  );
+  drawOfferedRing(ctx, x, y, zone, missed, held, offered, gated);
   drawFaces(ctx, x, y, scale, canFaces(body, lip, spout, fx));
   ctx.restore();
 }
@@ -143,27 +136,19 @@ export function drawCarryPet(ctx, x, y, { happy, missed, gated }, zone) {
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} x
  * @param {number} y
- * @param {{ held: boolean, gated: boolean, missed: boolean }} look
+ * @param {{ held: boolean, gated: boolean, missed: boolean, offered?: boolean }} look
  * @param {number} zone
  */
-export function drawCarryBowl(ctx, x, y, { held, gated, missed }, zone) {
+export function drawCarryBowl(ctx, x, y, { held, gated, missed, offered = false }, zone) {
   const scale = 1.7;
   const alpha = gated ? 0.45 : missed ? 0.55 : 1;
-  const dish = carryShade({ missed, held, hue: "lilac" });
+  const dish = carryShade({ missed, held, offered, hue: "lilac" });
   const kibble = missed ? facetShade("coral") : facetShade("ember");
   const well = missed ? FACET_STEPS.coralInk : FACET.ink;
 
   ctx.save();
   ctx.globalAlpha = alpha;
-  drawHitRing(
-    ctx,
-    x,
-    y,
-    zone,
-    missed ? FACET_RGB.coral : held ? FACET_RGB.ember : FACET_RGB.lilac,
-    held ? 0.85 : gated ? 0.28 : 0.7,
-    held ? 3 : 2,
-  );
+  drawOfferedRing(ctx, x, y, zone, missed, held, offered, gated);
   drawFaces(ctx, x, y, scale, bowlFaces(dish, well, kibble));
   ctx.restore();
 }
@@ -206,29 +191,42 @@ export function drawCarryFlame(ctx, x, y, { out, missed, gated, elapsed }, zone)
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} x
  * @param {number} y
- * @param {{ held: boolean, gated: boolean, missed: boolean, face?: number }} look
+ * @param {{ held: boolean, gated: boolean, missed: boolean, offered?: boolean, face?: number }} look
  * @param {number} zone
  */
-export function drawCarryBucket(ctx, x, y, { held, gated, missed, face = 1 }, zone) {
+export function drawCarryBucket(ctx, x, y, { held, gated, missed, offered = false, face = 1 }, zone) {
   const scale = 1.5;
   const alpha = gated ? 0.45 : missed ? 0.55 : 1;
-  const body = carryShade({ missed, held, hue: "lilac" });
+  const body = carryShade({ missed, held, offered, hue: "lilac" });
   const water = missed ? facetShade("coral") : facetShade("sky");
   const fx = face < 0 ? -1 : 1;
 
   ctx.save();
   ctx.globalAlpha = alpha;
-  drawHitRing(
-    ctx,
-    x,
-    y,
-    zone,
-    missed ? FACET_RGB.coral : held ? FACET_RGB.ember : FACET_RGB.lilac,
-    held ? 0.85 : gated ? 0.28 : 0.7,
-    held ? 3 : 2,
-  );
+  drawOfferedRing(ctx, x, y, zone, missed, held, offered, gated);
   drawFaces(ctx, x, y, scale, bucketFaces(body, water, fx));
   ctx.restore();
+}
+
+/**
+ * Placeholder offered cue: sky ring, extra outer hex. Shine can skin later.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {number} zone
+ * @param {boolean} missed
+ * @param {boolean} held
+ * @param {boolean} offered
+ * @param {boolean} gated
+ */
+function drawOfferedRing(ctx, x, y, zone, missed, held, offered, gated) {
+  const rgb = missed ? FACET_RGB.coral : offered ? FACET_RGB.sky : held ? FACET_RGB.ember : FACET_RGB.lilac;
+  const alpha = offered ? 0.95 : held ? 0.85 : gated ? 0.28 : 0.7;
+  drawHitRing(ctx, x, y, zone, rgb, alpha, offered ? 4 : held ? 3 : 2);
+  if (offered && !missed) {
+    drawHitRing(ctx, x, y, zone * 1.22, FACET_RGB.sky, 0.45, 2);
+  }
 }
 
 /**

@@ -80,6 +80,7 @@ assert(isPlayOutcome(play.tick(1 / 60, idle())), "tick must return a contract ou
 const startView = play.getView();
 assert(startView.scene?.kind === "feed-pet", "the view should expose the pet scene");
 assert(startView.scene.bowl.held === false, "the bowl starts on the field");
+assert(startView.scene.bowl.offered === false, "the bowl is not offered at rest");
 assert(startView.scene.pet.stage === 0, "the pet starts hungry");
 assert(startView.timeLeft != null && startView.timeLeft > 15, "the pet timer should be live");
 
@@ -198,6 +199,82 @@ assert(session.getState().scene.bowl.held === true, "session play should stick t
 drainGame(session, FEED_DWELL + 0.05, oneBody({ left_wrist: { x: livePet.x, y: livePet.y, confidence: 1 } }));
 assert(session.getState().result === "win", "a feed should resolve as a session win");
 assert(session.getState().score === 1, "the session should score the pet win");
+
+const noSteal = FEED_PET.create({ random: () => 0.2, index: 1, duration: FEED_PET.duration });
+noSteal.start();
+const stealBowl = noSteal.getView().scene.bowl;
+drainPlay(noSteal, PET_PICKUP_DWELL + 0.05, oneBody({ left_wrist: { x: stealBowl.x, y: stealBowl.y, confidence: 1 } }));
+noSteal.tick(
+  1 / 60,
+  twoBodies(
+    { left_wrist: { x: 0.4, y: 0.5, confidence: 1 } },
+    { right_wrist: { x: 0.4, y: 0.5, confidence: 1 } },
+  ),
+);
+assert(noSteal.getView().scene.bowl.heldBy === "p1:left_wrist", "a second body cannot steal the bowl without an offer");
+
+const passPlay = FEED_PET.create({ random: () => 0.2, index: 1, duration: FEED_PET.duration });
+passPlay.start();
+const passBowl = passPlay.getView().scene.bowl;
+const passPet = passPlay.getView().scene.pet;
+drainPlay(passPlay, PET_PICKUP_DWELL + 0.05, oneBody({ left_wrist: { x: passBowl.x, y: passBowl.y, confidence: 1 } }));
+passPlay.tick(
+  1 / 60,
+  oneBody({
+    left_wrist: { x: 0.5, y: 0.5, confidence: 1 },
+    right_wrist: { x: 0.5, y: 0.5, confidence: 1 },
+  }),
+);
+assert(passPlay.getView().scene.bowl.offered === true, "both owner hands offer the bowl");
+passPlay.tick(
+  1 / 60,
+  twoBodies(
+    {
+      left_wrist: { x: 0.5, y: 0.5, confidence: 1 },
+      right_wrist: { x: 0.5, y: 0.5, confidence: 1 },
+    },
+    { left_wrist: { x: 0.5, y: 0.5, confidence: 1 } },
+  ),
+);
+assert(passPlay.getView().scene.bowl.heldBy === "p2:left_wrist", "the other body accepts the bowl");
+assert(
+  drainPlay(
+    passPlay,
+    FEED_DWELL + 0.05,
+    twoBodies(
+      { left_wrist: { x: 0.04, y: 0.96, confidence: 1 } },
+      { left_wrist: { x: passPet.x, y: passPet.y, confidence: 1 } },
+    ),
+  ) === "win",
+  "the new owner can still feed",
+);
+
+const swapPlay = FEED_PET.create({ random: () => 0.2, index: 1, duration: FEED_PET.duration });
+swapPlay.start();
+const swapBowl = swapPlay.getView().scene.bowl;
+const swapPet = swapPlay.getView().scene.pet;
+drainPlay(swapPlay, PET_PICKUP_DWELL + 0.05, oneBody({ left_wrist: { x: swapBowl.x, y: swapBowl.y, confidence: 1 } }));
+swapPlay.tick(
+  1 / 60,
+  oneBody({
+    left_wrist: { x: 0.48, y: 0.52, confidence: 1 },
+    right_wrist: { x: 0.48, y: 0.52, confidence: 1 },
+  }),
+);
+swapPlay.tick(1 / 60, oneBody({ left_wrist: { x: 0.48, y: 0.52, confidence: 1 } }));
+swapPlay.tick(
+  1 / 60,
+  oneBody({
+    left_wrist: { x: 0.48, y: 0.52, confidence: 1 },
+    right_wrist: { x: 0.48, y: 0.52, confidence: 1 },
+  }),
+);
+assert(swapPlay.getView().scene.bowl.heldBy === "p1:right_wrist", "same-body re-grab swaps the bowl");
+assert(
+  drainPlay(swapPlay, FEED_DWELL + 0.05, oneBody({ right_wrist: { x: swapPet.x, y: swapPet.y, confidence: 1 } })) ===
+    "win",
+  "the swapped hand can still feed",
+);
 
 const keys = FEED_PET.create({ random: () => 0.2, index: 1, duration: FEED_PET.duration });
 keys.start();
