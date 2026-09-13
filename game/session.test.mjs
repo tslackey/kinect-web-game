@@ -3,6 +3,7 @@ import {
   FEED_PET,
   GAME_COUNT,
   ORB_HIT,
+  PLAY_DURATION,
   PROMPT_DURATION,
   RESULT_DURATION,
   STOMP_BUG,
@@ -56,6 +57,9 @@ function missCurrent(game) {
 }
 
 assert(GAME_COUNT >= 3 && GAME_COUNT <= 5, "the default session stays a short sequence");
+assert(PLAY_DURATION >= 15 && PLAY_DURATION <= 20, "the session play window is 15–20s");
+assert(lifetimeForGame(1) === PLAY_DURATION, "orb game 1 uses the shared 18s default");
+assert(lifetimeForGame(4) === PLAY_DURATION, "later orb games stay on the same 15–20s window");
 
 const landed = createGame({
   random: cyclingRandom([0.2, 0.35, 0.8, 0.15, 0.4, 0.6]),
@@ -94,7 +98,7 @@ assert(landed.getState().phase === "prompt", "next should start after a win, wit
 assert(landed.getState().game === 2, "the second game should follow the first");
 assert(landed.getState().score === 1, "session score should carry into the next game");
 assert(landed.getState().result === null, "a new game should clear the last result");
-assert(landed.getState().lifetime === lifetimeForGame(2), "later games can shave a little time");
+assert(landed.getState().lifetime === lifetimeForGame(2), "later games keep the same 15–20s play window");
 
 skipPrompt(landed);
 missCurrent(landed);

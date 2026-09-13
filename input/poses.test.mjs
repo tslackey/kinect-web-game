@@ -59,21 +59,45 @@ assert(
   "stand-in skeletons stay independent",
 );
 
-const mixed = assembleSample({
+const cameraPlusPointer = assembleSample({
   webcamPoses: [{ nose: { x: 0.25, y: 0.4, confidence: 1 } }],
+  pointers: [{ x: 0.82, y: 0.31, confidence: 1 }],
   keys: { x: 0.7, y: 0.6, confidence: 1 },
 });
-assert(mixed.source === "mixed", "webcam plus keyboard is mixed");
-assert(mixed.poses.length === 2, "a missing second camera can use the keyboard");
-assert(mixed.poses[0].source === "webcam", "live camera still owns player 1");
-assert(mixed.poses[1].source === "keyboard", "keyboard fills the empty slot");
+assert(cameraPlusPointer.source === "webcam", "a live camera body is webcam-only");
+assert(cameraPlusPointer.poses.length === 1, "mouse and keyboard stay off when a camera body is live");
+assert(cameraPlusPointer.poses[0].source === "webcam", "the camera skeleton is the only player");
+assert(!cameraPlusPointer.poses.some((pose) => pose.source === "mouse"), "pointer is not injected as a second body");
+assert(!cameraPlusPointer.poses.some((pose) => pose.source === "keyboard"), "keyboard is not injected beside a camera body");
+
+const twoCamsPlusMouse = assembleSample({
+  webcamPoses: [
+    { nose: { x: 0.2, y: 0.3, confidence: 1 } },
+    { nose: { x: 0.8, y: 0.35, confidence: 1 } },
+  ],
+  pointers: [{ x: 0.5, y: 0.5, confidence: 1 }],
+});
+assert(twoCamsPlusMouse.poses.length === 2, "two people in one frame stay two camera bodies");
+assert(
+  twoCamsPlusMouse.poses.every((pose) => pose.source === "webcam"),
+  "mouse is not player 2 when two camera bodies are present",
+);
 
 const onlySecondCam = assembleSample({
   webcamPoses: [null, { nose: { x: 0.9, y: 0.2, confidence: 1 } }],
   pointers: [{ x: 0.1, y: 0.2, confidence: 1 }],
 });
-assert(onlySecondCam.poses[0].source === "mouse", "a missing first camera can use a pointer");
-assert(onlySecondCam.poses[1].source === "webcam", "camera 2 stays player 2");
+assert(onlySecondCam.poses.length === 1, "one usable camera pose still suppresses the pointer");
+assert(onlySecondCam.poses[0].source === "webcam", "the live camera body stays the only player");
+assert(onlySecondCam.poses[0].id === "p2", "camera 2 keeps its slot");
+
+const cameraGone = assembleSample({
+  webcamPoses: [{}],
+  pointers: [{ x: 0.4, y: 0.5, confidence: 1 }],
+});
+assert(cameraGone.source === "mouse", "an empty camera pose is not usable; pointer returns");
+assert(cameraGone.poses.length === 1, "camera-absent still plays with the pointer");
+assert(cameraGone.poses[0].source === "mouse", "pointer stand-in returns immediately");
 
 const fromLegacy = posesFromSample({
   source: "webcam",

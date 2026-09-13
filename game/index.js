@@ -1,6 +1,6 @@
 /**
  * Game state owner. A session is a short sequence of microgames:
- * prompt → one game on a short timer → win or fail → next.
+ * prompt → one game on a 15–20s timer → win or fail → next.
  *
  * Water the plant is game 1. Feed the pet is game 2. Put out the fire is
  * game 3. Stomp the bug is game 4. Orb-hit stays in the pack. Either pose
@@ -34,6 +34,7 @@ import { STOMP_BUG, driftBug } from "./bug.js";
 export {
   GAME_COUNT,
   MICROGAME_OUTCOMES,
+  PLAY_DURATION,
   PROMPT_DURATION,
   RESULT_DURATION,
   defineMicrogame,

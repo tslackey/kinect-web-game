@@ -2,7 +2,7 @@
  * Microgame contract. A later pack plugs into the session with these fields:
  * prompt, duration, win, fail, next.
  *
- * Loop: short on-screen prompt → one game on a short timer → win or fail → next.
+ * Loop: short on-screen prompt → one game on a 15–20s timer → win or fail → next.
  * Win / fail are timeout-or-success, never “wrong gesture.”
  * Play ticks see 1 or 2 pose maps from one webcam sample (not one cam per player).
  */
@@ -10,6 +10,8 @@
 export const GAME_COUNT = 4;
 export const PROMPT_DURATION = 1.05;
 export const RESULT_DURATION = 0.9;
+/** Default play window after the prompt. Kids-feel floor is 15s; stay in 15–20. */
+export const PLAY_DURATION = 18;
 
 /** @type {readonly MicrogameOutcome[]} */
 export const MICROGAME_OUTCOMES = Object.freeze(["playing", "win", "fail"]);

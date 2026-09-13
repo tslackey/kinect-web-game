@@ -4,10 +4,10 @@
  * Timeout is the only fail. Wrists do not score.
  */
 
-import { defineMicrogame } from "./microgame.js";
+import { defineMicrogame, PLAY_DURATION } from "./microgame.js";
 import { FOOT_STRIKER_NAMES, HIT_RADIUS, listIdentifiedStrikers } from "./hit.js";
 
-export const BUG_DURATION = 4.5;
+export const BUG_DURATION = PLAY_DURATION;
 export const STOMP_DWELL = 0.35;
 /** Travel in one tick that counts as driving a foot through the bug. */
 export const STOMP_DRIVE = 0.08;

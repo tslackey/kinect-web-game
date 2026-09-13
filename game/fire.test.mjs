@@ -4,6 +4,7 @@ import {
   DOUSE_FIRE,
   FIRE_DURATION,
   FIRE_PICKUP_DWELL,
+  PLAY_DURATION,
   PROMPT_DURATION,
   RESULT_DURATION,
   createGame,
@@ -63,7 +64,7 @@ assert(isMicrogameDef(DOUSE_FIRE), "put out the fire must satisfy the microgame 
 assert(DOUSE_FIRE.prompt === "Douse fire", "on-screen prompt is Douse fire");
 assert(DOUSE_FIRE.prompt.split(/\s+/).length <= 2, "prompt stays at two words");
 assert(DOUSE_FIRE.duration === FIRE_DURATION, "pack duration should match the fire timer");
-assert(FIRE_DURATION >= 5 && FIRE_DURATION <= 6, "duration is about 5–6s");
+assert(FIRE_DURATION >= 15 && FIRE_DURATION <= 20, "duration is the 15–20s kids-feel window");
 assert(DEFAULT_PACK.some((def) => def.id === "douse-fire"), "the session pack should include this game");
 assert(DEFAULT_PACK.some((def) => def.id === "water-plant"), "water the plant should stay in the pack");
 assert(DEFAULT_PACK.some((def) => def.id === "feed-pet"), "feed the pet should stay in the pack");
@@ -80,7 +81,7 @@ const startView = play.getView();
 assert(startView.scene?.kind === "douse-fire", "the view should expose the fire scene");
 assert(startView.scene.bucket.held === false, "the bucket starts on the field");
 assert(startView.scene.fire.stage === 0, "the fire starts burning");
-assert(startView.timeLeft != null && startView.timeLeft > 5, "the fire timer should be live");
+assert(startView.timeLeft != null && startView.timeLeft > 15, "the fire timer should be live");
 
 const bucket = startView.scene.bucket;
 const fire = startView.scene.fire;
@@ -181,12 +182,12 @@ session.start();
 assert(session.getState().prompt === "Water plant", "Play should still flash Water plant first");
 assert(session.getState().gameId === "water-plant", "the live game id should open on water-plant");
 drainGame(session, PROMPT_DURATION);
-drainGame(session, 6, far);
+drainGame(session, PLAY_DURATION + 0.1, far);
 assert(session.getState().result === "fail", "timing out water the plant should still resolve");
 drainGame(session, RESULT_DURATION);
 assert(session.getState().prompt === "Feed pet", "Play should flash Feed pet as the second game");
 drainGame(session, PROMPT_DURATION);
-drainGame(session, 6, far);
+drainGame(session, PLAY_DURATION + 0.1, far);
 drainGame(session, RESULT_DURATION);
 assert(session.getState().prompt === "Douse fire", "Play should flash Douse fire as the third game");
 assert(session.getState().gameId === "douse-fire", "the live game id should be douse-fire");

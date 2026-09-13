@@ -95,6 +95,31 @@ pointers.tick(1 / 60, standins);
 assert(pointers.getState().score === 1, "the second test pointer should score");
 assert(pointers.getState().inputSource === "mouse", "two pointers still report mouse");
 
+const cameraBlocksMouse = createGame({
+  random: cyclingRandom([0.55, 0.5, 0.2, 0.25]),
+  pack: [ORB_HIT],
+});
+cameraBlocksMouse.start();
+skipPrompt(cameraBlocksMouse);
+const blockedOrb = cameraBlocksMouse.getState().target;
+const cameraWins = assembleSample({
+  webcamPoses: [{ nose: { x: 0.08, y: 0.92, confidence: 1 }, left_wrist: { x: 0.06, y: 0.9, confidence: 1 } }],
+  pointers: [{ x: blockedOrb.x, y: blockedOrb.y, confidence: 1 }],
+});
+assert(cameraWins.poses.length === 1, "camera-present samples keep a single camera body");
+assert(cameraWins.source === "webcam", "camera-present samples do not report mouse");
+cameraBlocksMouse.tick(1 / 60, cameraWins);
+assert(cameraBlocksMouse.getState().score === 0, "a pointer over the orb must not score while a camera body is live");
+assert(cameraBlocksMouse.getState().phase === "playing", "only the far camera skeleton is in play");
+
+const cameraAbsent = assembleSample({
+  webcamPoses: [],
+  pointers: [{ x: blockedOrb.x, y: blockedOrb.y, confidence: 1 }],
+});
+assert(cameraAbsent.source === "mouse", "camera-absent samples still inject the pointer");
+cameraBlocksMouse.tick(1 / 60, cameraAbsent);
+assert(cameraBlocksMouse.getState().score === 1, "pointer still plays the moment the camera body is gone");
+
 const firstThenSecond = createGame({
   random: cyclingRandom([0.15, 0.2, 0.85, 0.8, 0.4, 0.5]),
   pack: [ORB_HIT],

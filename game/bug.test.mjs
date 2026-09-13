@@ -3,6 +3,7 @@ import {
   DEFAULT_PACK,
   FOOT_STRIKER_NAMES,
   HIT_RADIUS,
+  PLAY_DURATION,
   PROMPT_DURATION,
   RESULT_DURATION,
   STOMP_BUG,
@@ -67,7 +68,7 @@ assert(isMicrogameDef(STOMP_BUG), "stomp the bug must satisfy the microgame cont
 assert(STOMP_BUG.prompt === "Stomp bug", "on-screen prompt is Stomp bug");
 assert(STOMP_BUG.prompt.split(/\s+/).length <= 2, "prompt stays at two words");
 assert(STOMP_BUG.duration === BUG_DURATION, "pack duration should match the bug timer");
-assert(BUG_DURATION >= 4 && BUG_DURATION <= 5, "duration is about 4–5s");
+assert(BUG_DURATION >= 15 && BUG_DURATION <= 20, "duration is the 15–20s kids-feel window");
 assert(STOMP_DWELL >= 0.3 && STOMP_DWELL <= 0.4, "hover dwell is about 0.35s");
 assert(Math.abs(HIT_RADIUS - 0.13) < 1e-9, "hit radius stays ~0.13");
 assert(DEFAULT_PACK.some((def) => def.id === "stomp-bug"), "the session pack should include this game");
@@ -102,7 +103,7 @@ assert(isPlayOutcome(play.tick(1 / 60, idle())), "tick must return a contract ou
 const startView = play.getView();
 assert(startView.scene?.kind === "stomp-bug", "the view should expose the bug scene");
 assert(startView.scene.bug.stage === 0, "the bug starts alive");
-assert(startView.timeLeft != null && startView.timeLeft > 4, "the bug timer should be live");
+assert(startView.timeLeft != null && startView.timeLeft > 15, "the bug timer should be live");
 assert(startView.scene.bug.y >= 0.65, "the bug should sit near the bottom of the field");
 
 const far = oneBody({ pointer: { x: 0.05, y: 0.05, confidence: 1 } }, "mouse");
@@ -211,15 +212,15 @@ const session = createGame({ random: () => 0.2, games: 4 });
 session.start();
 assert(session.getState().prompt === "Water plant", "Play should still flash Water plant first");
 drainGame(session, PROMPT_DURATION);
-drainGame(session, 6, far);
+drainGame(session, PLAY_DURATION + 0.1, far);
 drainGame(session, RESULT_DURATION);
 assert(session.getState().prompt === "Feed pet", "Play should flash Feed pet as the second game");
 drainGame(session, PROMPT_DURATION);
-drainGame(session, 6, far);
+drainGame(session, PLAY_DURATION + 0.1, far);
 drainGame(session, RESULT_DURATION);
 assert(session.getState().prompt === "Douse fire", "Play should flash Douse fire as the third game");
 drainGame(session, PROMPT_DURATION);
-drainGame(session, 6, far);
+drainGame(session, PLAY_DURATION + 0.1, far);
 drainGame(session, RESULT_DURATION);
 assert(session.getState().prompt === "Stomp bug", "Play should flash Stomp bug as the fourth game");
 assert(session.getState().gameId === "stomp-bug", "the live game id should be stomp-bug");

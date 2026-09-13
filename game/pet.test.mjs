@@ -4,6 +4,7 @@ import {
   FEED_PET,
   PET_DURATION,
   PET_PICKUP_DWELL,
+  PLAY_DURATION,
   PROMPT_DURATION,
   RESULT_DURATION,
   createGame,
@@ -63,7 +64,7 @@ assert(isMicrogameDef(FEED_PET), "feed the pet must satisfy the microgame contra
 assert(FEED_PET.prompt === "Feed pet", "on-screen prompt is Feed pet");
 assert(FEED_PET.prompt.split(/\s+/).length <= 2, "prompt stays at two words");
 assert(FEED_PET.duration === PET_DURATION, "pack duration should match the pet timer");
-assert(PET_DURATION >= 5 && PET_DURATION <= 6, "duration is about 5–6s");
+assert(PET_DURATION >= 15 && PET_DURATION <= 20, "duration is the 15–20s kids-feel window");
 assert(DEFAULT_PACK.some((def) => def.id === "feed-pet"), "the session pack should include this game");
 assert(DEFAULT_PACK.some((def) => def.id === "water-plant"), "water the plant should stay in the pack");
 assert(DEFAULT_PACK.some((def) => def.id === "douse-fire"), "put out the fire should join the pack");
@@ -79,7 +80,7 @@ const startView = play.getView();
 assert(startView.scene?.kind === "feed-pet", "the view should expose the pet scene");
 assert(startView.scene.bowl.held === false, "the bowl starts on the field");
 assert(startView.scene.pet.stage === 0, "the pet starts hungry");
-assert(startView.timeLeft != null && startView.timeLeft > 5, "the pet timer should be live");
+assert(startView.timeLeft != null && startView.timeLeft > 15, "the pet timer should be live");
 
 const bowl = startView.scene.bowl;
 const pet = startView.scene.pet;
@@ -180,7 +181,7 @@ session.start();
 assert(session.getState().prompt === "Water plant", "Play should still flash Water plant first");
 assert(session.getState().gameId === "water-plant", "the live game id should open on water-plant");
 drainGame(session, PROMPT_DURATION);
-drainGame(session, 6, far);
+drainGame(session, PLAY_DURATION + 0.1, far);
 assert(session.getState().result === "fail", "timing out water the plant should still resolve");
 drainGame(session, RESULT_DURATION);
 assert(session.getState().prompt === "Feed pet", "Play should flash Feed pet as the second game");
