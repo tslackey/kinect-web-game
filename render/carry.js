@@ -5,7 +5,7 @@
  */
 
 import { FACET, FACET_RGB, FACET_STEPS, mixHex } from "../theme/facet.js";
-import { drawCrystal, drawFaces, facetShade, fillDiamond, fillPoly, lilacCrystal, strokeHex } from "./facet.js";
+import { drawCrystal, drawFaces, drawOfferedCue, facetShade, fillDiamond, fillPoly, lilacCrystal, strokeHex } from "./facet.js";
 
 /**
  * @typedef {import("./facet.js").Face} Face
@@ -88,7 +88,7 @@ export function drawCarryCan(ctx, x, y, { held, gated, missed, offered = false, 
 
   ctx.save();
   ctx.globalAlpha = alpha;
-  drawOfferedRing(ctx, x, y, zone, missed, held, offered, gated);
+  drawOfferedCue(ctx, x, y, zone, { missed, held, offered, gated });
   drawFaces(ctx, x, y, scale, canFaces(body, lip, spout, fx));
   ctx.restore();
 }
@@ -148,7 +148,7 @@ export function drawCarryBowl(ctx, x, y, { held, gated, missed, offered = false 
 
   ctx.save();
   ctx.globalAlpha = alpha;
-  drawOfferedRing(ctx, x, y, zone, missed, held, offered, gated);
+  drawOfferedCue(ctx, x, y, zone, { missed, held, offered, gated });
   drawFaces(ctx, x, y, scale, bowlFaces(dish, well, kibble));
   ctx.restore();
 }
@@ -203,30 +203,9 @@ export function drawCarryBucket(ctx, x, y, { held, gated, missed, offered = fals
 
   ctx.save();
   ctx.globalAlpha = alpha;
-  drawOfferedRing(ctx, x, y, zone, missed, held, offered, gated);
+  drawOfferedCue(ctx, x, y, zone, { missed, held, offered, gated });
   drawFaces(ctx, x, y, scale, bucketFaces(body, water, fx));
   ctx.restore();
-}
-
-/**
- * Placeholder offered cue: sky ring, extra outer hex. Shine can skin later.
- *
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} x
- * @param {number} y
- * @param {number} zone
- * @param {boolean} missed
- * @param {boolean} held
- * @param {boolean} offered
- * @param {boolean} gated
- */
-function drawOfferedRing(ctx, x, y, zone, missed, held, offered, gated) {
-  const rgb = missed ? FACET_RGB.coral : offered ? FACET_RGB.sky : held ? FACET_RGB.ember : FACET_RGB.lilac;
-  const alpha = offered ? 0.95 : held ? 0.85 : gated ? 0.28 : 0.7;
-  drawHitRing(ctx, x, y, zone, rgb, alpha, offered ? 4 : held ? 3 : 2);
-  if (offered && !missed) {
-    drawHitRing(ctx, x, y, zone * 1.22, FACET_RGB.sky, 0.45, 2);
-  }
 }
 
 /**

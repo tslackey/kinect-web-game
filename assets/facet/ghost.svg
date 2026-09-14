@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet mirror ghost">
+  <!-- 128 grid. Copy / reflection kite. Upper-left light. -->
+  <polygon fill="#c8adf3" points="64,20 32,64 64,68"/>
+  <polygon fill="#7aa2f7" points="64,20 96,64 64,68"/>
+  <polygon fill="#8771b4" points="32,64 64,108 64,68"/>
+  <polygon fill="#5b77b4" points="96,64 64,108 64,68"/>
+  <polygon fill="#f4efe6" points="48,44 64,28 64,56"/>
+  <polygon fill="#a9b1d6" points="28,48 8,64 36,76"/>
+  <polygon fill="#a9b1d6" points="100,48 120,64 92,76"/>
+  <polygon fill="#9cb8f2" points="44,88 64,116 84,88"/>
+</svg>

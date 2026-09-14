@@ -5,7 +5,7 @@
  */
 
 import { FACET, FACET_RGB } from "../theme/facet.js";
-import { drawCrystal, drawFaces, facetShade, fillTri, strokeHex } from "./facet.js";
+import { drawCrystal, drawFaces, drawOfferedCue, facetShade, fillTri, strokeHex } from "./facet.js";
 import { impactFaces, stompFootFaces } from "./stomp.js";
 
 /**
@@ -102,8 +102,8 @@ export function drawSimpleScene(ctx, width, height, state) {
       missed,
     );
   } else if (scene.kind === "mirror-me") {
-    drawPoseAnchor(ctx, width, height, scene.left.x * width, scene.left.y * height, scene.left.held || won, missed);
-    drawPoseAnchor(ctx, width, height, scene.right.x * width, scene.right.y * height, scene.right.held || won, missed);
+    drawGhostMark(ctx, width, height, scene.left.x * width, scene.left.y * height, scene.left.held || won, missed);
+    drawGhostMark(ctx, width, height, scene.right.x * width, scene.right.y * height, scene.right.held || won, missed);
   } else if (scene.kind === "hot-potato") {
     drawPotato(
       ctx,
@@ -765,9 +765,7 @@ function drawTray(ctx, width, height, x, y, held, offered, tipped, missed) {
   const s = unit(width, height);
   const fail = missed || tipped;
   const body = simpleShade({ missed: fail, ready: held && !tipped, hue: offered ? "sky" : "lilac" });
-  const rgb = fail ? FACET_RGB.coral : offered ? FACET_RGB.sky : held ? FACET_RGB.ember : FACET_RGB.lilac;
-  drawHitRing(ctx, x, y, 34 * s, rgb, offered ? 0.95 : held ? 0.8 : 0.5, offered ? 4 : held ? 3 : 2);
-  if (offered && !fail) drawHitRing(ctx, x, y, 42 * s, FACET_RGB.sky, 0.45, 2);
+  drawOfferedCue(ctx, x, y, 34 * s, { missed: fail, held, offered });
   drawFaces(ctx, x, y, 2.5 * s, trayFaces(body, fail));
 }
 
@@ -784,14 +782,44 @@ function drawTray(ctx, width, height, x, y, held, offered, tipped, missed) {
 function drawPotato(ctx, width, height, x, y, held, offered, missed) {
   const s = unit(width, height);
   const body = simpleShade({ missed, ready: held && !offered, hue: offered ? "sky" : "ember" });
-  const rgb = missed ? FACET_RGB.coral : offered ? FACET_RGB.sky : held ? FACET_RGB.ember : FACET_RGB.lilac;
-  drawHitRing(ctx, x, y, 30 * s, rgb, offered ? 0.95 : held ? 0.85 : 0.5, offered ? 4 : held ? 3 : 2);
-  if (offered && !missed) drawHitRing(ctx, x, y, 38 * s, FACET_RGB.sky, 0.45, 2);
+  drawOfferedCue(ctx, x, y, 30 * s, { missed, held, offered });
   drawFaces(ctx, x, y, 2.4 * s, potatoFaces(body, missed));
 }
 
+function drawGhostMark(ctx, width, height, x, y, held, missed) {
+  const s = unit(width, height);
+  const zone = 32 * s;
+  const body = simpleShade({ missed, ready: held, hue: "lilac" });
+  const rgb = missed ? FACET_RGB.coral : held ? FACET_RGB.moss : FACET_RGB.lilac;
+  drawHitRing(ctx, x, y, zone, rgb, held ? 0.8 : 0.5, held ? 3 : 2);
+  drawFaces(ctx, x, y, 2.3 * s, ghostMarkFaces(body, missed));
+}
+
 /**
- * Placeholder tray plate with two handle nubs.
+ * Copy / reflection kite. Split down the middle so it reads as a ghost, not a pose star.
+ *
+ * @param {ReturnType<typeof facetShade>} body
+ * @param {boolean} missed
+ * @returns {Face[]}
+ */
+export function ghostMarkFaces(body, missed) {
+  const glass = missed ? FACET.coral : FACET.mist;
+  const echo = missed ? facetShade("coral") : facetShade("sky");
+  const shine = missed ? FACET.coral : FACET.bone;
+  return [
+    { pts: [[0, -22], [-16, 0], [0, 2]], fill: body.lit },
+    { pts: [[0, -22], [16, 0], [0, 2]], fill: echo.mid },
+    { pts: [[-16, 0], [0, 22], [0, 2]], fill: body.shade },
+    { pts: [[16, 0], [0, 22], [0, 2]], fill: echo.shade },
+    { pts: [[-8, -10], [0, -18], [0, -4]], fill: shine },
+    { pts: [[-18, -8], [-28, 0], [-14, 6]], fill: glass },
+    { pts: [[18, -8], [28, 0], [14, 6]], fill: glass },
+    { pts: [[-10, 12], [0, 26], [10, 12]], fill: echo.lit },
+  ];
+}
+
+/**
+ * Serving tray with a cup and a Moss level bead. Light from upper-left.
  *
  * @param {ReturnType<typeof facetShade>} body
  * @param {boolean} missed
@@ -799,18 +827,28 @@ function drawPotato(ctx, width, height, x, y, held, offered, missed) {
  */
 export function trayFaces(body, missed) {
   const lip = missed ? FACET.coral : FACET.bone;
+  const cup = missed ? facetShade("coral") : facetShade("ember");
+  const bead = missed ? FACET.coral : FACET.moss;
   return [
-    { pts: [[-22, 2], [0, -10], [22, 4]], fill: body.lit },
-    { pts: [[-22, 2], [22, 4], [0, 12]], fill: body.shade },
-    { pts: [[-16, 0], [14, -2], [0, 8]], fill: body.mid },
-    { pts: [[-26, -2], [-18, -8], [-14, 4]], fill: body.shade },
-    { pts: [[26, 0], [18, -6], [14, 6]], fill: body.mid },
-    { pts: [[-10, -6], [0, -14], [10, -4]], fill: lip },
+    { pts: [[-24, 2], [0, -10], [24, 4]], fill: body.lit },
+    { pts: [[-24, 2], [24, 4], [0, 14]], fill: body.shade },
+    { pts: [[-16, 0], [16, 0], [0, 10]], fill: body.mid },
+    { pts: [[-18, -2], [0, -14], [18, 0]], fill: lip },
+    { pts: [[-28, 0], [-20, -6], [-18, 6]], fill: body.mid },
+    { pts: [[-28, 0], [-18, 6], [-30, 8]], fill: body.shade },
+    { pts: [[28, 2], [20, -4], [18, 8]], fill: body.mid },
+    { pts: [[28, 2], [18, 8], [30, 10]], fill: body.shade },
+    { pts: [[-6, -6], [0, -20], [2, 2]], fill: cup.lit },
+    { pts: [[0, -20], [8, -4], [2, 2]], fill: cup.mid },
+    { pts: [[-6, -6], [8, -4], [0, 4]], fill: cup.shade },
+    { pts: [[-8, -18], [0, -24], [8, -16]], fill: lip },
+    { pts: [[-4, 6], [0, 2], [4, 6]], fill: bead },
+    { pts: [[-4, 6], [4, 6], [0, 10]], fill: missed ? FACET.coral : FACET.ink },
   ];
 }
 
 /**
- * Goal stand the tray lands on.
+ * Landing shelf the tray is carried to. Horizontal plate reads “set it down level.”
  *
  * @param {ReturnType<typeof facetShade>} body
  * @param {boolean} missed
@@ -818,18 +856,21 @@ export function trayFaces(body, missed) {
  */
 export function trayGoalFaces(body, missed) {
   const plate = missed ? FACET.coral : FACET.bone;
+  const bead = missed ? FACET.coral : FACET.moss;
   return [
-    { pts: [[-6, 22], [-2, -8], [2, 22]], fill: body.lit },
-    { pts: [[-2, -8], [6, -4], [2, 22]], fill: body.shade },
-    { pts: [[-18, -6], [0, -16], [18, -4]], fill: body.mid },
-    { pts: [[-18, -6], [18, -4], [0, 4]], fill: body.shade },
-    { pts: [[-12, -8], [10, -10], [0, -2]], fill: plate },
-    { pts: [[-10, 18], [10, 16], [0, 26]], fill: body.shade },
+    { pts: [[-8, 24], [-2, -4], [2, 24]], fill: body.lit },
+    { pts: [[-2, -4], [8, 0], [2, 24]], fill: body.shade },
+    { pts: [[-12, 20], [12, 18], [0, 28]], fill: body.shade },
+    { pts: [[-22, -2], [0, -14], [22, 0]], fill: body.mid },
+    { pts: [[-22, -2], [22, 0], [0, 8]], fill: body.shade },
+    { pts: [[-16, -4], [14, -6], [0, 2]], fill: plate },
+    { pts: [[-10, -8], [0, -16], [10, -6]], fill: bead },
+    { pts: [[-4, -10], [0, -14], [4, -8]], fill: plate },
   ];
 }
 
 /**
- * Placeholder hot potato — lumpy ember shard.
+ * Lumpy hot potato with ember sparks and a Moss sprout.
  *
  * @param {ReturnType<typeof facetShade>} body
  * @param {boolean} missed
@@ -838,14 +879,21 @@ export function trayGoalFaces(body, missed) {
 export function potatoFaces(body, missed) {
   const eye = missed ? FACET.coral : FACET.ink;
   const sprout = missed ? FACET.coral : FACET.moss;
+  const spark = missed ? FACET.coral : FACET.bone;
   return [
-    { pts: [[0, -16], [-14, -2], [4, 2]], fill: body.lit },
-    { pts: [[0, -16], [16, -4], [4, 2]], fill: body.mid },
-    { pts: [[-14, -2], [4, 2], [0, 16]], fill: body.shade },
-    { pts: [[16, -4], [4, 2], [0, 16]], fill: body.shade },
-    { pts: [[-8, 6], [10, 4], [2, 14]], fill: body.mid },
-    { pts: [[-4, -6], [2, -2], [0, 4]], fill: eye },
-    { pts: [[2, -16], [8, -24], [8, -10]], fill: sprout },
+    { pts: [[-6, -18], [-20, -4], [0, 0]], fill: body.lit },
+    { pts: [[-6, -18], [12, -16], [0, 0]], fill: body.lit },
+    { pts: [[12, -16], [22, 0], [0, 0]], fill: body.mid },
+    { pts: [[-20, -4], [-22, 10], [0, 4]], fill: body.mid },
+    { pts: [[22, 0], [16, 16], [0, 4]], fill: body.shade },
+    { pts: [[-22, 10], [-8, 20], [0, 4]], fill: body.shade },
+    { pts: [[-8, 20], [16, 16], [0, 4]], fill: body.shade },
+    { pts: [[-10, -8], [6, -6], [0, 8]], fill: body.mid },
+    { pts: [[-8, -16], [2, -28], [4, -12]], fill: spark },
+    { pts: [[10, -14], [20, -24], [16, -8]], fill: body.lit },
+    { pts: [[-8, -4], [-2, -2], [-4, 4]], fill: eye },
+    { pts: [[6, -2], [12, 0], [8, 4]], fill: eye },
+    { pts: [[4, -18], [10, -28], [12, -12]], fill: sprout },
   ];
 }
 

@@ -17,6 +17,7 @@ import {
   trayFaces,
   trayGoalFaces,
   potatoFaces,
+  ghostMarkFaces,
   waveChevronFaces,
   waveHandFaces,
   goalMouthFaces,
@@ -95,6 +96,7 @@ const builders = [
   ["tray", trayFaces(lilac, false)],
   ["tray goal", trayGoalFaces(facetShade("moss"), false)],
   ["potato", potatoFaces(ember, false)],
+  ["ghost mark", ghostMarkFaces(lilac, false)],
 ];
 
 for (const [name, faces] of builders) {
@@ -188,6 +190,34 @@ for (const fill of hexFills) {
   assert(allowedHex.has(fill), `unexpected fill ${fill}`);
 }
 
+const idlePotato = mockCtx();
+drawSimpleScene(idlePotato, 800, 600, {
+  phase: "playing",
+  result: null,
+  transition: null,
+  elapsed: 0.4,
+  scene: {
+    kind: "hot-potato",
+    potato: { x: 0.4, y: 0.5, held: true, offered: false, heldBy: "p1:left_wrist" },
+    passes: 0,
+  },
+});
+const offeredPotato = mockCtx();
+drawSimpleScene(offeredPotato, 800, 600, {
+  phase: "playing",
+  result: null,
+  transition: null,
+  elapsed: 0.4,
+  scene: {
+    kind: "hot-potato",
+    potato: { x: 0.4, y: 0.5, held: true, offered: true, heldBy: "p1:left_wrist" },
+    passes: 0,
+  },
+});
+const idlePotatoFills = idlePotato.calls.filter((call) => Array.isArray(call) && call[0] === "fill").length;
+const offeredPotatoFills = offeredPotato.calls.filter((call) => Array.isArray(call) && call[0] === "fill").length;
+assert(offeredPotatoFills > idlePotatoFills, "offered potato adds Facet sky shards");
+
 const source = readFileSync(new URL("./simple.js", import.meta.url), "utf8");
 for (const banned of ["quadraticCurveTo", "bezierCurveTo", "ellipse(", "arc(", "createLinearGradient", "createRadialGradient", "shadowBlur", "fillRect"]) {
   assert(!source.includes(banned), `simple-pack marks must not use ${banned}`);
@@ -205,6 +235,9 @@ const marks = [
   "fruit.svg",
   "wave.svg",
   "squash.svg",
+  "tray.svg",
+  "potato.svg",
+  "ghost.svg",
 ];
 const svgHex = /#[0-9a-fA-F]{6}/g;
 for (const name of marks) {
