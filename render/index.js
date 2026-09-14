@@ -73,7 +73,7 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
     }
     drawFlashVeil(state);
     const poses = posesFromSample(state.pose);
-    const footGame = state.scene?.kind === "stomp-bug" || state.scene?.kind === "kick-ball";
+    const footGame = state.scene?.kind === "stomp-bug" || state.scene?.kind === "score-goal";
     poses.forEach((pose, index) => {
       drawSkeleton(pose.joints, PLAYER_RGB[index % PLAYER_RGB.length], pose.id, footGame);
     });

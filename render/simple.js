@@ -50,8 +50,12 @@ export function drawSimpleScene(ctx, width, height, state) {
     drawLean(ctx, width, height, scene.side, scene.leaned || won, missed);
   } else if (scene.kind === "clap-now") {
     drawClap(ctx, width, height, scene.cue, scene.clapped || won, missed, elapsed);
-  } else if (scene.kind === "kick-ball") {
+  } else if (scene.kind === "score-goal") {
+    drawGoalMouth(ctx, width, height, scene.goal, scene.kicking || won, missed);
     drawBall(ctx, width, height, scene.ball.x * width, scene.ball.y * height, scene.kicking || won, missed, elapsed);
+  } else if (scene.kind === "shoot-hoops") {
+    drawHoop(ctx, width, height, scene.hoop.x * width, scene.hoop.y * height, scene.shooting || won, missed);
+    drawBall(ctx, width, height, scene.ball.x * width, scene.ball.y * height, scene.shooting || won, missed, elapsed);
   } else if (scene.kind === "stretch-wide") {
     drawStretchPost(ctx, width, height, scene.left.x * width, scene.left.y * height, scene.left.held || won, missed, -1);
     drawStretchPost(ctx, width, height, scene.right.x * width, scene.right.y * height, scene.right.held || won, missed, 1);
@@ -63,6 +67,27 @@ export function drawSimpleScene(ctx, width, height, state) {
     drawWave(ctx, width, height, scene.waving || won, missed, elapsed);
   } else if (scene.kind === "squash-it") {
     drawSquash(ctx, width, height, scene.zone.x * width, scene.zone.y * height, scene.squashing || won, missed);
+  } else if (scene.kind === "roll-dough") {
+    drawDough(
+      ctx,
+      width,
+      height,
+      scene.dough.x * width,
+      scene.dough.y * height,
+      scene.dough.flatten,
+      scene.rolling || won,
+      missed,
+    );
+    drawPin(
+      ctx,
+      width,
+      height,
+      scene.left.x * width,
+      scene.right.x * width,
+      scene.pin.y * height,
+      scene.pin.held || won,
+      missed,
+    );
   } else if (scene.kind === "balance-tray") {
     drawTrayGoal(ctx, width, height, scene.goal.x * width, scene.goal.y * height, scene.arriving || won, missed);
     drawTray(
@@ -361,7 +386,7 @@ function drawBall(ctx, width, height, x, y, kicking, missed, elapsed) {
 }
 
 /**
- * Low-poly kick ball. Upper-left panel is lit.
+ * Low-poly kick / hoop ball. Upper-left panel is lit.
  *
  * @param {ReturnType<typeof facetShade>} body
  * @param {boolean} missed
@@ -379,6 +404,138 @@ export function ballFaces(body, missed) {
     { pts: [[-18, 4], [18, 2], [0, 18]], fill: body.shade },
     { pts: [[-6, -6], [6, -4], [0, 6]], fill: patch },
     { pts: [[-2, -2], [4, 0], [0, 4]], fill: seam },
+  ];
+}
+
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} width
+ * @param {number} height
+ * @param {{ x0: number, y0: number, x1: number, y1: number }} goal
+ * @param {boolean} ready
+ * @param {boolean} missed
+ */
+function drawGoalMouth(ctx, width, height, goal, ready, missed) {
+  const s = unit(width, height);
+  const x = ((goal.x0 + goal.x1) / 2) * width;
+  const y = ((goal.y0 + goal.y1) / 2) * height;
+  const body = simpleShade({ missed, ready, hue: "moss" });
+  const rgb = missed ? FACET_RGB.coral : ready ? FACET_RGB.moss : FACET_RGB.sky;
+  drawHitRing(ctx, x, y, 36 * s, rgb, ready ? 0.75 : 0.4, ready ? 3 : 2);
+  drawFaces(ctx, x, y, 3.2 * s, goalMouthFaces(body, missed));
+}
+
+/**
+ * Placeholder goal mouth. Shine can skin after #74.
+ *
+ * @param {ReturnType<typeof facetShade>} body
+ * @param {boolean} missed
+ * @returns {Face[]}
+ */
+export function goalMouthFaces(body, missed) {
+  const net = missed ? FACET.coral : FACET.bone;
+  return [
+    { pts: [[-8, 22], [-4, -20], [0, 22]], fill: body.lit },
+    { pts: [[8, 22], [4, -18], [12, 22]], fill: body.shade },
+    { pts: [[-4, -20], [14, -16], [4, -18]], fill: body.mid },
+    { pts: [[-4, -18], [12, -14], [0, -4]], fill: net },
+    { pts: [[-2, -4], [10, -2], [2, 16]], fill: body.shade },
+    { pts: [[-10, 18], [14, 16], [2, 26]], fill: body.mid },
+  ];
+}
+
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} width
+ * @param {number} height
+ * @param {number} x
+ * @param {number} y
+ * @param {boolean} ready
+ * @param {boolean} missed
+ */
+function drawHoop(ctx, width, height, x, y, ready, missed) {
+  const s = unit(width, height);
+  const body = simpleShade({ missed, ready, hue: "ember" });
+  const rgb = missed ? FACET_RGB.coral : ready ? FACET_RGB.moss : FACET_RGB.ember;
+  drawHitRing(ctx, x, y, 34 * s, rgb, ready ? 0.85 : 0.5, ready ? 3 : 2);
+  drawHitRing(ctx, x, y, 22 * s, rgb, ready ? 0.55 : 0.3, 2);
+  drawFaces(ctx, x, y, 2.6 * s, hoopFaces(body, missed));
+}
+
+/**
+ * Placeholder rim + backboard shard.
+ *
+ * @param {ReturnType<typeof facetShade>} body
+ * @param {boolean} missed
+ * @returns {Face[]}
+ */
+export function hoopFaces(body, missed) {
+  const rim = missed ? FACET.coral : FACET.ember;
+  return [
+    { pts: [[-16, 2], [0, -8], [16, 4]], fill: body.lit },
+    { pts: [[-16, 2], [16, 4], [0, 10]], fill: body.shade },
+    { pts: [[-10, 0], [10, 0], [0, 6]], fill: rim },
+    { pts: [[10, -6], [22, -18], [18, 2]], fill: body.mid },
+    { pts: [[12, -16], [24, -22], [22, -6]], fill: body.lit },
+    { pts: [[-4, 8], [4, 8], [0, 18]], fill: body.shade },
+  ];
+}
+
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} width
+ * @param {number} height
+ * @param {number} x
+ * @param {number} heightY
+ * @param {number} flatten
+ * @param {boolean} rolling
+ * @param {boolean} missed
+ */
+function drawDough(ctx, width, height, x, heightY, flatten, rolling, missed) {
+  const s = unit(width, height);
+  const body = simpleShade({ missed, ready: rolling, hue: "ember" });
+  const rgb = missed ? FACET_RGB.coral : rolling ? FACET_RGB.moss : FACET_RGB.ember;
+  const squash = 1 - 0.4 * Math.min(1, Math.max(0, flatten));
+  drawHitRing(ctx, x, heightY, 42 * s, rgb, rolling ? 0.7 : 0.4, rolling ? 3 : 2);
+  drawFaces(ctx, x, heightY, 3 * s, squashPadFaces(body, missed, squash));
+}
+
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} width
+ * @param {number} height
+ * @param {number} x0
+ * @param {number} x1
+ * @param {number} y
+ * @param {boolean} held
+ * @param {boolean} missed
+ */
+function drawPin(ctx, width, height, x0, x1, y, held, missed) {
+  const s = unit(width, height);
+  const body = simpleShade({ missed, ready: held, hue: "sky" });
+  const rgb = missed ? FACET_RGB.coral : held ? FACET_RGB.moss : FACET_RGB.sky;
+  const mid = (x0 + x1) / 2;
+  drawHitRing(ctx, x0, y, 22 * s, rgb, held ? 0.8 : 0.45, held ? 3 : 2);
+  drawHitRing(ctx, x1, y, 22 * s, rgb, held ? 0.8 : 0.45, held ? 3 : 2);
+  drawFaces(ctx, mid, y, 2.4 * s, doughPinFaces(body, missed));
+}
+
+/**
+ * Placeholder rolling pin. Handle nubs at the ends.
+ *
+ * @param {ReturnType<typeof facetShade>} body
+ * @param {boolean} missed
+ * @returns {Face[]}
+ */
+export function doughPinFaces(body, missed) {
+  const grip = missed ? FACET.coral : FACET.bone;
+  return [
+    { pts: [[-22, 2], [0, -8], [22, 4]], fill: body.lit },
+    { pts: [[-22, 2], [22, 4], [0, 10]], fill: body.shade },
+    { pts: [[-16, 0], [14, -2], [0, 6]], fill: body.mid },
+    { pts: [[-26, -2], [-18, -8], [-14, 6]], fill: grip },
+    { pts: [[26, 0], [18, -6], [14, 8]], fill: grip },
+    { pts: [[-8, -6], [8, -4], [0, 2]], fill: body.lit },
   ];
 }
 

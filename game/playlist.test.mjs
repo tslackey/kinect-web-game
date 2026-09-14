@@ -105,6 +105,15 @@ assert(!extra.games.some((entry) => entry.id === "ghost-game"), "unknown ids are
 assert(extra.games.some((entry) => entry.id === "duck-beam"), "known ids stay");
 assert(extra.games.length === DEFAULT_PACK.length, "new shipped games append onto an old save");
 
+const retired = normalizePlaylist(
+  { playerMode: "2p", games: [{ id: "kick-ball", enabled: true }, { id: "duck-beam", enabled: false }] },
+  DEFAULT_PACK,
+);
+assert(retired.games[0].id === "score-goal", "saved Kick the ball slots become Score a goal");
+assert(!retired.games.some((entry) => entry.id === "kick-ball"), "Kick the ball does not stay in the playlist");
+assert(retired.games.some((entry) => entry.id === "shoot-hoops"), "Shoot some hoops appends onto an old save");
+assert(retired.games.some((entry) => entry.id === "roll-dough"), "Roll the dough appends onto an old save");
+
 const noneOn = normalizePlaylist(
   { playerMode: "2p", games: DEFAULT_PACK.map((def) => ({ id: def.id, enabled: false })) },
   DEFAULT_PACK,

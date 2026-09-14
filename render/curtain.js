@@ -718,8 +718,10 @@ const STAGE_KITS = {
   pitch: kit("moss", "goals", 0.1),
   span: kit("sky", "span", 0.1),
   high: kit("lilac", "high", 0.1),
+  hoop: kit("lilac", "high", 0.1),
   hello: kit("sky", "waves", 0.09),
   press: kit("ember", "press", 0.1),
+  dough: kit("ember", "press", 0.1),
 };
 
 /**

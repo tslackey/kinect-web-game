@@ -20,21 +20,28 @@ uses it. 2P is two bodies in one webcam frame, not a second camera.
 The pack includes the sticky-carry games (**Water plant**, **Feed pet**,
 **Douse fire**), **Stomp bug**, **Hit orb**, and the simple sweep:
 **Duck beam**, **Jump bar**, **Strike pose**, **Lean away**, **Clap now**,
-**Kick ball**, **Stretch wide**, **High five**, **Catch fruit**,
-**Wave hello**, **Squash it**. Harder siblings: **Balance the tray**
+**Score a goal** (`Score!` — replaces **Kick the ball**; an ankle or
+pointer-foot has to send the ball rolling into the goal, not just touch
+it), **Stretch wide**, **High five**, **Catch fruit**, **Wave hello**,
+**Squash it**, **Shoot some hoops** (`Shoot!` — toss the ball through
+the hoop; a wrist in the hoop zone is not enough), and **Roll the dough**
+(`Roll!` — both hands on the pin, then stroke up and down until it
+flattens). Harder siblings: **Balance the tray**
 (`Steady!` — keep wrists level while carrying to the goal; tip or
 timeout fails), **Mirror me** (`Copy!` — P2 matches P1 wrists, or a
 solo ghost like Strike pose), and **Hot potato** (`Pass!` — offer/accept
 pass; win is at least one successful pass before the timer). Between
 games, Facet theater drapes close, the next stage set swaps, then the
 curtain rises on a big title placard. Simple-pack verbs use Facet
-low-poly marks and a matching stage set.
+low-poly marks and a matching stage set. Score / hoops / dough ship
+with placeholder Facet marks; a later art pass can skin them.
 
 Each play window is 15–20 seconds (default 18s) so kids have time to
 find the body part and finish. Win or fail is timeout-or-success, not
 a wrong gesture — except **Balance the tray**, which also fails if the
-wrists tip past tolerance. Two people in one camera frame share the
-same target and the same win.
+wrists tip past tolerance, and **Roll the dough**, which also fails if
+you leave the pin too long after grabbing it. Two people in one camera
+frame share the same target and the same win.
 
 Sticky-carry items (plant pot, pet bowl, fire bucket, tray, potato)
 stay with the hand that picked them up. To pass, the owner puts **both

@@ -9,11 +9,12 @@ import {
   DUCK_CLEARANCE,
   HIGH_FIVE,
   JUMP_BAR,
-  KICK_BALL,
-  KICK_DWELL,
   LEAN_AWAY,
   PLAY_DURATION,
   POSE_DWELL,
+  ROLL_DOUGH,
+  SCORE_GOAL,
+  SHOOT_HOOPS,
   SQUASH_DWELL,
   SQUASH_IT,
   STRIKE_POSE,
@@ -59,12 +60,14 @@ const SIMPLE = [
   STRIKE_POSE,
   LEAN_AWAY,
   CLAP_NOW,
-  KICK_BALL,
+  SCORE_GOAL,
   STRETCH_WIDE,
   HIGH_FIVE,
   CATCH_FRUIT,
   WAVE_HELLO,
   SQUASH_IT,
+  SHOOT_HOOPS,
+  ROLL_DOUGH,
 ];
 
 for (const def of SIMPLE) {
@@ -185,32 +188,6 @@ drainPlay(clapPointer, CLAP_CUE_AT + 0.05, idle());
 assert(
   clapPointer.tick(1 / 60, oneBody({ pointer: { x: 0.5, y: 0.42, confidence: 1 } }, "mouse")) === "win",
   "pointer can hit the clap mark on cue",
-);
-
-const kick = KICK_BALL.create({ random: () => 0.2, index: 1, duration: KICK_BALL.duration });
-kick.start();
-assert(
-  drainPlay(kick, KICK_DWELL + 0.05, (play) => {
-    const ball = play.getView().scene.ball;
-    return oneBody({ left_wrist: { x: ball.x, y: ball.y, confidence: 1 } });
-  }) === "playing",
-  "a wrist on the ball is not a kick",
-);
-assert(
-  drainPlay(kick, KICK_DWELL + 0.05, (play) => {
-    const ball = play.getView().scene.ball;
-    return oneBody({ left_ankle: { x: ball.x, y: ball.y, confidence: 1 } });
-  }) === "win",
-  "an ankle on the ball wins",
-);
-const kickPointer = KICK_BALL.create({ random: () => 0.25, index: 1, duration: KICK_BALL.duration });
-kickPointer.start();
-assert(
-  drainPlay(kickPointer, KICK_DWELL + 0.05, (play) => {
-    const ball = play.getView().scene.ball;
-    return oneBody({ pointer: { x: ball.x, y: ball.y, confidence: 1 } }, "mouse");
-  }) === "win",
-  "pointer is the camera-off foot for kick",
 );
 
 const stretch = STRETCH_WIDE.create({ random: () => 0.2, index: 1, duration: STRETCH_WIDE.duration });

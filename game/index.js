@@ -3,8 +3,9 @@
  * prompt → one game on a 15–20s timer → win or fail → next.
  *
  * Default session shuffles a short run from the expanded pack (plant, pet,
- * fire, stomp, orb, the simple sweep, plus tray / mirror / potato). Either
- * pose map on the sample can score — one webcam, up to two bodies. Curtain
+ * fire, stomp, orb, the simple sweep, score / hoops / dough, plus tray /
+ * mirror / potato). Either pose map on the sample can score — one webcam,
+ * up to two bodies. Curtain
  * wipes live on the session, not on each game. Start and game-over share
  * an on-canvas hand-hold Play mark on the top-right playlist chrome;
  * click Play stays as the fallback. 1P uses the first body; 2P is two
@@ -20,7 +21,9 @@ import { CLAP_NOW } from "./clap.js";
 import { DUCK_BEAM } from "./duck.js";
 import { HIGH_FIVE } from "./highfive.js";
 import { JUMP_BAR } from "./jump.js";
-import { KICK_BALL, driftBall } from "./kick.js";
+import { SCORE_GOAL } from "./goal.js";
+import { SHOOT_HOOPS } from "./hoops.js";
+import { ROLL_DOUGH } from "./dough.js";
 import { LEAN_AWAY } from "./lean.js";
 import {
   GAME_COUNT,
@@ -76,6 +79,7 @@ export {
 export {
   PLAYLIST_KEY,
   PLAYLIST_VERSION,
+  RETIRED_GAMES,
   clipSampleForMode,
   defaultPlaylist,
   loadPlaylist,
@@ -93,7 +97,36 @@ export { JUMP_BAR, JUMP_DURATION, BAR_Y, JUMP_SPIKE } from "./jump.js";
 export { STRIKE_POSE, POSE_DURATION, POSE_DWELL } from "./pose.js";
 export { LEAN_AWAY, LEAN_DURATION, LEAN_EDGE } from "./lean.js";
 export { CLAP_NOW, CLAP_DURATION, CLAP_CUE_AT, CLAP_SPAN } from "./clap.js";
-export { KICK_BALL, KICK_DURATION, KICK_DWELL, driftBall, makeBall } from "./kick.js";
+export {
+  GOAL_DRIVE,
+  GOAL_DURATION,
+  GOAL_FRICTION,
+  GOAL_MOUTH,
+  GOAL_SPEED,
+  SCORE_GOAL,
+  inGoal,
+  makeGoalBall,
+  rollBall,
+} from "./goal.js";
+export {
+  HOOP,
+  HOOPS_DRIVE,
+  HOOPS_DURATION,
+  HOOPS_GRAVITY,
+  HOOPS_SPEED,
+  SHOOT_HOOPS,
+  inHoop,
+  makeHoopBall,
+  throughHoop,
+} from "./hoops.js";
+export {
+  DOUGH_BREAK,
+  DOUGH_DURATION,
+  DOUGH_STROKE,
+  DOUGH_STROKES,
+  ROLL_DOUGH,
+  layoutDough,
+} from "./dough.js";
 export { STRETCH_WIDE, STRETCH_DURATION, STRETCH_SPAN } from "./stretch.js";
 export { HIGH_FIVE, HIGH_FIVE_DURATION } from "./highfive.js";
 export { CATCH_FRUIT, FRUIT_DURATION, FRUIT_FALL, makeFruit } from "./fruit.js";
@@ -185,7 +218,7 @@ export const DEFAULT_PACK = [
   STRIKE_POSE,
   LEAN_AWAY,
   CLAP_NOW,
-  KICK_BALL,
+  SCORE_GOAL,
   STRETCH_WIDE,
   HIGH_FIVE,
   CATCH_FRUIT,
@@ -194,9 +227,11 @@ export const DEFAULT_PACK = [
   BALANCE_TRAY,
   MIRROR_ME,
   HOT_POTATO,
+  SHOOT_HOOPS,
+  ROLL_DOUGH,
 ];
 
-const FOOT_GAMES = new Set(["stomp-bug", "kick-ball"]);
+const FOOT_GAMES = new Set(["stomp-bug", "score-goal"]);
 const HEIGHT_GAMES = new Set(["duck-beam", "jump-bar"]);
 const LEAN_GAMES = new Set(["lean-away"]);
 
@@ -660,10 +695,6 @@ function nearest(points, dest) {
 function driftLiveTarget(state, step) {
   if (state.scene?.kind === "stomp-bug") {
     driftBug(state.target, step);
-    return;
-  }
-  if (state.scene?.kind === "kick-ball") {
-    driftBall(state.target, step);
     return;
   }
   if (state.scene?.kind === "catch-fruit") {

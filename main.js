@@ -264,7 +264,7 @@ function ledeForGame(gameId) {
   if (gameId === "strike-pose") return "Hold both wrists on the glowing anchors.";
   if (gameId === "lean-away") return "Lean your torso toward the lit side.";
   if (gameId === "clap-now") return "When the mark lights, clap — or tap it.";
-  if (gameId === "kick-ball") return "Drive an ankle through the drifting ball.";
+  if (gameId === "score-goal") return "Kick the ball so it rolls into the goal.";
   if (gameId === "stretch-wide") return "Stretch your wrists apart, or tag both posts.";
   if (gameId === "high-five") return "Slap the high zone with a wrist.";
   if (gameId === "catch-fruit") return "Catch the falling fruit with a wrist.";
@@ -273,6 +273,8 @@ function ledeForGame(gameId) {
   if (gameId === "balance-tray") return "Keep the tray level and carry it to the mark.";
   if (gameId === "mirror-me") return "Copy the other wrists, or hold the ghost marks.";
   if (gameId === "hot-potato") return "Offer with both hands, then one hand accepts the pass.";
+  if (gameId === "shoot-hoops") return "Flick a wrist to toss the ball through the hoop.";
+  if (gameId === "roll-dough") return "Both hands on the pin, then roll it up and down.";
   return "One hit. Timer is live.";
 }
 
