@@ -1,6 +1,7 @@
 /**
- * Facet player skeletons. Low-poly skin over the pose, eyes, and a
- * small expression set. Light from upper-left. Strikers stay on top.
+ * Facet player skeletons. Low-poly skin over the pose, plus circular
+ * cartoony faces (heads/eyes/mouths) with a small expression set.
+ * Light from upper-left. Strikers stay on top.
  */
 
 import { STICK_BONES } from "../input/joints.js";
@@ -84,28 +85,84 @@ export function playerAccent(hue) {
 }
 
 /**
- * Faceted skull. Local units around the nose. +y is down.
+ * Triangle fan for a disc (or pie slice). Hard edges, no canvas arcs.
+ * Circular cartoony faces stay Facet by using a round silhouette with
+ * upper-left hard-cut shading.
+ *
+ * @param {number} cx
+ * @param {number} cy
+ * @param {number} rx
+ * @param {number} ry
+ * @param {string | ((index: number, midAngle: number) => string)} fill
+ * @param {number} [segments]
+ * @param {number} [start]
+ * @param {number} [end]
+ * @returns {Face[]}
+ */
+export function discFaces(cx, cy, rx, ry, fill, segments = 8, start = -Math.PI / 2, end = start + Math.PI * 2) {
+  const count = Math.max(3, segments);
+  const span = end - start;
+  /** @type {Face[]} */
+  const faces = [];
+  for (let i = 0; i < count; i += 1) {
+    const a0 = start + (span * i) / count;
+    const a1 = start + (span * (i + 1)) / count;
+    const mid = (a0 + a1) / 2;
+    const color = typeof fill === "function" ? fill(i, mid) : fill;
+    faces.push({
+      pts: [
+        [cx, cy],
+        [cx + Math.cos(a0) * rx, cy + Math.sin(a0) * ry],
+        [cx + Math.cos(a1) * rx, cy + Math.sin(a1) * ry],
+      ],
+      fill: color,
+    });
+  }
+  return faces;
+}
+
+/**
+ * Upper-left light on a disc wedge. +y is down.
+ *
+ * @param {number} midAngle
+ * @param {ReturnType<typeof facetShade>} body
+ */
+function shadeFromAngle(midAngle, body) {
+  const facing = -Math.cos(midAngle) - Math.sin(midAngle);
+  if (facing > 0.5) return body.lit;
+  if (facing < -0.45) return body.shade;
+  return body.mid;
+}
+
+/**
+ * Round faceted skull. Local units around the nose. +y is down.
  *
  * @param {ReturnType<typeof facetShade>} body
  * @param {SkeletonMood} [mood]
  * @returns {Face[]}
  */
 export function headFaces(body, mood = "idle") {
-  const lift = mood === "win" ? -1.2 : mood === "fail" ? 0.6 : 0;
-  const squash = mood === "effort" ? 0.86 : mood === "fail" ? 0.94 : 1;
+  const lift = mood === "win" ? -1.4 : mood === "fail" ? 0.7 : 0;
+  const squash = mood === "effort" ? 0.88 : mood === "fail" ? 0.96 : 1;
+  const puff = mood === "win" ? 1.06 : 1;
+  const rx = 12 * puff;
+  const ry = 12.6 * puff;
   const map = (pts) => pts.map(([x, y]) => /** @type {Pt} */ ([x, y * squash + lift]));
-  return [
-    { pts: map([[0, -13], [-9, -4], [2, -3]]), fill: body.lit },
-    { pts: map([[0, -13], [9, -4], [2, -3]]), fill: body.mid },
-    { pts: map([[-9, -4], [-8, 8], [0, 1]]), fill: body.mid },
-    { pts: map([[9, -4], [8, 8], [0, 1]]), fill: body.shade },
-    { pts: map([[-8, 8], [0, 14], [8, 8]]), fill: body.shade },
-    { pts: map([[-4, -2], [3, -5], [1, 3]]), fill: body.lit },
-  ];
+  const wedges = discFaces(0, 0.4, rx, ry, (_i, mid) => shadeFromAngle(mid, body), 12);
+  const shine = {
+    pts: /** @type {Pt[]} */ ([
+      [-5.4, -6.6],
+      [-1.4, -9.6],
+      [0.8, -3.8],
+    ]),
+    fill: body.lit,
+  };
+  return [...wedges, shine].map((face) => ({ pts: map(face.pts), fill: face.fill }));
 }
 
 /**
  * Eyes, brows, mouth. Local units around the nose.
+ * Circular cartoony discs; idle / effort / win / fail stay distinct.
  *
  * @param {SkeletonMood} mood
  * @param {string} accent
@@ -118,61 +175,92 @@ export function faceFaces(mood, accent) {
   const white = FACET.bone;
   const pupil = FACET.ink;
   const brow = fail ? FACET.coral : accent;
-  const lip = fail ? FACET.coral : win ? FACET.bone : effort ? FACET.ink : FACET.bone;
+  const blush = fail ? FACET.coral : accent;
 
-  const eyeY = win ? -6.2 : fail ? -5 : effort ? -5.4 : -5.6;
-  const eyeW = effort ? 5.6 : win ? 4.8 : 4.4;
-  const eyeH = effort ? 2.4 : fail ? 3.4 : win ? 4.8 : 4;
-  const pupilY = win ? -1.2 : fail ? 0.9 : 0.2;
-  const spread = 6.4;
+  const eyeY = win ? -6.1 : fail ? -5.2 : effort ? -5.5 : -5.6;
+  const eyeR = effort ? 5.2 : win ? 5.6 : fail ? 5 : 5.2;
+  const eyeSquash = effort ? 0.58 : fail ? 0.92 : 1;
+  const pupilR = effort ? 2.2 : win ? 2.8 : fail ? 2.1 : 2.5;
+  const pupilY = win ? -1.3 : fail ? 0.7 : effort ? 0.15 : 0.25;
+  const spread = 6.6;
 
-  const browY = win ? eyeY - 4.4 : effort ? eyeY - 2.6 : fail ? eyeY - 2.8 : eyeY - 3.4;
-  const browTilt = win ? -1.2 : fail ? 1.6 : effort ? 1.8 : 0.2;
-  const mouthY = win ? 7.4 : fail ? 8 : effort ? 7 : 6.8;
+  const browY = win ? eyeY - 5.2 : effort ? eyeY - 2.8 : fail ? eyeY - 2.4 : eyeY - 4.2;
+  const browTilt = win ? -1.6 : fail ? 2.1 : effort ? 2.2 : 0.45;
+  const mouthY = win ? 7.8 : fail ? 7.4 : effort ? 7.1 : 7;
 
   /** @param {number} side */
   const eye = (side) => {
     const cx = side * spread;
+    const px = cx + side * 0.15;
+    const py = eyeY + pupilY;
+    const sparkX = px - pupilR * 0.38;
+    const sparkY = py - pupilR * 0.32;
     return [
-      { pts: [[cx, eyeY - eyeH], [cx + eyeW, eyeY], [cx, eyeY + eyeH]], fill: white },
-      { pts: [[cx, eyeY - eyeH], [cx, eyeY + eyeH], [cx - eyeW, eyeY]], fill: white },
-      { pts: [[cx - 1.4, eyeY + pupilY], [cx + 1.4, eyeY + pupilY], [cx, eyeY + pupilY + 2.2]], fill: pupil },
+      ...discFaces(cx, eyeY, eyeR, eyeR * eyeSquash, white, 10),
+      ...discFaces(px, py, pupilR, pupilR * eyeSquash, pupil, 8),
+      {
+        pts: /** @type {Pt[]} */ ([
+          [sparkX, sparkY],
+          [sparkX + pupilR * 0.42, sparkY - pupilR * 0.22],
+          [sparkX + pupilR * 0.28, sparkY + pupilR * 0.18],
+        ]),
+        fill: white,
+      },
     ];
   };
 
   /** @param {number} side */
-  const browFace = (side) => {
-    const inner = side * (spread - 2.4);
-    const outer = side * (spread + 3.2);
-    return {
-      pts: [
-        [inner, browY + browTilt],
-        [outer, browY - browTilt * 0.35],
-        [side * spread, browY + 1.2],
-      ],
-      fill: brow,
-    };
+  const browFaces = (side) => {
+    const inner = side * (spread - 2.8);
+    const outer = side * (spread + 3.8);
+    const midX = side * spread;
+    return [
+      {
+        pts: /** @type {Pt[]} */ ([
+          [inner, browY + browTilt],
+          [outer, browY - browTilt * 0.4],
+          [midX, browY + 2],
+        ]),
+        fill: brow,
+      },
+      {
+        pts: /** @type {Pt[]} */ ([
+          [inner, browY + browTilt - 0.9],
+          [outer, browY - browTilt * 0.4 - 1.1],
+          [midX, browY + 0.35],
+        ]),
+        fill: brow,
+      },
+    ];
   };
 
   /** @type {Face[]} */
   const mouth = win
     ? [
-        { pts: [[-6.2, mouthY], [0, mouthY + 3.8], [-0.8, mouthY + 1.2]], fill: lip },
-        { pts: [[6.2, mouthY], [0, mouthY + 3.8], [0.8, mouthY + 1.2]], fill: lip },
+        ...discFaces(0, mouthY, 5.8, 4.6, FACET.bone, 10),
+        ...discFaces(0, mouthY + 0.45, 3.7, 2.9, FACET.ink, 8),
+        { pts: [[-1.8, mouthY + 1.5], [1.8, mouthY + 1.5], [0, mouthY + 3.6]], fill: FACET.ember },
       ]
     : fail
-      ? [
-          { pts: [[-5.6, mouthY + 2.2], [0, mouthY - 1.4], [-0.8, mouthY + 1]], fill: lip },
-          { pts: [[5.6, mouthY + 2.2], [0, mouthY - 1.4], [0.8, mouthY + 1]], fill: lip },
-        ]
+      ? discFaces(0, mouthY + 1.6, 4.8, 3, FACET.coral, 6, -Math.PI * 0.92, -Math.PI * 0.08)
       : effort
         ? [
-            { pts: [[-4.2, mouthY - 0.6], [4.2, mouthY - 0.2], [0, mouthY + 0.5]], fill: lip },
-            { pts: [[-4.2, mouthY + 1.4], [4.2, mouthY + 1], [0, mouthY + 0.3]], fill: FACET.bone },
+            { pts: [[-5, mouthY - 1.3], [5, mouthY - 0.9], [0, mouthY + 0.15]], fill: FACET.ink },
+            { pts: [[-5, mouthY + 2], [5, mouthY + 1.6], [0, mouthY + 0.05]], fill: FACET.bone },
+            { pts: [[-1.7, mouthY - 1.1], [-0.3, mouthY - 1], [-1, mouthY + 1.6]], fill: FACET.ink },
+            { pts: [[1.7, mouthY - 1.1], [0.3, mouthY - 1], [1, mouthY + 1.6]], fill: FACET.ink },
           ]
-        : [{ pts: [[-2.8, mouthY], [2.8, mouthY + 0.3], [0, mouthY + 1.8]], fill: lip }];
+        : discFaces(0, mouthY, 3.6, 2.5, FACET.bone, 6, Math.PI * 0.08, Math.PI * 0.92);
 
-  return [...eye(-1), ...eye(1), browFace(-1), browFace(1), ...mouth];
+  const cheeks =
+    effort
+      ? []
+      : [
+          ...discFaces(-8.4, 3.8, 2.3, 1.55, blush, 6),
+          ...discFaces(8.4, 3.8, 2.3, 1.55, blush, 6),
+        ];
+
+  return [...eye(-1), ...eye(1), ...browFaces(-1), ...browFaces(1), ...cheeks, ...mouth];
 }
 
 /**
@@ -298,8 +386,8 @@ export function drawSkeleton(
   const nose = px("nose");
   if (nose && ls && rs) {
     const midShoulder = mid(ls, rs);
-    const chin = /** @type {Pt} */ ([nose[0], nose[1] + headScale * 12]);
-    const neckW = headScale * 5.2;
+    const chin = /** @type {Pt} */ ([nose[0], nose[1] + headScale * 12.4]);
+    const neckW = headScale * 5.4;
     skin.push(
       { pts: [chin, [midShoulder[0] - neckW, midShoulder[1]], midShoulder], fill: body.mid },
       { pts: [chin, midShoulder, [midShoulder[0] + neckW, midShoulder[1]]], fill: body.shade },

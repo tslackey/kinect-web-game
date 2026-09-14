@@ -5,6 +5,7 @@ import { facetShade } from "./facet.js";
 import {
   STRIKER_HALO,
   STRIKER_RADIUS,
+  discFaces,
   drawSkeleton,
   faceFaces,
   headFaces,
@@ -107,6 +108,7 @@ for (const [name, faces] of builders) {
   );
 }
 
+const idleHead = headFaces(moss, "idle");
 const idleFace = faceFaces("idle", FACET.ember);
 const winFace = faceFaces("win", FACET.ember);
 const failFace = faceFaces("fail", FACET.ember);
@@ -134,9 +136,46 @@ assert(
   "P2 face uses Lilac, not Ember",
 );
 
-const winMouth = winFace.filter((face) => face.fill === FACET.bone && face.pts.every(([, y]) => y > 4));
-const failMouth = failFace.filter((face) => face.fill === FACET.coral);
-assert(winMouth.length >= 2, "win mouth is a Bone chevron");
+const disc = discFaces(0, 0, 4, 4, FACET.bone, 8);
+assert(disc.length === 8 && disc.every((face) => face.pts.length === 3), "discFaces is a triangle fan");
+
+/**
+ * @param {import("./facet.js").Face[]} faces
+ * @param {number} [cx]
+ * @param {number} [cy]
+ */
+function outerRadii(faces, cx = 0, cy = 0) {
+  return faces.flatMap((face) =>
+    face.pts.map(([x, y]) => Math.hypot(x - cx, y - cy)).filter((r) => r > 2),
+  );
+}
+
+const headWedges = idleHead.filter((face) => face.pts.some(([x, y]) => Math.hypot(x, y - 0.4) < 0.2));
+const headRadii = outerRadii(headWedges, 0, 0.4);
+const headMin = Math.min(...headRadii);
+const headMax = Math.max(...headRadii);
+assert(headWedges.length >= 8, "head is a faceted disc, not a diamond");
+assert(headMax / headMin < 1.25, "head silhouette is circular");
+
+const leftEyeWhite = idleFace.filter(
+  (face) => face.fill === FACET.bone && face.pts.some(([x, y]) => Math.hypot(x + 6.6, y + 5.6) < 0.2),
+);
+const leftEyeRadii = outerRadii(leftEyeWhite, -6.6, -5.6);
+assert(leftEyeWhite.length >= 6, "eyes are faceted discs, not diamonds");
+assert(Math.max(...leftEyeRadii) / Math.min(...leftEyeRadii) < 1.2, "idle eyes are circular");
+
+const idlePupils = idleFace.filter(
+  (face) => face.fill === FACET.ink && face.pts.every(([, y]) => y < 2),
+);
+const pupilXs = idlePupils.flatMap((face) => face.pts.map(([x]) => x));
+const pupilYs = idlePupils.flatMap((face) => face.pts.map(([, y]) => y));
+assert(Math.max(...pupilXs) - Math.min(...pupilXs) > 4, "pupils are bigger discs");
+assert(Math.max(...pupilYs) - Math.min(...pupilYs) > 3.5, "pupils are round, not a tiny triangle");
+
+const winMouth = winFace.filter((face) => face.fill === FACET.bone && face.pts.every(([, y]) => y > 2.8));
+const failMouth = failFace.filter((face) => face.fill === FACET.coral && face.pts.every(([, y]) => y > 3));
+assert(winMouth.length >= 6, "win mouth is a round Bone laugh");
+assert(failMouth.length >= 3, "fail mouth is a round Coral frown");
 assert(
   Math.max(...winMouth.flatMap((face) => face.pts.map(([, y]) => y))) >
     Math.min(...failMouth.flatMap((face) => face.pts.map(([, y]) => y))),
