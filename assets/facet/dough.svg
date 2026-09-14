@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet roll dough">
+  <!-- 128 grid. Ember dough mound under a Sky rolling pin. Upper-left light. -->
+  <polygon fill="#fcb588" points="64,40 28,72 68,80"/>
+  <polygon fill="#ff9e64" points="64,40 100,68 68,80"/>
+  <polygon fill="#b67450" points="28,72 68,80 64,104"/>
+  <polygon fill="#b67450" points="100,68 68,80 64,104"/>
+  <polygon fill="#fcb588" points="44,60 76,52 72,76"/>
+  <polygon fill="#ff9e64" points="84,44 104,36 96,64"/>
+  <polygon fill="#b67450" points="32,84 96,88 64,108"/>
+  <polygon fill="#f4efe6" points="56,64 72,68 64,80"/>
+  <polygon fill="#9cb8f2" points="24,52 104,48 104,64"/>
+  <polygon fill="#5b77b4" points="24,52 104,64 24,76"/>
+  <polygon fill="#7aa2f7" points="32,56 96,56 64,72"/>
+  <polygon fill="#ff9e64" points="56,50 72,50 64,66"/>
+  <polygon fill="#f4efe6" points="8,58 24,48 24,76"/>
+  <polygon fill="#5b77b4" points="0,62 8,52 12,74"/>
+  <polygon fill="#f4efe6" points="120,60 104,48 104,76"/>
+  <polygon fill="#7aa2f7" points="128,66 120,52 116,76"/>
+</svg>

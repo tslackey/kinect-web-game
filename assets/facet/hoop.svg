@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet shoot hoop">
+  <!-- 128 grid. Lilac backboard, Ember rim, hanging net. Upper-left light. -->
+  <polygon fill="#bb9af7" points="76,52 112,12 116,80"/>
+  <polygon fill="#8771b4" points="76,52 116,80 80,84"/>
+  <polygon fill="#c8adf3" points="84,28 108,16 104,56"/>
+  <polygon fill="#f4efe6" points="88,32 100,24 96,52"/>
+  <polygon fill="#b67450" points="72,60 96,48 80,72"/>
+  <polygon fill="#ff9e64" points="32,64 64,50 96,68"/>
+  <polygon fill="#b67450" points="32,64 96,68 64,78"/>
+  <polygon fill="#1a1b26" points="48,64 80,66 64,72"/>
+  <polygon fill="#a9b1d6" points="40,76 64,80 48,104"/>
+  <polygon fill="#ff9e64" points="88,76 64,80 80,104"/>
+  <polygon fill="#b67450" points="48,104 64,80 80,104"/>
+  <polygon fill="#a9b1d6" points="64,84 56,112 72,112"/>
+</svg>

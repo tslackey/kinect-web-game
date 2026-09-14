@@ -105,10 +105,10 @@ assert(stageKitFor("bar").motif === "hurdle", "jump stage is a moss hurdle");
 assert(stageKitFor("pitch").motif === "goals", "score stage is moss goals");
 assert(stageKitFor("span").motif === "span", "stretch stage is sky reach arms");
 assert(stageKitFor("high").motif === "high", "high-five stage is a lilac stand");
-assert(stageKitFor("hoop").motif === "high", "hoops reuses the high stand as a placeholder");
+assert(stageKitFor("hoop").motif === "court", "hoops stage is a lilac court");
 assert(stageKitFor("hello").motif === "waves", "wave stage is sky chevrons");
 assert(stageKitFor("press").motif === "press", "squash stage is an ember press plate");
-assert(stageKitFor("dough").motif === "press", "dough reuses the press plate as a placeholder");
+assert(stageKitFor("dough").motif === "board", "dough stage is an ember board");
 assert(stageKitFor("cue").motif === "hands", "clap stage is coral hands");
 assert(stageKitFor("steady").motif === "level", "balance stage is moss level shelves");
 assert(stageKitFor("mirror").motif === "glass", "copy stage is lilac mirror panes");
@@ -118,6 +118,15 @@ assert(stageKitFor("unknown").hue === "lilac", "unknown stages fall back to crys
 const pitch = mockCtx();
 drawStageWash(pitch, 800, 600, "pitch");
 assert(hexFills(pitch.calls).includes(FACET.moss), "score pitch uses Moss goals");
+
+const hoopStage = mockCtx();
+drawStageWash(hoopStage, 800, 600, "hoop");
+assert(hexFills(hoopStage.calls).includes(FACET.lilac), "hoops court uses Lilac backboards");
+assert(hexFills(hoopStage.calls).includes(FACET.ember), "hoops court rims are Ember");
+
+const doughStage = mockCtx();
+drawStageWash(doughStage, 800, 600, "dough");
+assert(hexFills(doughStage.calls).includes(FACET.ember), "dough board uses Ember mounds");
 
 const hello = mockCtx();
 drawStageWash(hello, 800, 600, "hello");
@@ -181,7 +190,16 @@ drawSimpleScene(ctx, 800, 600, {
 });
 assert(ctx.calls.length > 4, "simple-pack scenes draw Facet marks");
 
-for (const fill of [...hexFills(garden.calls), ...hexFills(ctx.calls), ...hexFills(card.calls), ...hexFills(steady.calls), ...hexFills(mirror.calls), ...hexFills(pass.calls)]) {
+for (const fill of [
+  ...hexFills(garden.calls),
+  ...hexFills(ctx.calls),
+  ...hexFills(card.calls),
+  ...hexFills(steady.calls),
+  ...hexFills(mirror.calls),
+  ...hexFills(pass.calls),
+  ...hexFills(hoopStage.calls),
+  ...hexFills(doughStage.calls),
+]) {
   assert(allowedHex.has(fill), `unexpected fill ${fill}`);
 }
 

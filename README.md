@@ -33,8 +33,7 @@ solo ghost like Strike pose), and **Hot potato** (`Pass!` — offer/accept
 pass; win is at least one successful pass before the timer). Between
 games, Facet theater drapes close, the next stage set swaps, then the
 curtain rises on a big title placard. Simple-pack verbs use Facet
-low-poly marks and a matching stage set. Score / hoops / dough ship
-with placeholder Facet marks; a later art pass can skin them.
+low-poly marks and a matching stage set.
 
 Each play window is 15–20 seconds (default 18s) so kids have time to
 find the body part and finish. Win or fail is timeout-or-success, not

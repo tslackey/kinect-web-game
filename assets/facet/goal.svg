@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet score goal">
+  <!-- 128 grid. Soccer mouth, opening left. Upper-left light. -->
+  <polygon fill="#b6d78d" points="24,112 28,16 40,112"/>
+  <polygon fill="#749554" points="28,16 40,20 40,112"/>
+  <polygon fill="#9ece6a" points="92,104 96,28 108,104"/>
+  <polygon fill="#749554" points="96,28 108,32 108,104"/>
+  <polygon fill="#b6d78d" points="28,16 96,28 40,28"/>
+  <polygon fill="#9ece6a" points="40,28 96,28 108,32"/>
+  <polygon fill="#f4efe6" points="40,32 92,40 64,68"/>
+  <polygon fill="#a9b1d6" points="40,60 92,68 68,96"/>
+  <polygon fill="#749554" points="44,92 96,88 72,108"/>
+  <polygon fill="#9ece6a" points="24,108 108,100 64,120"/>
+  <polygon fill="#749554" points="88,44 108,36 104,96"/>
+  <polygon fill="#ff9e64" points="20,16 40,4 36,28"/>
+</svg>
