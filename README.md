@@ -30,16 +30,31 @@ flattens). Harder siblings: **Balance the tray**
 (`Steady!` — keep wrists level while carrying to the goal; tip or
 timeout fails), **Mirror me** (`Copy!` — P2 matches P1 wrists, or a
 solo ghost like Strike pose), and **Hot potato** (`Pass!` — offer/accept
-pass; win is at least one successful pass before the timer). Between
-games, Facet theater drapes close, the next stage set swaps, then the
-curtain rises on a big title placard. Simple-pack verbs use Facet
-low-poly marks and a matching stage set.
+pass; win is at least one successful pass before the timer). Second
+wave: **Swat the fly** (`Swat!`), **Ring the bell** (`Ring!`),
+**Freeze dance** (`Freeze!` — move, then hold still), **Limbo under**
+(`Limbo!`), **Bow to the king** (`Bow!`), **Cover your ears**
+(`Cover!`), **Stir the pot** (`Stir!`), **Block it** (`Block!`),
+**Peek with binoculars** (`Peek!`), **Pat the dog** (`Pat!`),
+**Pull the rope** (`Pull!`), and **Pop the balloons** (`Pop!`). Third
+wave: **Brush your teeth** (`Brush!`), **Flap your wings** (`Flap!`),
+**Open the umbrella** (`Umbrella!`), **Stamp the passport** (`Stamp!`),
+**Head the ball** (`Head!`), **Hop on one foot** (`Hop!`),
+**Comb your hair** (`Comb!`), **Knock on the door** (`Knock!`),
+**Cheers** (`Cheers!` — coop toast in the center), **Tug of war**
+(`Tug!` — shared team pull), **Dig for treasure** (`Dig!`), and
+**Skip rope** (`Skip!`). Between games, Facet theater drapes close, the
+next stage set swaps, then the curtain rises on a big title placard.
+Simple-pack verbs use Facet low-poly marks and a matching stage set.
+Second- and third-wave Facet skins are placeholders until Shine.
 
 Each play window is 15–20 seconds (default 18s) so kids have time to
 find the body part and finish. Win or fail is timeout-or-success, not
 a wrong gesture — except **Balance the tray**, which also fails if the
-wrists tip past tolerance, and **Roll the dough**, which also fails if
-you leave the pin too long after grabbing it.
+wrists tip past tolerance, **Roll the dough**, which also fails if
+you leave the pin too long after grabbing it, and a few later verbs
+(freeze after the cue, limbo contact, an unblocked shot, a missed skip
+beat, a dropped header).
 
 **2P layouts.** One webcam, two bodies in one frame. Solo verbs use
 `layout: "split"`: each player gets mirrored props on their side
@@ -47,8 +62,9 @@ you leave the pin too long after grabbing it.
 passes or fails alone. **P1 and P2 keep separate scores**; the HUD
 shows both. A split win only increments that player. The round result
 is both win, both miss, or **split** when the scores diverge. True
-shared verbs use `layout: "coop"` and stay **centered** — **Hot potato**
-and **Mirror me**. A shared coop win credits **both** scores. 1P is
+shared verbs use `layout: "coop"` and stay **centered** — **Hot potato**,
+**Mirror me**, **Cheers**, and **Tug of war**. A shared coop win credits
+**both** scores. 1P is
 a single full-field instance and a single score. The playlist 1P/2P
 toggle still chooses the mode.
 

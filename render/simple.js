@@ -121,6 +121,65 @@ export function drawSimpleScene(ctx, width, height, state) {
       scene.potato.offered,
       missed,
     );
+  } else if (scene.kind === "swat-fly") {
+    drawFruit(ctx, width, height, scene.fly.x * width, scene.fly.y * height, scene.swatted || won, missed);
+  } else if (scene.kind === "ring-bell") {
+    drawHighFive(ctx, width, height, scene.bell.x * width, scene.bell.y * height, scene.rung || won, missed, elapsed);
+  } else if (scene.kind === "freeze-dance") {
+    drawClap(ctx, width, height, scene.cue, scene.frozen || won, missed, elapsed);
+  } else if (scene.kind === "limbo-under") {
+    drawBeam(ctx, width, height, scene.bar.y, scene.ducked || won, missed);
+  } else if (scene.kind === "bow-king") {
+    drawLean(ctx, width, height, "right", scene.bowed || won, missed);
+  } else if (scene.kind === "cover-ears") {
+    drawWave(ctx, width, height, scene.covering || won, missed, elapsed);
+  } else if (scene.kind === "stir-pot") {
+    drawDough(ctx, width, height, scene.pot.x * width, scene.pot.y * height, Math.min(1, scene.loops / 2), scene.stirring || won, missed);
+  } else if (scene.kind === "block-it") {
+    drawBall(ctx, width, height, scene.shot.x * width, scene.shot.y * height, scene.blocked || won, missed, elapsed, {
+      hue: "ember",
+      foot: false,
+    });
+    drawStretchPost(ctx, width, height, scene.shield.x * width, scene.shield.y * height, scene.blocked || won, missed, 1);
+  } else if (scene.kind === "peek-binoculars") {
+    drawGhostMark(ctx, width, height, scene.peeking || won ? width * 0.46 : width * 0.44, height * 0.22, scene.peeking || won, missed);
+    drawGhostMark(ctx, width, height, scene.peeking || won ? width * 0.54 : width * 0.56, height * 0.22, scene.peeking || won, missed);
+  } else if (scene.kind === "pat-dog") {
+    drawFruit(ctx, width, height, scene.dog.x * width, scene.dog.y * height, scene.patting || won, missed);
+  } else if (scene.kind === "pull-rope") {
+    drawStretchPost(ctx, width, height, scene.handle.x * width, scene.handle.y * height, scene.handle.held || won, missed, 1);
+  } else if (scene.kind === "pop-balloons") {
+    for (const balloon of scene.balloons ?? []) {
+      drawFruit(ctx, width, height, balloon.x * width, balloon.y * height, won, missed);
+    }
+  } else if (scene.kind === "brush-teeth") {
+    drawWave(ctx, width, height, scene.brushing || won, missed, elapsed);
+  } else if (scene.kind === "flap-wings") {
+    drawWave(ctx, width, height, scene.flapping || won, missed, elapsed);
+  } else if (scene.kind === "open-umbrella") {
+    drawStretchPost(ctx, width, height, scene.left.x * width, scene.left.y * height, scene.left.held || won, missed, -1);
+    drawStretchPost(ctx, width, height, scene.right.x * width, scene.right.y * height, scene.right.held || won, missed, 1);
+  } else if (scene.kind === "stamp-passport") {
+    drawSquash(ctx, width, height, scene.pad.x * width, scene.pad.y * height, scene.stamped || won, missed);
+  } else if (scene.kind === "head-ball") {
+    drawBall(ctx, width, height, scene.ball.x * width, scene.ball.y * height, scene.headed || won, missed, elapsed, {
+      hue: "sky",
+      foot: false,
+    });
+  } else if (scene.kind === "hop-foot") {
+    drawBar(ctx, width, height, 0.62, scene.hopping || won, missed);
+  } else if (scene.kind === "comb-hair") {
+    drawWave(ctx, width, height, scene.combing || won, missed, elapsed);
+  } else if (scene.kind === "knock-door") {
+    drawSquash(ctx, width, height, scene.door.x * width, scene.door.y * height, scene.knocking || won, missed);
+  } else if (scene.kind === "cheers-toast") {
+    drawClap(ctx, width, height, scene.toasting, scene.toasting || won, missed, elapsed);
+  } else if (scene.kind === "tug-of-war") {
+    drawPin(ctx, width, height, width * 0.32, width * 0.68, scene.rope.y * height, scene.tugging || won, missed);
+  } else if (scene.kind === "dig-treasure") {
+    drawDough(ctx, width, height, scene.pile.x * width, scene.pile.y * height, scene.found || won ? 1 : Math.min(1, (scene.digs ?? 0) / 3), scene.found || won, missed);
+  } else if (scene.kind === "skip-rope") {
+    drawBar(ctx, width, height, scene.rope.y, scene.jumping || won, missed);
   }
 
   ctx.restore();
