@@ -1,6 +1,6 @@
 /**
  * Draws the current game state onto the existing canvas.
- * Each pose map is its own stick figure. Orb games draw the crystal;
+ * Each pose map is a Facet-skinned figure (eyes + expressions). Orb games draw the crystal;
  * water-the-plant, feed-the-pet, and put-out-the-fire use Facet
  * low-poly marks (hard-edge triangles, token steps, upper-left light);
  * stomp-the-bug draws a Facet low-poly bug and stomp cue;
@@ -9,10 +9,10 @@
  * Start and game-over draw the hand-hold Play mark with a progress ring.
  */
 
-import { STICK_BONES } from "../input/joints.js";
 import { posesFromSample } from "../input/poses.js";
 import { HIT_RADIUS, TARGET_LIFETIME } from "../game/index.js";
 import { FACET, FACET_RGB, PLAYER_RGB, hexToRgb } from "../theme/facet.js";
+import { drawSkeleton, skeletonMood } from "./skeleton.js";
 import {
   bucketLipOffset,
   canSpoutOffset,
@@ -38,7 +38,6 @@ import { drawStompBug } from "./stomp.js";
 
 /**
  * @typedef {import("../game/index.js").GameState} GameState
- * @typedef {import("../input/index.js").Joint} Joint
  */
 
 /**
@@ -74,8 +73,15 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
     drawFlashVeil(state);
     const poses = posesFromSample(state.pose);
     const footGame = state.scene?.kind === "stomp-bug" || state.scene?.kind === "score-goal";
+    const mood = skeletonMood(state);
     poses.forEach((pose, index) => {
-      drawSkeleton(pose.joints, PLAYER_RGB[index % PLAYER_RGB.length], pose.id, footGame);
+      drawSkeleton(ctx, width, height, pose.joints, {
+        playerIndex: index,
+        label: pose.id,
+        footGame,
+        mood,
+        simple: pose.source === "mouse" || pose.source === "keyboard",
+      });
     });
     if (state.phase !== "start") {
       if (state.scene?.kind === "water-plant") {
@@ -141,63 +147,6 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
     ctx.textBaseline = "middle";
     ctx.fillStyle = FACET.bone;
     ctx.fillText(hold.label.toUpperCase(), x, y + r + 18);
-  }
-
-  /**
-   * @param {Record<string, Joint> | undefined | null} joints
-   * @param {string} rgb
-   * @param {string} [label]
-   * @param {boolean} [footGame]
-   */
-  function drawSkeleton(joints, rgb, label, footGame = false) {
-    if (!joints) return;
-
-    ctx.lineCap = "butt";
-    ctx.lineJoin = "miter";
-    ctx.miterLimit = 3;
-    ctx.lineWidth = 5;
-    ctx.strokeStyle = `rgba(${rgb}, 0.92)`;
-
-    for (const [from, to] of STICK_BONES) {
-      const a = joints[from];
-      const b = joints[to];
-      if (!usable(a) || !usable(b)) continue;
-      ctx.beginPath();
-      ctx.moveTo(a.x * width, a.y * height);
-      ctx.lineTo(b.x * width, b.y * height);
-      ctx.stroke();
-    }
-
-    const nose = joints.nose;
-    const leftShoulder = joints.left_shoulder;
-    const rightShoulder = joints.right_shoulder;
-    if (usable(nose) && usable(leftShoulder) && usable(rightShoulder)) {
-      ctx.beginPath();
-      ctx.moveTo(nose.x * width, nose.y * height);
-      ctx.lineTo(
-        ((leftShoulder.x + rightShoulder.x) / 2) * width,
-        ((leftShoulder.y + rightShoulder.y) / 2) * height,
-      );
-      ctx.stroke();
-    }
-
-    for (const [name, joint] of Object.entries(joints)) {
-      if (name === "pointer" || !usable(joint)) continue;
-      const strike =
-        name.endsWith("wrist") || (footGame && name.endsWith("ankle"));
-      const radius = name === "nose" || strike ? 7 : 4.5;
-      const fill = strike || name === "nose" ? `rgb(${rgb})` : FACET.bone;
-      fillDiamond(ctx, joint.x * width, joint.y * height, radius, fill);
-    }
-
-    const tag = usable(nose) ? nose : Object.values(joints).find((joint) => usable(joint));
-    if (label && tag) {
-      ctx.font = '700 14px "Bebas Neue", "Arial Narrow", sans-serif';
-      ctx.textAlign = "center";
-      ctx.textBaseline = "bottom";
-      ctx.fillStyle = `rgb(${rgb})`;
-      ctx.fillText(label.toUpperCase(), tag.x * width, tag.y * height - 12);
-    }
   }
 
   /**
@@ -549,11 +498,4 @@ function sceneGated(state) {
 function unit(seed) {
   const x = Math.sin(seed) * 10000;
   return x - Math.floor(x);
-}
-
-/**
- * @param {Joint | undefined} joint
- */
-function usable(joint) {
-  return Boolean(joint && Number.isFinite(joint.x) && Number.isFinite(joint.y));
 }
