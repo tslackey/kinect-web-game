@@ -163,15 +163,16 @@ const duo = createGame({
 });
 duo.start();
 drain(duo, PROMPT_DURATION);
-const duoOrb = duo.getState().target;
+const duoOrb = duo.getState().scene?.lanes?.find((lane) => lane.player === "p2")?.target ?? duo.getState().target;
 duo.tick(
   1 / 60,
   twoPoses(
-    { left_wrist: { x: 0.05, y: 0.05, confidence: 1 } },
-    { right_wrist: { x: duoOrb.x, y: duoOrb.y, confidence: 1 } },
+    { nose: { x: 0.2, y: 0.4, confidence: 1 }, left_wrist: { x: 0.05, y: 0.05, confidence: 1 } },
+    { nose: { x: 0.8, y: 0.4, confidence: 1 }, right_wrist: { x: duoOrb.x, y: duoOrb.y, confidence: 1 } },
   ),
 );
 assert(duo.getState().score === 1, "2P still lets the second body score");
+assert(duo.getState().scores.p2 === 1, "the second body credits P2");
 
 const gate = createGame({ pack: [ORB_HIT], games: 1, shuffle: false });
 gate.configure({ pack: [DUCK_BEAM], playerMode: "1p", shuffle: false, games: 1 });

@@ -6,6 +6,7 @@
  */
 
 import { createStickyCarry, overlapsCarry } from "./carry.js";
+import { FULL_LANE, placeX } from "./layout.js";
 import { defineMicrogame, PLAY_DURATION } from "./microgame.js";
 import { listIdentifiedStrikers } from "./hit.js";
 
@@ -31,12 +32,13 @@ const BUCKET_RIGHT = { x: 0.77, y: 0.6 };
 
 /**
  * @param {() => number} random
+ * @param {import("./layout.js").Lane} [lane]
  */
-export function layoutFire(random) {
+export function layoutFire(random, lane = FULL_LANE) {
+  const left = { x: placeX(lane, BUCKET_LEFT.x), y: BUCKET_LEFT.y };
+  const right = { x: placeX(lane, BUCKET_RIGHT.x), y: BUCKET_RIGHT.y };
   const flip = random() < 0.5;
-  return flip
-    ? { bucket: { ...BUCKET_RIGHT }, fire: { ...BUCKET_LEFT } }
-    : { bucket: { ...BUCKET_LEFT }, fire: { ...BUCKET_RIGHT } };
+  return flip ? { bucket: right, fire: left } : { bucket: left, fire: right };
 }
 
 export const DOUSE_FIRE = defineMicrogame({
@@ -44,10 +46,10 @@ export const DOUSE_FIRE = defineMicrogame({
   prompt: "Douse fire",
   backgroundId: "ash",
   duration: FIRE_DURATION,
-  create({ random, duration }) {
+  create({ random, duration, lane = FULL_LANE }) {
     const lifetime = Number.isFinite(duration) && duration > 0 ? duration : FIRE_DURATION;
-    let bucket = { x: BUCKET_LEFT.x, y: BUCKET_LEFT.y };
-    let fire = { x: BUCKET_RIGHT.x, y: BUCKET_RIGHT.y, stage: 0 };
+    let bucket = { x: placeX(lane, BUCKET_LEFT.x), y: BUCKET_LEFT.y };
+    let fire = { x: placeX(lane, BUCKET_RIGHT.x), y: BUCKET_RIGHT.y, stage: 0 };
     const carry = createStickyCarry({ pickupDwell: FIRE_PICKUP_DWELL });
     let douseTime = 0;
     let dousing = false;
@@ -61,7 +63,7 @@ export const DOUSE_FIRE = defineMicrogame({
     function api() {
       return {
         start() {
-          const next = layoutFire(random);
+          const next = layoutFire(random, lane);
           bucket = { x: next.bucket.x, y: next.bucket.y };
           fire = { x: next.fire.x, y: next.fire.y, stage: 0 };
           carry.reset(bucket);

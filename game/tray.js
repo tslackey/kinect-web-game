@@ -7,6 +7,7 @@
 import { createStickyCarry, overlapsCarry } from "./carry.js";
 import { defineMicrogame, PLAY_DURATION } from "./microgame.js";
 import { listIdentifiedStrikers } from "./hit.js";
+import { FULL_LANE, placeX } from "./layout.js";
 
 export const TRAY_DURATION = PLAY_DURATION;
 export const TRAY_PICKUP_DWELL = 0.4;
@@ -36,12 +37,13 @@ const TRAY_RIGHT = { x: 0.76, y: 0.56 };
 
 /**
  * @param {() => number} random
+ * @param {import("./layout.js").Lane} [lane]
  */
-export function layoutTray(random) {
+export function layoutTray(random, lane = FULL_LANE) {
+  const left = { x: placeX(lane, TRAY_LEFT.x), y: TRAY_LEFT.y };
+  const right = { x: placeX(lane, TRAY_RIGHT.x), y: TRAY_RIGHT.y };
   const flip = random() < 0.5;
-  return flip
-    ? { tray: { ...TRAY_RIGHT }, goal: { ...TRAY_LEFT } }
-    : { tray: { ...TRAY_LEFT }, goal: { ...TRAY_RIGHT } };
+  return flip ? { tray: right, goal: left } : { tray: left, goal: right };
 }
 
 export const BALANCE_TRAY = defineMicrogame({
@@ -49,10 +51,10 @@ export const BALANCE_TRAY = defineMicrogame({
   prompt: "Steady!",
   backgroundId: "steady",
   duration: TRAY_DURATION,
-  create({ random, duration }) {
+  create({ random, duration, lane = FULL_LANE }) {
     const lifetime = Number.isFinite(duration) && duration > 0 ? duration : TRAY_DURATION;
-    let tray = { x: TRAY_LEFT.x, y: TRAY_LEFT.y };
-    let goal = { x: TRAY_RIGHT.x, y: TRAY_RIGHT.y };
+    let tray = { x: placeX(lane, TRAY_LEFT.x), y: TRAY_LEFT.y };
+    let goal = { x: placeX(lane, TRAY_RIGHT.x), y: TRAY_RIGHT.y };
     const carry = createStickyCarry({ pickupDwell: TRAY_PICKUP_DWELL });
     let arriveTime = 0;
     let arriving = false;
@@ -69,7 +71,7 @@ export const BALANCE_TRAY = defineMicrogame({
     function api() {
       return {
         start() {
-          const next = layoutTray(random);
+          const next = layoutTray(random, lane);
           tray = { x: next.tray.x, y: next.tray.y };
           goal = { x: next.goal.x, y: next.goal.y };
           carry.reset(tray);

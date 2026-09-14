@@ -66,6 +66,7 @@ const landed = createGame({
   random: cyclingRandom([0.2, 0.35, 0.8, 0.15, 0.4, 0.6]),
   games: 3,
   pack: [ORB_HIT],
+  playerMode: "1p",
 });
 assert(landed.getState().phase === "start", "a new game should wait on the start screen");
 assert(landed.getState().game === 1, "the start screen is game 1");
@@ -133,6 +134,7 @@ const short = createGame({
   random: cyclingRandom([0.25, 0.3, 0.7, 0.2, 0.5, 0.4]),
   games: 1,
   pack: [ORB_HIT],
+  playerMode: "1p",
 });
 short.start();
 skipPrompt(short);

@@ -69,6 +69,14 @@ assert(skeletonMood({ phase: "playing" }) === "effort", "play is effort");
 assert(skeletonMood({ phase: "result", result: "win" }) === "win", "win beat is win");
 assert(skeletonMood({ phase: "result", result: "fail" }) === "fail", "fail beat is fail");
 assert(skeletonMood({ phase: "over" }) === "fail", "game-over is fail");
+assert(
+  skeletonMood({ phase: "result", result: "split", playerResults: { p1: "win", p2: "fail" } }, "p1") === "win",
+  "split P1 win face",
+);
+assert(
+  skeletonMood({ phase: "result", result: "split", playerResults: { p1: "win", p2: "fail" } }, "p2") === "fail",
+  "split P2 miss face",
+);
 assert(playerHue(0) === "moss", "P1 is Moss");
 assert(playerHue(1) === "sky", "P2 is Sky");
 assert(playerAccent("moss") === FACET.ember, "P1 brow accent is Ember");

@@ -6,6 +6,7 @@
  */
 
 import { createStickyCarry, overlapsCarry } from "./carry.js";
+import { FULL_LANE, placeX } from "./layout.js";
 import { defineMicrogame, PLAY_DURATION } from "./microgame.js";
 import { listIdentifiedStrikers } from "./hit.js";
 
@@ -31,12 +32,13 @@ const BOWL_RIGHT = { x: 0.78, y: 0.56 };
 
 /**
  * @param {() => number} random
+ * @param {import("./layout.js").Lane} [lane]
  */
-export function layoutPet(random) {
+export function layoutPet(random, lane = FULL_LANE) {
+  const left = { x: placeX(lane, BOWL_LEFT.x), y: BOWL_LEFT.y };
+  const right = { x: placeX(lane, BOWL_RIGHT.x), y: BOWL_RIGHT.y };
   const flip = random() < 0.5;
-  return flip
-    ? { bowl: { ...BOWL_RIGHT }, pet: { ...BOWL_LEFT } }
-    : { bowl: { ...BOWL_LEFT }, pet: { ...BOWL_RIGHT } };
+  return flip ? { bowl: right, pet: left } : { bowl: left, pet: right };
 }
 
 export const FEED_PET = defineMicrogame({
@@ -44,10 +46,10 @@ export const FEED_PET = defineMicrogame({
   prompt: "Feed pet",
   backgroundId: "hearth",
   duration: PET_DURATION,
-  create({ random, duration }) {
+  create({ random, duration, lane = FULL_LANE }) {
     const lifetime = Number.isFinite(duration) && duration > 0 ? duration : PET_DURATION;
-    let bowl = { x: BOWL_LEFT.x, y: BOWL_LEFT.y };
-    let pet = { x: BOWL_RIGHT.x, y: BOWL_RIGHT.y, stage: 0 };
+    let bowl = { x: placeX(lane, BOWL_LEFT.x), y: BOWL_LEFT.y };
+    let pet = { x: placeX(lane, BOWL_RIGHT.x), y: BOWL_RIGHT.y, stage: 0 };
     const carry = createStickyCarry({ pickupDwell: PET_PICKUP_DWELL });
     let feedTime = 0;
     let feeding = false;
@@ -61,7 +63,7 @@ export const FEED_PET = defineMicrogame({
     function api() {
       return {
         start() {
-          const next = layoutPet(random);
+          const next = layoutPet(random, lane);
           bowl = { x: next.bowl.x, y: next.bowl.y };
           pet = { x: next.pet.x, y: next.pet.y, stage: 0 };
           carry.reset(bowl);

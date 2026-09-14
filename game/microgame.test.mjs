@@ -58,6 +58,7 @@ play.start();
 assert(isPlayOutcome(play.tick(1 / 60, idle())), "tick must return a contract outcome");
 assert(MICROGAME_OUTCOMES.includes("win"), "win is part of the contract");
 assert(MICROGAME_OUTCOMES.includes("fail"), "fail is part of the contract");
+assert(MICROGAME_OUTCOMES.includes("split"), "split is part of the 2P contract");
 assert(play.getView().target, "the orb view exposes a target for render");
 
 assert(!isMicrogameDef({}), "an empty object is not a microgame");
@@ -103,7 +104,7 @@ assert(
   "a shuffled pack still fills a short session",
 );
 
-const stubbed = createGame({ pack: [named, named], games: 2 });
+const stubbed = createGame({ pack: [named, named], games: 2, playerMode: "1p" });
 stubbed.start();
 assert(stubbed.getState().phase === "prompt", "Play should flash the prompt first");
 assert(stubbed.getState().prompt === "Wait", "the HUD prompt should come from the pack");
@@ -146,7 +147,7 @@ const failer = defineMicrogame({
   },
 });
 
-const timed = createGame({ pack: [failer], games: 1 });
+const timed = createGame({ pack: [failer], games: 1, playerMode: "1p" });
 timed.start();
 drain(timed, PROMPT_DURATION);
 const far = {

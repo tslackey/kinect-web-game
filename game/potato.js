@@ -9,14 +9,23 @@ import { createStickyCarry } from "./carry.js";
 import { defineMicrogame, PLAY_DURATION } from "./microgame.js";
 import { listIdentifiedStrikers } from "./hit.js";
 import { createTimedPlay } from "./timed.js";
+import { LAYOUT_COOP } from "./layout.js";
 
 export const POTATO_DURATION = PLAY_DURATION;
 export const POTATO_PICKUP_DWELL = 0.4;
 /** Wins need this many offer/accept transfers. Initial pickup is not a pass. */
 export const POTATO_PASSES = 1;
 
-const POTATO_LEFT = { x: 0.28, y: 0.58 };
-const POTATO_RIGHT = { x: 0.72, y: 0.52 };
+const POTATO_CENTER = { x: 0.5, y: 0.55 };
+
+/**
+ * Shared potato lives in the middle. Coop-center — not a split copy.
+ *
+ * @param {() => number} [_random]
+ */
+export function layoutPotato(_random) {
+  return { ...POTATO_CENTER };
+}
 
 /**
  * @typedef {import("../input/index.js").PoseSample} PoseSample
@@ -29,21 +38,15 @@ const POTATO_RIGHT = { x: 0.72, y: 0.52 };
  * @property {number} passes Successful offer/accept transfers this play.
  */
 
-/**
- * @param {() => number} random
- */
-export function layoutPotato(random) {
-  return random() < 0.5 ? { ...POTATO_RIGHT } : { ...POTATO_LEFT };
-}
-
 export const HOT_POTATO = defineMicrogame({
   id: "hot-potato",
   prompt: "Pass!",
   backgroundId: "pass",
+  layout: LAYOUT_COOP,
   duration: POTATO_DURATION,
   create({ random, duration }) {
     const lifetime = Number.isFinite(duration) && duration > 0 ? duration : POTATO_DURATION;
-    let potato = { x: POTATO_LEFT.x, y: POTATO_LEFT.y };
+    let potato = { x: POTATO_CENTER.x, y: POTATO_CENTER.y };
     const carry = createStickyCarry({ pickupDwell: POTATO_PICKUP_DWELL });
     let passes = 0;
     /** @type {string | null} */

@@ -48,6 +48,7 @@ const game = createGame({
   random: cyclingRandom([0.2, 0.35, 0.8, 0.15, 0.4, 0.6]),
   games: 2,
   pack: [ORB_HIT],
+  playerMode: "1p",
 });
 
 assert(game.getState().flash === null, "the start screen has no flash");

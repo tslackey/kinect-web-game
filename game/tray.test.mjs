@@ -199,6 +199,7 @@ const session = createGame({
   games: 1,
   shuffle: false,
   pack: [BALANCE_TRAY],
+  playerMode: "1p",
 });
 session.start();
 assert(session.getState().prompt === "Steady!", "Play should flash Steady!");

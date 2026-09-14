@@ -6,6 +6,7 @@
 
 import { defineMicrogame, PLAY_DURATION } from "./microgame.js";
 import { FOOT_STRIKER_NAMES, HIT_RADIUS, listIdentifiedStrikers } from "./hit.js";
+import { FULL_LANE, fieldInLane } from "./layout.js";
 
 export const BUG_DURATION = PLAY_DURATION;
 export const STOMP_DWELL = 0.35;
@@ -35,17 +36,19 @@ const DRIFT_SPAN = 0.035;
  * @param {() => number} random
  * @param {number} id
  * @param {{ x: number, y: number }[]} [avoid]
+ * @param {{ x0: number, x1: number, y0: number, y1: number }} [field]
  * @returns {Target}
  */
-export function makeBug(random, id, avoid = []) {
-  let x = lerp(FIELD.x0, FIELD.x1, random());
-  let y = lerp(FIELD.y0, FIELD.y1, random());
+export function makeBug(random, id, avoid = [], field = FIELD) {
+  const box = field ?? FIELD;
+  let x = lerp(box.x0, box.x1, random());
+  let y = lerp(box.y0, box.y1, random());
 
   for (let attempt = 0; attempt < 12; attempt += 1) {
     const clear = avoid.every((point) => Math.hypot(point.x - x, point.y - y) >= SPAWN_CLEARANCE);
     if (clear) break;
-    x = lerp(FIELD.x0, FIELD.x1, random());
-    y = lerp(FIELD.y0, FIELD.y1, random());
+    x = lerp(box.x0, box.x1, random());
+    y = lerp(box.y0, box.y1, random());
   }
 
   const angle = random() * Math.PI * 2;
@@ -64,18 +67,20 @@ export function makeBug(random, id, avoid = []) {
  *
  * @param {Target} target
  * @param {number} step
+ * @param {{ x0: number, x1: number, y0: number, y1: number }} [field]
  */
-export function driftBug(target, step) {
+export function driftBug(target, step, field = FIELD) {
+  const box = field ?? FIELD;
   target.x += target.vx * step;
   target.y += target.vy * step;
 
-  if (target.x < FIELD.x0 || target.x > FIELD.x1) {
+  if (target.x < box.x0 || target.x > box.x1) {
     target.vx *= -1;
-    target.x = clamp(target.x, FIELD.x0, FIELD.x1);
+    target.x = clamp(target.x, box.x0, box.x1);
   }
-  if (target.y < FIELD.y0 || target.y > FIELD.y1) {
+  if (target.y < box.y0 || target.y > box.y1) {
     target.vy *= -1;
-    target.y = clamp(target.y, FIELD.y0, FIELD.y1);
+    target.y = clamp(target.y, box.y0, box.y1);
   }
 }
 
@@ -84,11 +89,12 @@ export const STOMP_BUG = defineMicrogame({
   prompt: "Stomp bug",
   backgroundId: "dirt",
   duration: BUG_DURATION,
-  create({ random, duration }) {
+  create({ random, duration, lane = FULL_LANE }) {
     const lifetime = Number.isFinite(duration) && duration > 0 ? duration : BUG_DURATION;
+    const field = fieldInLane(lane, FIELD);
     let nextId = 1;
     /** @type {Target} */
-    let bug = makeBug(random, nextId++);
+    let bug = makeBug(random, nextId++, [], field);
     /** @type {Map<string, number>} */
     const hover = new Map();
     /** @type {Map<string, { x: number, y: number }>} */
@@ -104,7 +110,7 @@ export const STOMP_BUG = defineMicrogame({
     function api() {
       return {
         start() {
-          bug = makeBug(random, nextId++);
+          bug = makeBug(random, nextId++, [], field);
           hover.clear();
           lastPos.clear();
           squashing = false;
@@ -118,7 +124,7 @@ export const STOMP_BUG = defineMicrogame({
         tick(dt, sample) {
           if (outcome !== "playing") return outcome;
           const step = Number.isFinite(dt) ? Math.max(0, dt) : 0;
-          driftBug(bug, step);
+          driftBug(bug, step, field);
 
           const strikers = listIdentifiedStrikers(sample, FOOT_STRIKER_NAMES);
           squashing = false;

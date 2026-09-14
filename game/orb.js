@@ -5,6 +5,7 @@
 
 import { defineMicrogame, PLAY_DURATION } from "./microgame.js";
 import { hitsTarget, listSampleStrikers } from "./hit.js";
+import { FULL_LANE, fieldInLane } from "./layout.js";
 
 export const TARGET_LIFETIME = PLAY_DURATION;
 export const LIFETIME_STEP = 0.4;
@@ -51,19 +52,21 @@ export function driftScaleForGame(index) {
  * @param {Joint[]} strikers
  * @param {Target | null} avoid
  * @param {number} [driftScale]
+ * @param {{ x0: number, x1: number, y0: number, y1: number }} [field]
  * @returns {Target}
  */
-export function makeTarget(random, id, strikers, avoid, driftScale = 1) {
-  let x = lerp(FIELD.x0, FIELD.x1, random());
-  let y = lerp(FIELD.y0, FIELD.y1, random());
+export function makeTarget(random, id, strikers, avoid, driftScale = 1, field = FIELD) {
+  const box = field ?? FIELD;
+  let x = lerp(box.x0, box.x1, random());
+  let y = lerp(box.y0, box.y1, random());
 
   for (let attempt = 0; attempt < 12; attempt += 1) {
     const clear = [...strikers, avoid].every(
       (point) => !point || Math.hypot(point.x - x, point.y - y) >= SPAWN_CLEARANCE,
     );
     if (clear) break;
-    x = lerp(FIELD.x0, FIELD.x1, random());
-    y = lerp(FIELD.y0, FIELD.y1, random());
+    x = lerp(box.x0, box.x1, random());
+    y = lerp(box.y0, box.y1, random());
   }
 
   const angle = random() * Math.PI * 2;
@@ -80,18 +83,20 @@ export function makeTarget(random, id, strikers, avoid, driftScale = 1) {
 /**
  * @param {Target} target
  * @param {number} step
+ * @param {{ x0: number, x1: number, y0: number, y1: number }} [field]
  */
-export function driftOrb(target, step) {
+export function driftOrb(target, step, field = FIELD) {
+  const box = field ?? FIELD;
   target.x += target.vx * step;
   target.y += target.vy * step;
 
-  if (target.x < FIELD.x0 || target.x > FIELD.x1) {
+  if (target.x < box.x0 || target.x > box.x1) {
     target.vx *= -1;
-    target.x = clamp(target.x, FIELD.x0, FIELD.x1);
+    target.x = clamp(target.x, box.x0, box.x1);
   }
-  if (target.y < FIELD.y0 || target.y > FIELD.y1) {
+  if (target.y < box.y0 || target.y > box.y1) {
     target.vy *= -1;
-    target.y = clamp(target.y, FIELD.y0, FIELD.y1);
+    target.y = clamp(target.y, box.y0, box.y1);
   }
 }
 
@@ -100,12 +105,13 @@ export const ORB_HIT = defineMicrogame({
   prompt: "Hit orb",
   backgroundId: "crystal",
   duration: TARGET_LIFETIME,
-  create({ random, index, duration }) {
+  create({ random, index, duration, lane = FULL_LANE }) {
     const lifetime = Number.isFinite(duration) && duration > 0 ? duration : lifetimeForGame(index);
     const driftScale = driftScaleForGame(index);
+    const field = fieldInLane(lane, FIELD);
     let nextId = 1;
     /** @type {Target} */
-    let target = makeTarget(random, nextId++, [], null, driftScale);
+    let target = makeTarget(random, nextId++, [], null, driftScale, field);
     let timeLeft = lifetime;
     /** @type {"playing" | "win" | "fail"} */
     let outcome = "playing";
@@ -114,7 +120,7 @@ export const ORB_HIT = defineMicrogame({
     function api() {
       return {
         start() {
-          target = makeTarget(random, nextId++, [], null, driftScale);
+          target = makeTarget(random, nextId++, [], null, driftScale, field);
           timeLeft = lifetime;
           outcome = "playing";
         },
@@ -124,7 +130,7 @@ export const ORB_HIT = defineMicrogame({
          */
         tick(dt, sample) {
           if (outcome !== "playing") return outcome;
-          driftOrb(target, dt);
+          driftOrb(target, dt, field);
           const strikers = listSampleStrikers(sample);
           if (hitsTarget(strikers, target)) {
             outcome = "win";

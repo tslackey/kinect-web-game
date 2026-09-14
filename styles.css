@@ -209,6 +209,40 @@ h1 {
   color: var(--bone);
 }
 
+.score-solo,
+.score-duo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+}
+
+.score-duo {
+  flex-direction: row;
+  gap: 1.1rem;
+}
+
+.score-duo[hidden],
+.score-solo[hidden] {
+  display: none;
+}
+
+.score-player {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 3.2rem;
+}
+
+.score-player.is-fail .score-value,
+.score-player.is-fail .score-kicker {
+  color: var(--coral);
+}
+
+.score-player.is-win .score-kicker {
+  color: var(--moss);
+}
+
 .score-kicker {
   font-family: var(--font-body);
   font-size: 0.78rem;
@@ -264,6 +298,14 @@ h1 {
 
 h1.is-fail {
   color: var(--coral);
+}
+
+h1.is-split {
+  color: var(--ember);
+}
+
+.status.is-split {
+  color: var(--ember);
 }
 
 .camera-invite {

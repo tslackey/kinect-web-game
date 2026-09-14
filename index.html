@@ -53,8 +53,20 @@
             alt=""
           />
           <p class="scoreline" id="scoreline" aria-live="polite">
-            <span class="score-kicker">Score</span>
-            <strong class="score-value" id="score-value">0</strong>
+            <span class="score-solo" id="score-solo">
+              <span class="score-kicker">Score</span>
+              <strong class="score-value" id="score-value">0</strong>
+            </span>
+            <span class="score-duo" id="score-duo" hidden>
+              <span class="score-player" id="score-p1-wrap">
+                <span class="score-kicker">P1</span>
+                <strong class="score-value" id="score-p1">0</strong>
+              </span>
+              <span class="score-player" id="score-p2-wrap">
+                <span class="score-kicker">P2</span>
+                <strong class="score-value" id="score-p2">0</strong>
+              </span>
+            </span>
           </p>
         </div>
         <p class="roundline" id="roundline">Game 1 of 4</p>

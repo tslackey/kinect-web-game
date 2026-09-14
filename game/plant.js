@@ -6,6 +6,7 @@
  */
 
 import { createStickyCarry, overlapsCarry } from "./carry.js";
+import { FULL_LANE, placeX } from "./layout.js";
 import { defineMicrogame, PLAY_DURATION } from "./microgame.js";
 import { listIdentifiedStrikers } from "./hit.js";
 
@@ -31,12 +32,13 @@ const POT_RIGHT = { x: 0.76, y: 0.58 };
 
 /**
  * @param {() => number} random
+ * @param {import("./layout.js").Lane} [lane]
  */
-export function layoutPlant(random) {
+export function layoutPlant(random, lane = FULL_LANE) {
+  const left = { x: placeX(lane, POT_LEFT.x), y: POT_LEFT.y };
+  const right = { x: placeX(lane, POT_RIGHT.x), y: POT_RIGHT.y };
   const flip = random() < 0.5;
-  return flip
-    ? { pot: { ...POT_RIGHT }, plant: { ...POT_LEFT } }
-    : { pot: { ...POT_LEFT }, plant: { ...POT_RIGHT } };
+  return flip ? { pot: right, plant: left } : { pot: left, plant: right };
 }
 
 export const WATER_PLANT = defineMicrogame({
@@ -44,10 +46,10 @@ export const WATER_PLANT = defineMicrogame({
   prompt: "Water plant",
   backgroundId: "garden",
   duration: PLANT_DURATION,
-  create({ random, duration }) {
+  create({ random, duration, lane = FULL_LANE }) {
     const lifetime = Number.isFinite(duration) && duration > 0 ? duration : PLANT_DURATION;
-    let pot = { x: POT_LEFT.x, y: POT_LEFT.y };
-    let plant = { x: POT_RIGHT.x, y: POT_RIGHT.y, stage: 0 };
+    let pot = { x: placeX(lane, POT_LEFT.x), y: POT_LEFT.y };
+    let plant = { x: placeX(lane, POT_RIGHT.x), y: POT_RIGHT.y, stage: 0 };
     const carry = createStickyCarry({ pickupDwell: PICKUP_DWELL });
     let pourTime = 0;
     let pouring = false;
@@ -61,7 +63,7 @@ export const WATER_PLANT = defineMicrogame({
     function api() {
       return {
         start() {
-          const next = layoutPlant(random);
+          const next = layoutPlant(random, lane);
           pot = { x: next.pot.x, y: next.pot.y };
           plant = { x: next.plant.x, y: next.plant.y, stage: 0 };
           carry.reset(pot);

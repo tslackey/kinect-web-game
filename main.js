@@ -27,6 +27,12 @@ const lede = document.getElementById("lede");
 const scoreboard = document.getElementById("scoreboard");
 const scoreline = document.getElementById("scoreline");
 const scoreValue = document.getElementById("score-value");
+const scoreSolo = document.getElementById("score-solo");
+const scoreDuo = document.getElementById("score-duo");
+const scoreP1 = document.getElementById("score-p1");
+const scoreP2 = document.getElementById("score-p2");
+const scoreP1Wrap = document.getElementById("score-p1-wrap");
+const scoreP2Wrap = document.getElementById("score-p2-wrap");
 const roundline = document.getElementById("roundline");
 const video = document.getElementById("camera-feed");
 const video2 = document.getElementById("camera-feed-2");
@@ -127,6 +133,7 @@ function updateHud(state) {
   const live = state.phase === "prompt" || state.phase === "playing";
   const curtain = state.phase === "prompt" && Boolean(state.transition);
   const missed = state.phase === "over" || (state.phase === "result" && state.result === "fail");
+  const splitRound = state.phase === "result" && state.result === "split";
   const cameraReady = cam.camera === "ready" || cam.camerasReady > 0;
   const cameraBusy = cam.starting || cam.camera === "pending" || cam.camera === "loading";
 
@@ -144,6 +151,7 @@ function updateHud(state) {
   if (headline) {
     headline.textContent = headlineFor(state);
     headline.classList.toggle("is-fail", missed);
+    headline.classList.toggle("is-split", splitRound);
   }
 
   if (lede) {
@@ -154,13 +162,31 @@ function updateHud(state) {
     scoreboard.hidden = state.phase === "start";
   }
 
+  const duo = state.playerMode === "2p";
+  const scores = state.scores ?? { p1: state.score, p2: 0 };
   if (scoreValue) {
-    scoreValue.textContent = String(state.score);
+    scoreValue.textContent = String(duo ? scores.p1 + scores.p2 : scores.p1);
   }
+  if (scoreP1) scoreP1.textContent = String(scores.p1);
+  if (scoreP2) scoreP2.textContent = String(scores.p2);
+  if (scoreSolo instanceof HTMLElement) scoreSolo.hidden = duo;
+  if (scoreDuo instanceof HTMLElement) scoreDuo.hidden = !duo;
 
   if (scoreline) {
     scoreline.classList.toggle("is-fail", missed);
-    scoreline.setAttribute("aria-label", `Score ${state.score}`);
+    scoreline.classList.toggle("is-split", splitRound);
+    scoreline.setAttribute(
+      "aria-label",
+      duo ? `P1 ${scores.p1}, P2 ${scores.p2}` : `Score ${scores.p1}`,
+    );
+  }
+  if (scoreP1Wrap instanceof HTMLElement) {
+    scoreP1Wrap.classList.toggle("is-fail", playerMissed(state, "p1"));
+    scoreP1Wrap.classList.toggle("is-win", playerWon(state, "p1"));
+  }
+  if (scoreP2Wrap instanceof HTMLElement) {
+    scoreP2Wrap.classList.toggle("is-fail", playerMissed(state, "p2"));
+    scoreP2Wrap.classList.toggle("is-win", playerWon(state, "p2"));
   }
 
   if (roundline) {
@@ -170,6 +196,7 @@ function updateHud(state) {
 
   if (statusEl) {
     statusEl.classList.toggle("is-fail", missed);
+    statusEl.classList.toggle("is-split", splitRound);
     statusEl.textContent = statusFor(state, cam);
   }
 
@@ -227,6 +254,7 @@ function updateHud(state) {
  */
 function headlineFor(state) {
   if (state.phase === "over") return "Game over";
+  if (state.phase === "result" && state.result === "split") return splitHeadline(state);
   if (state.phase === "result" && state.result === "fail") return "Miss";
   if (state.phase === "result" && state.result === "win") return "Nice";
   if (state.phase === "prompt" || state.phase === "playing") return state.prompt || "Water plant";
@@ -238,51 +266,77 @@ function headlineFor(state) {
  */
 function ledeFor(state) {
   if (state.phase === "over") {
+    if (state.playerMode === "2p") {
+      const scores = state.scores ?? { p1: state.score, p2: 0 };
+      return `Session over. P1 ${scores.p1} · P2 ${scores.p2}. Play again for another short run.`;
+    }
     return "Session over. Play again for another short run.";
   }
+  if (state.phase === "result" && state.result === "split") {
+    return `${splitHeadline(state)}. Scores stay separate — a split win only counts for that player.`;
+  }
   if (state.phase === "result" && state.result === "win") {
+    if (state.layout === "coop" && state.playerMode === "2p") {
+      return state.game >= state.games
+        ? "Shared win. Both scores go up. Session wrapping up."
+        : "Shared win. Both scores go up. Next game incoming.";
+    }
     return state.game >= state.games ? "Got it. Session wrapping up." : "Got it. Next game incoming.";
   }
   if (state.phase === "result") {
     return state.game >= state.games ? "Timed out. Session wrapping up." : "Timed out. Next game incoming.";
   }
   if (state.phase === "prompt") return "Curtain up. Get ready.";
-  if (state.phase === "playing") return ledeForGame(state.gameId);
+  if (state.phase === "playing") return ledeForGame(state);
   return "Open, allow the camera, play. The top-right menu saves a playlist and 1P/2P. Hold a hand over the corner Play mark, or click Play. A longer curtain, a big title, then about 18 seconds. When a camera body is live, the camera is the only player. Pointer and keyboard still play if the camera is off.";
 }
 
 /**
- * @param {string | null} gameId
+ * @param {import("./game/index.js").GameState} state
  */
-function ledeForGame(gameId) {
-  if (gameId === "water-plant") return "Hover the pot, carry it over the plant.";
-  if (gameId === "feed-pet") return "Hover the bowl, carry it over the pet.";
-  if (gameId === "douse-fire") return "Hover the bucket, carry it over the fire.";
-  if (gameId === "stomp-bug") return "Hover an ankle over the bug, or stomp through it.";
+function ledeForGame(state) {
+  const gameId = state.gameId;
+  const split = state.layout === "split";
+  if (gameId === "water-plant") {
+    return split ? "Each side has a pot and a plant. Water yours." : "Hover the pot, carry it over the plant.";
+  }
+  if (gameId === "feed-pet") {
+    return split ? "Each side has a bowl and a pet. Feed yours." : "Hover the bowl, carry it over the pet.";
+  }
+  if (gameId === "douse-fire") {
+    return split ? "Each side has a bucket and a fire. Douse yours." : "Hover the bucket, carry it over the fire.";
+  }
+  if (gameId === "stomp-bug") return split ? "Each side has a bug. Stomp yours." : "Hover an ankle over the bug, or stomp through it.";
   if (gameId === "duck-beam") return "Drop your hips or head under the beam.";
   if (gameId === "jump-bar") return "Pop your hips or head up over the bar.";
   if (gameId === "strike-pose") return "Hold both wrists on the glowing anchors.";
   if (gameId === "lean-away") return "Lean your torso toward the lit side.";
   if (gameId === "clap-now") return "When the mark lights, clap — or tap it.";
-  if (gameId === "score-goal") return "Kick the ball so it rolls into the goal.";
+  if (gameId === "score-goal") return split ? "Each side has a ball and a goal. Score yours." : "Kick the ball so it rolls into the goal.";
   if (gameId === "stretch-wide") return "Stretch your wrists apart, or tag both posts.";
   if (gameId === "high-five") return "Slap the high zone with a wrist.";
   if (gameId === "catch-fruit") return "Catch the falling fruit with a wrist.";
   if (gameId === "wave-hello") return "Hold a wrist up above your head.";
   if (gameId === "squash-it") return "Put both hands on the zone, or dwell with the pointer.";
   if (gameId === "balance-tray") return "Keep the tray level and carry it to the mark.";
-  if (gameId === "mirror-me") return "Copy the other wrists, or hold the ghost marks.";
-  if (gameId === "hot-potato") return "Offer with both hands, then one hand accepts the pass.";
+  if (gameId === "mirror-me") return "Copy the other wrists in the middle, or hold the ghost marks.";
+  if (gameId === "hot-potato") return "Pass the potato in the middle. Offer with both hands, then one hand accepts.";
   if (gameId === "shoot-hoops") return "Flick a wrist to toss the ball through the hoop.";
   if (gameId === "roll-dough") return "Both hands on the pin, then roll it up and down.";
-  return "One hit. Timer is live.";
+  return split ? "Each side has a target. Hit yours." : "One hit. Timer is live.";
 }
 
 /**
  * @param {import("./game/index.js").GameState} state
  */
 function roundlineFor(state) {
-  if (state.phase === "over") return `${state.score} hit${state.score === 1 ? "" : "s"} · ${state.games} games`;
+  if (state.phase === "over") {
+    if (state.playerMode === "2p") {
+      const scores = state.scores ?? { p1: state.score, p2: 0 };
+      return `P1 ${scores.p1} · P2 ${scores.p2} · ${state.games} games`;
+    }
+    return `${state.score} hit${state.score === 1 ? "" : "s"} · ${state.games} games`;
+  }
   return `Game ${state.game} of ${state.games}`;
 }
 
@@ -292,16 +346,27 @@ function roundlineFor(state) {
  */
 function statusFor(state, cam) {
   if (state.phase === "over") {
+    if (state.playerMode === "2p") {
+      const scores = state.scores ?? { p1: state.score, p2: 0 };
+      return `P1 ${scores.p1} · P2 ${scores.p2} across ${state.games} games.`;
+    }
     return `${state.score} hit${state.score === 1 ? "" : "s"} across ${state.games} games.`;
   }
+  if (state.phase === "result" && state.result === "split") {
+    return state.game >= state.games ? `${splitHeadline(state)}. Session complete.` : `${splitHeadline(state)}. Game ${state.game + 1} next.`;
+  }
   if (state.phase === "result" && state.result === "win") {
-    return state.game >= state.games ? "Nice. Session complete." : `Nice. Game ${state.game + 1} next.`;
+    const note = state.layout === "coop" && state.playerMode === "2p" ? "Both score. " : "";
+    return state.game >= state.games ? `${note}Nice. Session complete.` : `${note}Nice. Game ${state.game + 1} next.`;
   }
   if (state.phase === "result") {
     return state.game >= state.games ? "Miss. Session complete." : `Miss. Game ${state.game + 1} next.`;
   }
   if (state.phase === "playing" && state.timeLeft != null) {
-    return `Game ${state.game} of ${state.games} · ${state.timeLeft.toFixed(1)}s left`;
+    const live = liveSplitNote(state);
+    return live
+      ? `Game ${state.game} of ${state.games} · ${state.timeLeft.toFixed(1)}s left · ${live}`
+      : `Game ${state.game} of ${state.games} · ${state.timeLeft.toFixed(1)}s left`;
   }
   if (state.phase === "prompt") {
     if (cam.camera !== "ready") {
@@ -313,6 +378,44 @@ function statusFor(state, cam) {
     return "Camera is off. Hold Play or press Play to use the pointer or keyboard.";
   }
   return "Allow the camera, then hold Play or press Play.";
+}
+
+/**
+ * @param {import("./game/index.js").GameState} state
+ */
+function splitHeadline(state) {
+  const p1 = state.playerResults?.p1 === "win" ? "P1 nice" : "P1 miss";
+  const p2 = state.playerResults?.p2 === "win" ? "P2 nice" : "P2 miss";
+  return `${p1} · ${p2}`;
+}
+
+/**
+ * @param {import("./game/index.js").GameState} state
+ */
+function liveSplitNote(state) {
+  if (state.layout !== "split" || state.playerMode !== "2p") return "";
+  const p1 = state.playerResults?.p1;
+  const p2 = state.playerResults?.p2;
+  if (p1 === "win" && p2 !== "win" && p2 !== "fail") return "P1 scored — P2 still playing";
+  if (p2 === "win" && p1 !== "win" && p1 !== "fail") return "P2 scored — P1 still playing";
+  return "";
+}
+
+/**
+ * @param {import("./game/index.js").GameState} state
+ * @param {"p1" | "p2"} player
+ */
+function playerMissed(state, player) {
+  if (state.phase !== "result" && state.phase !== "over") return false;
+  return state.playerResults?.[player] === "fail";
+}
+
+/**
+ * @param {import("./game/index.js").GameState} state
+ * @param {"p1" | "p2"} player
+ */
+function playerWon(state, player) {
+  return state.playerResults?.[player] === "win";
 }
 
 /**
