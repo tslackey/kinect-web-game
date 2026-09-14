@@ -8,6 +8,8 @@ import { GAME_COUNT, isMicrogameDef } from "./microgame.js";
 
 export const PLAYLIST_KEY = "kinect-web-game:playlist";
 export const PLAYLIST_VERSION = 1;
+/** Kick the ball (#31) retired in favor of Score a goal (#75). */
+export const RETIRED_GAMES = Object.freeze({ "kick-ball": "score-goal" });
 
 /**
  * @typedef {import("./microgame.js").MicrogameDef} MicrogameDef
@@ -55,7 +57,8 @@ export function normalizePlaylist(raw, catalog) {
 
   for (const item of listed) {
     if (!item || typeof item !== "object") continue;
-    const id = typeof item.id === "string" ? item.id : "";
+    const rawId = typeof item.id === "string" ? item.id : "";
+    const id = RETIRED_GAMES[rawId] ?? rawId;
     if (!id || !known.has(id) || seen.has(id)) continue;
     seen.add(id);
     games.push({ id, enabled: item.enabled !== false });

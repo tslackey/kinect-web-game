@@ -102,17 +102,19 @@ assert(hexFills(hearth.calls).includes(FACET.ember), "hearth stage set uses Embe
 
 assert(stageKitFor("beam").motif === "beams", "duck stage is sky beams");
 assert(stageKitFor("bar").motif === "hurdle", "jump stage is a moss hurdle");
-assert(stageKitFor("pitch").motif === "goals", "kick stage is moss goals");
+assert(stageKitFor("pitch").motif === "goals", "score stage is moss goals");
 assert(stageKitFor("span").motif === "span", "stretch stage is sky reach arms");
 assert(stageKitFor("high").motif === "high", "high-five stage is a lilac stand");
+assert(stageKitFor("hoop").motif === "high", "hoops reuses the high stand as a placeholder");
 assert(stageKitFor("hello").motif === "waves", "wave stage is sky chevrons");
 assert(stageKitFor("press").motif === "press", "squash stage is an ember press plate");
+assert(stageKitFor("dough").motif === "press", "dough reuses the press plate as a placeholder");
 assert(stageKitFor("cue").motif === "hands", "clap stage is coral hands");
 assert(stageKitFor("unknown").hue === "lilac", "unknown stages fall back to crystal");
 
 const pitch = mockCtx();
 drawStageWash(pitch, 800, 600, "pitch");
-assert(hexFills(pitch.calls).includes(FACET.moss), "kick pitch uses Moss goals");
+assert(hexFills(pitch.calls).includes(FACET.moss), "score pitch uses Moss goals");
 
 const hello = mockCtx();
 drawStageWash(hello, 800, 600, "hello");
