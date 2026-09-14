@@ -143,15 +143,16 @@ function updateHud(state) {
   document.body.classList.toggle("is-between", state.phase === "result");
   if (state.backgroundId) document.body.dataset.stage = state.backgroundId;
   else delete document.body.dataset.stage;
+  if (state.layout) document.body.dataset.layout = state.layout;
+  else delete document.body.dataset.layout;
+  document.body.classList.toggle("is-duo", state.playerMode === "2p");
   document.body.classList.toggle("is-over", state.phase === "over");
   document.body.classList.toggle("is-camera-prompt", cam.camera === "prompt");
   document.body.classList.toggle("is-camera-denied", cam.camera === "denied" || cam.camera === "unavailable" || cam.camera === "error");
   document.body.classList.toggle("is-camera-ready", cameraReady || cam.camera === "loading");
 
   if (headline) {
-    headline.textContent = headlineFor(state);
-    headline.classList.toggle("is-fail", missed);
-    headline.classList.toggle("is-split", splitRound);
+    paintHeadline(state, missed, splitRound);
   }
 
   if (lede) {
@@ -259,6 +260,52 @@ function headlineFor(state) {
   if (state.phase === "result" && state.result === "win") return "Nice";
   if (state.phase === "prompt" || state.phase === "playing") return state.prompt || "Water plant";
   return "Short games";
+}
+
+/**
+ * Dual Facet chips for a split result (`P1 nice · P2 miss`). Other phases
+ * stay a single hard headline.
+ *
+ * @param {import("./game/index.js").GameState} state
+ * @param {boolean} missed
+ * @param {boolean} splitRound
+ */
+function paintHeadline(state, missed, splitRound) {
+  if (!headline) return;
+  headline.classList.toggle("is-fail", missed && !splitRound);
+  headline.classList.toggle("is-split", splitRound);
+  if (!splitRound) {
+    headline.textContent = headlineFor(state);
+    return;
+  }
+  headline.replaceChildren(splitChip(state, "p1"), splitSep(), splitChip(state, "p2"));
+}
+
+/**
+ * @param {import("./game/index.js").GameState} state
+ * @param {"p1" | "p2"} player
+ */
+function splitChip(state, player) {
+  const won = state.playerResults?.[player] === "win";
+  const chip = document.createElement("span");
+  chip.className = `split-chip is-${player}${won ? " is-win" : " is-fail"}`;
+  chip.textContent = won ? `${playerLabel(player)} nice` : `${playerLabel(player)} miss`;
+  return chip;
+}
+
+function splitSep() {
+  const sep = document.createElement("span");
+  sep.className = "split-sep";
+  sep.setAttribute("aria-hidden", "true");
+  sep.textContent = "·";
+  return sep;
+}
+
+/**
+ * @param {"p1" | "p2"} player
+ */
+function playerLabel(player) {
+  return player === "p2" ? "P2" : "P1";
 }
 
 /**

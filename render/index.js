@@ -6,6 +6,7 @@
  * stomp-the-bug draws a Facet low-poly bug and stomp cue;
  * the simple pack draws Facet low-poly marks for each verb.
  * Interstitials use Facet theater drapes, a title placard, and stage sets.
+ * 2P split paints a Facet panel seam and Moss/Sky side cues; coop does not.
  * Start and game-over draw the hand-hold Play mark with a progress ring.
  */
 
@@ -34,6 +35,7 @@ import {
 } from "./facet.js";
 import { drawCurtain, drawStageWash } from "./curtain.js";
 import { drawSimpleScene } from "./simple.js";
+import { drawSplitChrome as paintSplitChrome } from "./split.js";
 import { drawStompBug } from "./stomp.js";
 
 /**
@@ -87,7 +89,7 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
       });
     });
     if (state.phase !== "start") {
-      drawSplitChrome(state);
+      paintSplitChrome(ctx, width, height, state);
       const slices = sceneSlices(state);
       for (const slice of slices) {
         drawPlayfield(slice);
@@ -190,31 +192,6 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
         ctx.stroke();
       }
     }
-  }
-
-  /**
-   * Placeholder lane chrome. Shine can polish the split later.
-   *
-   * @param {GameState} state
-   */
-  function drawSplitChrome(state) {
-    if (state.layout !== "split" && state.scene?.layout !== "split") return;
-    const x = width * 0.5;
-    ctx.save();
-    ctx.strokeStyle = `rgba(${FACET_RGB.mist}, 0.35)`;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(x, height * 0.12);
-    ctx.lineTo(x, height * 0.92);
-    ctx.stroke();
-    ctx.font = `700 ${Math.round(Math.min(width, height) * 0.028)}px "Bebas Neue", "Arial Narrow", sans-serif`;
-    ctx.textBaseline = "top";
-    ctx.fillStyle = `rgba(${PLAYER_RGB[0]}, 0.85)`;
-    ctx.textAlign = "center";
-    ctx.fillText("P1", width * 0.25, height * 0.08);
-    ctx.fillStyle = `rgba(${PLAYER_RGB[1]}, 0.85)`;
-    ctx.fillText("P2", width * 0.75, height * 0.08);
-    ctx.restore();
   }
 
   /**
