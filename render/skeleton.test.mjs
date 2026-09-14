@@ -3,6 +3,7 @@ import { pointerToPose } from "../input/poses.js";
 import { FACET, FACET_RGB, FACET_STEPS } from "../theme/facet.js";
 import { facetShade } from "./facet.js";
 import {
+  STRIKER_HALO,
   STRIKER_RADIUS,
   drawSkeleton,
   faceFaces,
@@ -207,11 +208,20 @@ assert(p1Fills.slice(0, lastMoss).some((fill) => fill === FACET.moss || fill ===
 
 const wristX = 0.18 * 800;
 const wristY = 0.52 * 600;
-const wristMoves = p1.calls.filter(
+const wristCore = p1.calls.filter(
   (call) => Array.isArray(call) && call[0] === "moveTo" && Math.abs(call[1] - wristX) < 0.01 && Math.abs(call[2] - (wristY - STRIKER_RADIUS)) < 0.01,
 );
-assert(wristMoves.length >= 1, "wrist striker is a diamond at the joint");
-assert(STRIKER_RADIUS === 7, "striker radius matches the old stick figure");
+const wristHalo = p1.calls.filter(
+  (call) => Array.isArray(call) && call[0] === "moveTo" && Math.abs(call[1] - wristX) < 0.01 && Math.abs(call[2] - (wristY - STRIKER_HALO)) < 0.01,
+);
+const wristInk = p1.calls.filter(
+  (call) => Array.isArray(call) && call[0] === "moveTo" && Math.abs(call[1] - wristX) < 0.01 && Math.abs(call[2] - (wristY - 2.4)) < 0.01,
+);
+assert(wristHalo.length >= 1, "wrist striker has a Bone halo");
+assert(wristCore.length >= 1, "wrist striker keeps a player-color core");
+assert(wristInk.length >= 1, "wrist striker has an Ink center");
+assert(STRIKER_RADIUS === 7, "striker core matches the old stick-figure radius");
+assert(STRIKER_HALO > STRIKER_RADIUS, "halo sits outside the core");
 
 const ankleX = 0.26 * 800;
 const ankleY = 0.84 * 600;

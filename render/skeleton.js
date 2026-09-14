@@ -17,8 +17,9 @@ import { drawFaces, facetShade, fillDiamond } from "./facet.js";
 
 export const PLAYER_HUES = /** @type {const} */ (["moss", "sky"]);
 
-/** Same pixel radius as the old stick-figure strikers. */
+/** Player-color core of a striker diamond. Bone halo sits outside so it reads on skin. */
 export const STRIKER_RADIUS = 7;
+export const STRIKER_HALO = 10;
 
 const FACE_JOINTS = new Set([
   "nose",
@@ -109,56 +110,57 @@ export function faceFaces(mood, accent) {
   const brow = fail ? FACET.coral : accent;
   const lip = fail ? FACET.coral : win ? FACET.bone : effort ? FACET.ink : FACET.bone;
 
-  const eyeY = win ? -6.4 : fail ? -4.2 : effort ? -5.1 : -5.6;
-  const eyeW = effort ? 5.4 : win ? 4.6 : 4.2;
-  const eyeH = effort ? 2.1 : fail ? 3.1 : win ? 4.6 : 3.7;
-  const pupilY = win ? -1.5 : fail ? 1.1 : effort ? 0.35 : 0.15;
-  const spread = 6.6;
+  const eyeY = win ? -6.2 : fail ? -5 : effort ? -5.4 : -5.6;
+  const eyeW = effort ? 5.6 : win ? 4.8 : 4.4;
+  const eyeH = effort ? 2.4 : fail ? 3.4 : win ? 4.8 : 4;
+  const pupilY = win ? -1.2 : fail ? 0.9 : 0.2;
+  const spread = 6.4;
 
-  const browY = win ? eyeY - 5.6 : effort ? eyeY - 3.1 : fail ? eyeY - 3.4 : eyeY - 4.2;
-  const browTilt = win ? -2.1 : fail ? 2.4 : effort ? 2.8 : 0.5;
-
-  const mouthY = win ? 7.2 : fail ? 8.2 : effort ? 7.1 : 6.6;
+  const browY = win ? eyeY - 4.4 : effort ? eyeY - 2.6 : fail ? eyeY - 2.8 : eyeY - 3.4;
+  const browTilt = win ? -1.2 : fail ? 1.6 : effort ? 1.8 : 0.2;
+  const mouthY = win ? 7.4 : fail ? 8 : effort ? 7 : 6.8;
 
   /** @param {number} side */
   const eye = (side) => {
     const cx = side * spread;
     return [
-      { pts: [[cx - eyeW, eyeY], [cx, eyeY - eyeH], [cx + 0.6, eyeY + 0.4]], fill: white },
-      { pts: [[cx + eyeW, eyeY], [cx, eyeY - eyeH], [cx + 0.6, eyeY + 0.4]], fill: white },
-      { pts: [[cx - eyeW, eyeY], [cx + 0.6, eyeY + 0.4], [cx, eyeY + eyeH]], fill: white },
-      { pts: [[cx - 1.5, eyeY + pupilY - 0.2], [cx + 1.6, eyeY + pupilY], [cx, eyeY + pupilY + 2.1]], fill: pupil },
+      { pts: [[cx, eyeY - eyeH], [cx + eyeW, eyeY], [cx, eyeY + eyeH]], fill: white },
+      { pts: [[cx, eyeY - eyeH], [cx, eyeY + eyeH], [cx - eyeW, eyeY]], fill: white },
+      { pts: [[cx - 1.4, eyeY + pupilY], [cx + 1.4, eyeY + pupilY], [cx, eyeY + pupilY + 2.2]], fill: pupil },
     ];
   };
 
   /** @param {number} side */
   const browFace = (side) => {
-    const inner = side * (spread - 3.2);
-    const outer = side * (spread + 4.4);
-    const innerY = browY + browTilt;
-    const outerY = browY - browTilt * 0.45;
-    return { pts: [[inner, innerY], [outer, outerY], [side * spread, browY + 1.6]], fill: brow };
+    const inner = side * (spread - 2.4);
+    const outer = side * (spread + 3.2);
+    return {
+      pts: [
+        [inner, browY + browTilt],
+        [outer, browY - browTilt * 0.35],
+        [side * spread, browY + 1.2],
+      ],
+      fill: brow,
+    };
   };
 
   /** @type {Face[]} */
   const mouth = win
     ? [
-        { pts: [[-5.8, mouthY - 0.4], [0, mouthY + 3.4], [-1.2, mouthY + 0.6]], fill: lip },
-        { pts: [[5.8, mouthY - 0.4], [0, mouthY + 3.4], [1.2, mouthY + 0.6]], fill: lip },
+        { pts: [[-6.2, mouthY], [0, mouthY + 3.8], [-0.8, mouthY + 1.2]], fill: lip },
+        { pts: [[6.2, mouthY], [0, mouthY + 3.8], [0.8, mouthY + 1.2]], fill: lip },
       ]
     : fail
       ? [
-          { pts: [[-5.4, mouthY + 2.6], [0, mouthY - 1.6], [-1, mouthY + 1.2]], fill: lip },
-          { pts: [[5.4, mouthY + 2.6], [0, mouthY - 1.6], [1, mouthY + 1.2]], fill: lip },
+          { pts: [[-5.6, mouthY + 2.2], [0, mouthY - 1.4], [-0.8, mouthY + 1]], fill: lip },
+          { pts: [[5.6, mouthY + 2.2], [0, mouthY - 1.4], [0.8, mouthY + 1]], fill: lip },
         ]
       : effort
         ? [
-            { pts: [[-4.6, mouthY - 0.8], [4.6, mouthY - 0.4], [0, mouthY + 0.6]], fill: lip },
-            { pts: [[-4.6, mouthY + 1.6], [4.6, mouthY + 1.2], [0, mouthY + 0.4]], fill: FACET.bone },
+            { pts: [[-4.2, mouthY - 0.6], [4.2, mouthY - 0.2], [0, mouthY + 0.5]], fill: lip },
+            { pts: [[-4.2, mouthY + 1.4], [4.2, mouthY + 1], [0, mouthY + 0.3]], fill: FACET.bone },
           ]
-        : [
-            { pts: [[-3.4, mouthY], [3.4, mouthY + 0.4], [0, mouthY + 2.2]], fill: lip },
-          ];
+        : [{ pts: [[-2.8, mouthY], [2.8, mouthY + 0.3], [0, mouthY + 1.8]], fill: lip }];
 
   return [...eye(-1), ...eye(1), browFace(-1), browFace(1), ...mouth];
 }
@@ -252,8 +254,8 @@ export function drawSkeleton(
   const px = (name) => pixel(joints[name], width, height);
   const span = shoulderSpan(joints, width, height);
   const thick = clamp(span * (simple ? 0.18 : 0.22), simple ? 6 : 8, simple ? 16 : 22);
-  const headScale = clamp(span / (simple ? 26 : 22), simple ? 1.35 : 1.6, simple ? 2.6 : 3.4);
-  const distal = Math.max(2.4, thick * 0.2);
+  const headScale = clamp(span / (simple ? 24 : 20), simple ? 1.45 : 1.8, simple ? 2.8 : 3.6);
+  const distal = Math.max(2, thick * 0.14);
 
   ctx.save();
   ctx.globalAlpha = 0.94;
@@ -276,16 +278,18 @@ export function drawSkeleton(
     const a = px(from);
     const b = px(to);
     if (!a || !b) continue;
+    const strikeTo = isStrikerJoint(to, footGame);
     const ra = limbRadius(from, thick);
-    const rb = isStrikerJoint(to, footGame) ? distal : limbRadius(to, thick);
-    skin.push(...limbFaces(a[0], a[1], b[0], b[1], ra, rb, body));
+    const rb = strikeTo ? distal : limbRadius(to, thick);
+    const tip = strikeTo ? shorten(a[0], a[1], b[0], b[1], STRIKER_HALO * 0.9) : b;
+    skin.push(...limbFaces(a[0], a[1], tip[0], tip[1], ra, rb, body));
   }
 
   const nose = px("nose");
   if (nose && ls && rs) {
     const midShoulder = mid(ls, rs);
     const chin = /** @type {Pt} */ ([nose[0], nose[1] + headScale * 12]);
-    const neckW = headScale * 3.4;
+    const neckW = headScale * 5.2;
     skin.push(
       { pts: [chin, [midShoulder[0] - neckW, midShoulder[1]], midShoulder], fill: body.mid },
       { pts: [chin, midShoulder, [midShoulder[0] + neckW, midShoulder[1]]], fill: body.shade },
@@ -304,7 +308,11 @@ export function drawSkeleton(
   for (const [name, joint] of Object.entries(joints)) {
     if (name === "pointer" || FACE_JOINTS.has(name) || !usable(joint)) continue;
     if (!isStrikerJoint(name, footGame)) continue;
-    fillDiamond(ctx, joint.x * width, joint.y * height, STRIKER_RADIUS, `rgb(${rgb})`);
+    const x = joint.x * width;
+    const y = joint.y * height;
+    fillDiamond(ctx, x, y, STRIKER_HALO, FACET.bone);
+    fillDiamond(ctx, x, y, STRIKER_RADIUS, `rgb(${rgb})`);
+    fillDiamond(ctx, x, y, 2.4, FACET.ink);
   }
 
   const tag = usable(joints.nose)
@@ -349,6 +357,24 @@ function limbRadius(name, thick) {
   if (name.endsWith("shoulder") || name.endsWith("hip")) return thick;
   if (name.endsWith("elbow") || name.endsWith("knee")) return thick * 0.68;
   return thick * 0.42;
+}
+
+/**
+ * Pull a distal joint back so the striker diamond sits in the open.
+ *
+ * @param {number} ax
+ * @param {number} ay
+ * @param {number} bx
+ * @param {number} by
+ * @param {number} pad
+ * @returns {Pt}
+ */
+function shorten(ax, ay, bx, by, pad) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len = Math.hypot(dx, dy) || 1;
+  const t = Math.max(0.15, (len - pad) / len);
+  return [ax + dx * t, ay + dy * t];
 }
 
 /**
