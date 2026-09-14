@@ -9,6 +9,7 @@ import { defineMicrogame, PLAY_DURATION } from "./microgame.js";
 import { HIT_RADIUS, listIdentifiedStrikers } from "./hit.js";
 import { posesFromSample } from "../input/poses.js";
 import { createTimedPlay } from "./timed.js";
+import { LAYOUT_COOP } from "./layout.js";
 
 export const MIRROR_DURATION = PLAY_DURATION;
 /** Hold the match (or ghost anchors) this long. */
@@ -35,6 +36,7 @@ export const MIRROR_ME = defineMicrogame({
   id: "mirror-me",
   prompt: "Copy!",
   backgroundId: "mirror",
+  layout: LAYOUT_COOP,
   duration: MIRROR_DURATION,
   create({ duration }) {
     const lifetime = Number.isFinite(duration) && duration > 0 ? duration : MIRROR_DURATION;

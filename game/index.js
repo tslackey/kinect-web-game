@@ -1,11 +1,11 @@
 /**
  * Game state owner. A session is a short sequence of microgames:
- * prompt → one game on a 15–20s timer → win or fail → next.
+ * prompt → one game on a 15–20s timer → win, fail, or split → next.
  *
  * Default session shuffles a short run from the expanded pack (plant, pet,
  * fire, stomp, orb, the simple sweep, score / hoops / dough, plus tray /
- * mirror / potato). Either pose map on the sample can score — one webcam,
- * up to two bodies. Curtain
+ * mirror / potato). 2P split verbs give each body their own props and
+ * score; coop verbs stay centered and a shared win credits both. Curtain
  * wipes live on the session, not on each game. Start and game-over share
  * an on-canvas hand-hold Play mark on the top-right playlist chrome;
  * click Play stays as the fallback. 1P uses the first body; 2P is two
@@ -16,6 +16,16 @@ import { posesFromSample } from "../input/poses.js";
 import { FOOT_STRIKER_NAMES, STRIKER_NAMES, listStrikers } from "./hit.js";
 import { clipSampleForMode } from "./playlist.js";
 import { createStartDwell, startHoldFor } from "./start-dwell.js";
+import {
+  LAYOUT_COOP,
+  LAYOUT_SOLO,
+  LAYOUT_SPLIT,
+  LEFT_LANE,
+  RIGHT_LANE,
+  createSplitPlay,
+  fieldInLane,
+  liveLayoutFor,
+} from "./layout.js";
 import { CATCH_FRUIT } from "./fruit.js";
 import { CLAP_NOW } from "./clap.js";
 import { DUCK_BEAM } from "./duck.js";
@@ -67,6 +77,24 @@ export {
   sequenceFromPack,
   shufflePack,
 } from "./microgame.js";
+export {
+  CENTER_LANE,
+  FULL_LANE,
+  LAYOUT_COOP,
+  LAYOUT_SOLO,
+  LAYOUT_SPLIT,
+  LEFT_LANE,
+  RIGHT_LANE,
+  assignLanePoses,
+  combineSplitOutcomes,
+  createSplitPlay,
+  fieldInLane,
+  liveLayoutFor,
+  normalizeLayout,
+  placeX,
+  poseAnchorX,
+  roundResultFor,
+} from "./layout.js";
 export {
   DEFAULT_CURTAIN_TIMINGS,
   REDUCED_CURTAIN_TIMINGS,
@@ -251,12 +279,15 @@ const LEAN_GAMES = new Set(["lean-away"]);
  * @property {Marker[]} markers One aim per pose map when two people are in frame.
  * @property {PoseSample | null} pose
  * @property {"start" | "prompt" | "playing" | "result" | "over"} phase
- * @property {number} score
+ * @property {number} score 1P score, or P1+P2 in 2P.
+ * @property {{ p1: number, p2: number }} scores Per-player tallies. 1P only uses p1.
  * @property {number} game 1-based microgame index.
  * @property {number} games
  * @property {string} prompt On-screen cue for the current game.
  * @property {string | null} gameId
- * @property {"win" | "fail" | null} result Outcome of the current game, if resolved.
+ * @property {"win" | "fail" | "split" | null} result Outcome of the current game, if resolved.
+ * @property {import("./layout.js").PlayerResults | null} playerResults Per-body outcomes for the live game.
+ * @property {"split" | "coop" | "solo" | null} layout Live layout. 1P is always solo.
  * @property {number} lifetime Seconds the current game stays playable.
  * @property {number} driftScale
  * @property {Target} target
@@ -329,6 +360,8 @@ export function createGame({
   let current = null;
   /** @type {number | null} */
   let pendingIndex = null;
+  let awardedP1 = false;
+  let awardedP2 = false;
 
   /** @type {GameState} */
   const state = {
@@ -340,11 +373,14 @@ export function createGame({
     pose: null,
     phase: "start",
     score: 0,
+    scores: { p1: 0, p2: 0 },
     game: 1,
     games: sessionGames,
     prompt: first.prompt,
     gameId: null,
     result: null,
+    playerResults: null,
+    layout: liveLayoutFor(first.layout, mode),
     lifetime: first.duration,
     driftScale: driftScaleForGame(1),
     target: {
@@ -439,7 +475,7 @@ export function createGame({
     state.startHold = startHoldFor("prompt");
     nextFlashId = 1;
     state.elapsed = 0;
-    state.score = 0;
+    resetScores();
     state.flash = null;
     queueGame(1, { revealNow: true });
     return state;
@@ -451,14 +487,18 @@ export function createGame({
     nextFlashId = 1;
     startDwell.reset();
     transition.reset();
+    awardedP1 = false;
+    awardedP2 = false;
     state.elapsed = 0;
     state.ticks = 0;
     state.phase = "start";
-    state.score = 0;
+    resetScores();
     state.game = 1;
     state.prompt = first.prompt;
     state.gameId = null;
     state.result = null;
+    state.playerResults = null;
+    state.layout = liveLayoutFor(first.layout, mode);
     state.lifetime = first.duration;
     state.driftScale = driftScaleForGame(1);
     state.scene = null;
@@ -506,6 +546,8 @@ export function createGame({
     state.driftScale = driftScaleForGame(1);
     state.backgroundId = first.backgroundId ?? first.id;
     state.playerMode = mode;
+    state.layout = liveLayoutFor(first.layout, mode);
+    state.playerResults = null;
     return state;
   }
 
@@ -523,6 +565,10 @@ export function createGame({
     state.phase = "prompt";
     state.prompt = def.title ?? def.prompt;
     state.result = null;
+    state.playerResults = null;
+    state.layout = liveLayoutFor(def.layout, mode);
+    awardedP1 = false;
+    awardedP2 = false;
     state.timeLeft = null;
     state.lifetime = def.duration;
     state.driftScale = driftScaleForGame(index);
@@ -541,14 +587,33 @@ export function createGame({
   function revealGame() {
     const index = pendingIndex ?? state.game;
     const def = sequence[index - 1] ?? first;
-    current = def.create({ random, index, duration: def.duration });
+    current = createPlay(def, index);
     current.start();
     state.gameId = def.id;
     state.backgroundId = def.backgroundId ?? def.id;
+    state.layout = liveLayoutFor(def.layout, mode);
     syncView();
     state.timeLeft = null;
     const view = transition.consumeSwap();
     state.transition = view;
+  }
+
+  /**
+   * @param {MicrogameDef} def
+   * @param {number} index
+   */
+  function createPlay(def, index) {
+    const ctx = {
+      random,
+      index,
+      duration: def.duration,
+      playerMode: mode,
+      layout: liveLayoutFor(def.layout, mode),
+    };
+    if (mode === "2p" && liveLayoutFor(def.layout, mode) === LAYOUT_SPLIT) {
+      return createSplitPlay(def, ctx);
+    }
+    return def.create(ctx);
   }
 
   function beginPlay() {
@@ -563,18 +628,23 @@ export function createGame({
   }
 
   /**
-   * @param {"win" | "fail"} outcome
+   * @param {"win" | "fail" | "split"} outcome
    */
   function resolveGame(outcome) {
+    const results = playerResultsFor(outcome);
+    state.playerResults = results;
+    creditWins(results);
     state.result = outcome;
     state.phase = "result";
     state.holdLeft = RESULT_DURATION;
     if (outcome === "win") {
-      state.score += 1;
-      emitFlash("hit", state.target.x, state.target.y);
+      if (!state.flash || state.flash.kind !== "hit") {
+        emitFlash("hit", state.target.x, state.target.y);
+      }
       return;
     }
-    emitFlash("miss", state.target.x, state.target.y);
+    const missAt = failTarget(results) ?? state.target;
+    emitFlash("miss", missAt.x, missAt.y);
   }
 
   function advanceAfterResult() {
@@ -596,9 +666,88 @@ export function createGame({
     if (view.lifetime != null) state.lifetime = view.lifetime;
     if (view.driftScale != null) state.driftScale = view.driftScale;
     state.scene = view.scene ?? null;
-    if (state.phase === "playing" && view.timeLeft !== undefined) {
-      state.timeLeft = view.timeLeft;
+    if (view.layout) state.layout = view.layout;
+    else state.layout = liveLayoutFor(sequence[(pendingIndex ?? state.game) - 1]?.layout, mode);
+    const results = view.playerResults ?? state.playerResults;
+    if (results) state.playerResults = results;
+    if (state.phase === "playing") {
+      if (view.timeLeft !== undefined) state.timeLeft = view.timeLeft;
+      if (results) creditWins(results);
     }
+  }
+
+  function resetScores() {
+    state.scores = { p1: 0, p2: 0 };
+    state.score = 0;
+    awardedP1 = false;
+    awardedP2 = false;
+  }
+
+  /**
+   * @param {import("./layout.js").PlayerResults} results
+   */
+  function creditWins(results) {
+    let scored = false;
+    if (results.p1 === "win" && !awardedP1) {
+      awardedP1 = true;
+      state.scores.p1 += 1;
+      scored = true;
+      const at = laneTarget("p1");
+      syncTotalScore();
+      emitFlash("hit", at.x, at.y);
+    }
+    if (mode === "2p" && results.p2 === "win" && !awardedP2) {
+      awardedP2 = true;
+      state.scores.p2 += 1;
+      scored = true;
+      const at = laneTarget("p2");
+      syncTotalScore();
+      emitFlash("hit", at.x, at.y);
+    }
+    if (!scored) syncTotalScore();
+  }
+
+  function syncTotalScore() {
+    state.score = mode === "1p" ? state.scores.p1 : state.scores.p1 + state.scores.p2;
+  }
+
+  /**
+   * @param {"win" | "fail" | "split"} outcome
+   * @returns {import("./layout.js").PlayerResults}
+   */
+  function playerResultsFor(outcome) {
+    const viewed = current?.getView()?.playerResults;
+    if (viewed) return viewed;
+    if (mode === "1p" || state.layout === LAYOUT_SOLO) {
+      return { p1: outcome === "win" ? "win" : "fail", p2: "idle" };
+    }
+    if (state.layout === LAYOUT_COOP) {
+      const both = outcome === "win" ? "win" : "fail";
+      return { p1: both, p2: both };
+    }
+    return {
+      p1: outcome === "fail" ? "fail" : "win",
+      p2: outcome === "win" ? "win" : outcome === "split" ? "fail" : "fail",
+    };
+  }
+
+  /**
+   * @param {import("./layout.js").PlayerResults} results
+   */
+  function failTarget(results) {
+    if (results.p1 === "fail") return laneTarget("p1");
+    if (results.p2 === "fail") return laneTarget("p2");
+    return null;
+  }
+
+  /**
+   * @param {"p1" | "p2"} player
+   */
+  function laneTarget(player) {
+    const lane = state.scene?.lanes?.find((item) => item.player === player);
+    const point = lane?.target ?? lane?.pot ?? lane?.bowl ?? lane?.bucket ?? lane?.bug ?? lane?.ball ?? lane?.plant ?? lane?.pet ?? lane?.fire;
+    if (point && Number.isFinite(point.x) && Number.isFinite(point.y)) return point;
+    return state.target;
   }
 
   /**
@@ -693,6 +842,28 @@ function nearest(points, dest) {
  * @param {number} step
  */
 function driftLiveTarget(state, step) {
+  const lanes = state.scene?.lanes;
+  if (Array.isArray(lanes) && lanes.length > 0) {
+    for (const lane of lanes) {
+      if (lane.result && lane.result !== "playing") continue;
+      const target = lane.target;
+      if (!target || !Number.isFinite(target.x)) continue;
+      const box = fieldInLane(lane.player === "p2" ? RIGHT_LANE : LEFT_LANE, {
+        x0: 0.12,
+        x1: 0.88,
+        y0: 0.28,
+        y1: 0.88,
+      });
+      if (lane.kind === "stomp-bug" || state.scene?.kind === "stomp-bug") {
+        driftBug(target, step, { ...box, y0: 0.68, y1: 0.88 });
+      } else if (lane.kind === "orb-hit" || !lane.kind) {
+        driftOrb(target, step, { ...box, y0: 0.28, y1: 0.76 });
+      }
+    }
+    const live = lanes.find((lane) => lane.result === "playing" && lane.target) ?? lanes.find((lane) => lane.target);
+    if (live?.target) state.target = live.target;
+    return;
+  }
   if (state.scene?.kind === "stomp-bug") {
     driftBug(state.target, step);
     return;

@@ -205,6 +205,8 @@ session.tick(1 / 60, oneBody(bothOn(0.5, 0.5)));
 session.tick(1 / 60, oneBody({ left_wrist: { x: 0.5, y: 0.5, confidence: 1 } }));
 session.tick(1 / 60, oneBody(bothOn(0.5, 0.5)));
 assert(session.getState().result === "win", "a solo pass should resolve as a session win");
-assert(session.getState().score === 1, "the session should score the potato win");
+assert(session.getState().scores.p1 === 1, "coop success credits P1");
+assert(session.getState().scores.p2 === 1, "a 2P coop win also credits P2");
+assert(session.getState().score === 2, "shared potato success adds to both scores");
 
 console.log("game/potato.test.mjs passed");

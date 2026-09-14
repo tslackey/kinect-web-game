@@ -50,13 +50,13 @@ assert(
   "low-confidence wrists should not strike",
 );
 
-const gated = createGame({ random: cyclingRandom([0.2, 0.4, 0.1, 0.2]), pack: [ORB_HIT] });
+const gated = createGame({ random: cyclingRandom([0.2, 0.4, 0.1, 0.2]), pack: [ORB_HIT], playerMode: "1p" });
 const gatedOrb = { ...gated.getState().target };
 gated.tick(1 / 60, sample({ left_wrist: { x: gatedOrb.x, y: gatedOrb.y, confidence: 0.95 } }));
 assert(gated.getState().phase === "start", "the start screen should ignore hits");
 assert(gated.getState().score === 0, "the start screen should not score");
 
-const waiting = createGame({ random: cyclingRandom([0.2, 0.4, 0.1, 0.2]), pack: [ORB_HIT] });
+const waiting = createGame({ random: cyclingRandom([0.2, 0.4, 0.1, 0.2]), pack: [ORB_HIT], playerMode: "1p" });
 waiting.start();
 const firstTarget = { ...waiting.getState().target };
 for (let i = 0; i < 30; i += 1) {
@@ -73,6 +73,7 @@ assert(
 const scored = createGame({
   random: cyclingRandom([0.15, 0.2, 0.85, 0.8, 0.3, 0.4, 0.1, 0.2]),
   pack: [ORB_HIT],
+  playerMode: "1p",
 });
 scored.start();
 skipPrompt(scored);
@@ -90,6 +91,7 @@ assert(
 const pointerGame = createGame({
   random: cyclingRandom([0.7, 0.6, 0.2, 0.25, 0.4, 0.5]),
   pack: [ORB_HIT],
+  playerMode: "1p",
 });
 pointerGame.start();
 skipPrompt(pointerGame);
@@ -98,7 +100,7 @@ pointerGame.tick(1 / 60, sample({ pointer: { x: pointerOrb.x, y: pointerOrb.y, c
 assert(pointerGame.getState().score === 1, "pointer should be able to hit");
 assert(pointerGame.getState().inputSource === "mouse", "mouse source should pass through");
 
-const keysGame = createGame({ random: cyclingRandom([0.4, 0.45, 0.2, 0.25]), pack: [ORB_HIT] });
+const keysGame = createGame({ random: cyclingRandom([0.4, 0.45, 0.2, 0.25]), pack: [ORB_HIT], playerMode: "1p" });
 keysGame.start();
 skipPrompt(keysGame);
 const keyOrb = keysGame.getState().target;
@@ -116,6 +118,7 @@ assert(keysGame.getState().inputSource === "keyboard", "keyboard source should p
 const missed = createGame({
   random: cyclingRandom([0.3, 0.3, 0.8, 0.7, 0.2, 0.9]),
   pack: [ORB_HIT],
+  playerMode: "1p",
 });
 missed.start();
 skipPrompt(missed);

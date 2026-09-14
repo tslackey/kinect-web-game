@@ -204,6 +204,8 @@ drainGame(session, PROMPT_DURATION);
 assert(session.getState().phase === "playing", "the prompt should hand off to mirror me");
 drainGame(session, MIRROR_DWELL + 0.05, copied);
 assert(session.getState().result === "win", "a duo copy should resolve as a session win");
-assert(session.getState().score === 1, "the session should score the mirror win");
+assert(session.getState().scores.p1 === 1, "coop success credits P1");
+assert(session.getState().scores.p2 === 1, "coop success credits P2");
+assert(session.getState().score === 2, "a shared mirror win adds to both scores");
 
 console.log("game/mirror.test.mjs passed");

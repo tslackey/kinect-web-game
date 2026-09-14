@@ -39,8 +39,18 @@ Each play window is 15–20 seconds (default 18s) so kids have time to
 find the body part and finish. Win or fail is timeout-or-success, not
 a wrong gesture — except **Balance the tray**, which also fails if the
 wrists tip past tolerance, and **Roll the dough**, which also fails if
-you leave the pin too long after grabbing it. Two people in one camera
-frame share the same target and the same win.
+you leave the pin too long after grabbing it.
+
+**2P layouts.** One webcam, two bodies in one frame. Solo verbs use
+`layout: "split"`: each player gets mirrored props on their side
+(Feed pet: P1 bowl+pet left, P2 bowl+pet right). Each instance
+passes or fails alone. **P1 and P2 keep separate scores**; the HUD
+shows both. A split win only increments that player. The round result
+is both win, both miss, or **split** when the scores diverge. True
+shared verbs use `layout: "coop"` and stay **centered** — **Hot potato**
+and **Mirror me**. A shared coop win credits **both** scores. 1P is
+a single full-field instance and a single score. The playlist 1P/2P
+toggle still chooses the mode.
 
 Sticky-carry items (plant pot, pet bowl, fire bucket, tray, potato)
 stay with the hand that picked them up. To pass, the owner puts **both
@@ -87,7 +97,7 @@ camera hardware).
 | Path | Role |
 | --- | --- |
 | `input/` | Pose sample from one webcam; else mouse or keyboard. Webcam joints are exponentially smoothed with last-known-good (`SMOOTH_RATE`, `LKG_HOLD_MS`, `MIN_CONFIDENCE` in `input/smooth.js`). A live camera pose suppresses stand-ins. `sample()` emits pose maps. |
-| `game/` | Microgame contract and session loop: curtain → 18s play → win/fail → next. `transition.toNext({ title, backgroundId })` is the shared wipe (timings in `game/transition.js`). Start / game-over share a corner hand-hold Play mark (`START_DWELL` in `game/start-dwell.js`). Playlist + 1P/2P persist in `game/playlist.js`. Sticky-carry offer/accept lives in `game/carry.js`. |
+| `game/` | Microgame contract and session loop: curtain → 18s play → win/fail/split → next. `layout: "split" \| "coop"` on each def (`game/layout.js`). Split 2P mirrors per-player instances; coop stays centered and a shared win credits both scores. `transition.toNext({ title, backgroundId })` is the shared wipe (timings in `game/transition.js`). Start / game-over share a corner hand-hold Play mark (`START_DWELL` in `game/start-dwell.js`). Playlist + 1P/2P persist in `game/playlist.js`. Sticky-carry offer/accept lives in `game/carry.js`. |
 | `render/` | Facet-skinned pose overlays (eyes + expressions), carry/stomp/simple-pack marks, theater curtains, title placard, verb-matched stage sets, and the start-hold ring. |
 | `feel/` | Optional synthesized hit / miss audio. |
 | `main.js` | Wires the loop, camera prompt, corner playlist menu, Play, and sound toggle. |

@@ -1,13 +1,19 @@
 /**
  * Microgame contract. A later pack plugs into the session with these fields:
- * prompt, duration, win, fail, next.
+ * prompt, duration, win, fail, next, layout.
  *
- * Loop: curtain + title placard → one game on a 15–20s timer → win or fail → next.
- * Win / fail are timeout-or-success, never “wrong gesture.”
+ * Loop: curtain + title placard → one game on a 15–20s timer → win, fail, or
+ * split → next. Win / fail are timeout-or-success, never “wrong gesture.”
  * Play ticks see 1 or 2 pose maps from one webcam sample (not one cam per player).
+ *
+ * `layout: "split"` (default) is a solo verb: 2P mirrors per-player props on
+ * left / right with independent pass/fail and scores. `layout: "coop"` is a
+ * true shared verb: the interaction stays centered and a shared win credits
+ * both scores. 1P is always one full-field instance and one score.
  */
 
 import { interstitialDuration } from "./transition.js";
+import { LAYOUT_COOP, LAYOUT_SPLIT, normalizeLayout } from "./layout.js";
 
 export const GAME_COUNT = 4;
 /** Curtain down → swap → curtain up + placard hold. Lives in transition.js. */
@@ -17,11 +23,14 @@ export const RESULT_DURATION = 0.9;
 export const PLAY_DURATION = 18;
 
 /** @type {readonly MicrogameOutcome[]} */
-export const MICROGAME_OUTCOMES = Object.freeze(["playing", "win", "fail"]);
+export const MICROGAME_OUTCOMES = Object.freeze(["playing", "win", "fail", "split"]);
 
 /**
- * @typedef {"playing" | "win" | "fail"} MicrogameOutcome
+ * @typedef {"playing" | "win" | "fail" | "split"} MicrogameOutcome
  * @typedef {import("../input/poses.js").PoseSample} PoseSample
+ * @typedef {import("./layout.js").MicrogameLayout} MicrogameLayout
+ * @typedef {import("./layout.js").Lane} Lane
+ * @typedef {import("./layout.js").PlayerResults} PlayerResults
  */
 
 /**
@@ -33,6 +42,8 @@ export const MICROGAME_OUTCOMES = Object.freeze(["playing", "win", "fail"]);
  * @property {number} [lifetime]
  * @property {number} [driftScale]
  * @property {object | null} [scene]
+ * @property {"split" | "coop" | "solo"} [layout]
+ * @property {PlayerResults} [playerResults]
  */
 
 /**
@@ -49,6 +60,9 @@ export const MICROGAME_OUTCOMES = Object.freeze(["playing", "win", "fail"]);
  * @property {() => number} random
  * @property {number} index 1-based place in the session sequence
  * @property {number} duration Seconds of play after the prompt
+ * @property {"1p" | "2p"} [playerMode]
+ * @property {MicrogameLayout | "solo"} [layout]
+ * @property {Lane} [lane] Split instance bounds. 1P / coop omit this (full field).
  */
 
 /**
@@ -61,6 +75,7 @@ export const MICROGAME_OUTCOMES = Object.freeze(["playing", "win", "fail"]);
  * @property {string} [backgroundId] Stage set swapped while the curtain is closed
  * @property {string} [subtitle]
  * @property {number} duration Seconds of play after the prompt
+ * @property {MicrogameLayout} [layout] `split` (default solo verb) or `coop` (shared center)
  * @property {(ctx: MicrogameCreateContext) => MicrogamePlay} create
  */
 
@@ -90,7 +105,7 @@ export function defineMicrogame(def) {
   if (!isMicrogameDef(def)) {
     throw new Error("A microgame needs id, prompt, a positive duration, and create().");
   }
-  return def;
+  return { ...def, layout: normalizeLayout(def.layout) };
 }
 
 /**
@@ -98,7 +113,7 @@ export function defineMicrogame(def) {
  * @returns {value is MicrogameOutcome}
  */
 export function isPlayOutcome(value) {
-  return value === "playing" || value === "win" || value === "fail";
+  return value === "playing" || value === "win" || value === "fail" || value === "split";
 }
 
 /**

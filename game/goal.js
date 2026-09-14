@@ -6,6 +6,7 @@
 
 import { defineMicrogame, PLAY_DURATION } from "./microgame.js";
 import { FOOT_STRIKER_NAMES, HIT_RADIUS, listIdentifiedStrikers } from "./hit.js";
+import { FULL_LANE, fieldInLane } from "./layout.js";
 
 export const GOAL_DURATION = PLAY_DURATION;
 /** Min striker travel on first contact to count as a kick. */
@@ -35,17 +36,20 @@ export const GOAL_MOUTH = { x0: 0.8, x1: 0.96, y0: 0.44, y1: 0.72 };
 /**
  * @param {() => number} random
  * @param {number} id
+ * @param {{ x0: number, x1: number, y0: number, y1: number }} [field]
  * @returns {Target}
  */
-export function makeGoalBall(random, id) {
+export function makeGoalBall(random, id, field = FIELD) {
+  const box = field ?? FIELD;
   const rxRaw = random();
   const ryRaw = random();
   const rx = Number.isFinite(rxRaw) ? rxRaw : 0.3;
   const ry = Number.isFinite(ryRaw) ? ryRaw : 0.5;
+  const full = box.x0 === FIELD.x0 && box.x1 === FIELD.x1;
   return {
     id,
-    x: lerp(0.22, 0.46, rx),
-    y: lerp(FIELD.y0 + 0.06, FIELD.y1 - 0.06, ry),
+    x: full ? lerp(0.22, 0.46, rx) : lerp(box.x0 + 0.04, box.x0 + (box.x1 - box.x0) * 0.55, rx),
+    y: lerp(box.y0 + 0.06, box.y1 - 0.06, ry),
     vx: 0,
     vy: 0,
   };
@@ -57,42 +61,48 @@ export function makeGoalBall(random, id) {
  *
  * @param {Target} ball
  * @param {number} step
+ * @param {{ x0: number, x1: number, y0: number, y1: number }} [field]
+ * @param {{ x0: number, y0: number, x1: number, y1: number }} [mouth]
  */
-export function rollBall(ball, step) {
+export function rollBall(ball, step, field = FIELD, mouth = GOAL_MOUTH) {
   const dt = Number.isFinite(step) ? Math.max(0, step) : 0;
   if (dt <= 0) return;
+  const box = field ?? FIELD;
+  const goal = mouth ?? GOAL_MOUTH;
   ball.x += ball.vx * dt;
   ball.y += ball.vy * dt;
   const damp = Math.exp(-GOAL_FRICTION * dt);
   ball.vx *= damp;
   ball.vy *= damp;
 
-  if (ball.y < FIELD.y0 || ball.y > FIELD.y1) {
+  if (ball.y < box.y0 || ball.y > box.y1) {
     ball.vy *= -0.55;
-    ball.y = clamp(ball.y, FIELD.y0, FIELD.y1);
+    ball.y = clamp(ball.y, box.y0, box.y1);
   }
-  if (ball.x < FIELD.x0) {
+  if (ball.x < box.x0) {
     ball.vx *= -0.55;
-    ball.x = FIELD.x0;
+    ball.x = box.x0;
   }
-  if (ball.x > FIELD.x1 && !inGoalMouthY(ball.y)) {
+  if (ball.x > box.x1 && !inGoalMouthY(ball.y, goal)) {
     ball.vx *= -0.55;
-    ball.x = FIELD.x1;
+    ball.x = box.x1;
   }
-  ball.x = Math.min(ball.x, GOAL_MOUTH.x1);
+  ball.x = Math.min(ball.x, goal.x1);
 }
 
 /**
  * Ball center inside the goal zone.
  *
  * @param {{ x: number, y: number }} ball
+ * @param {{ x0: number, y0: number, x1: number, y1: number }} [mouth]
  */
-export function inGoal(ball) {
+export function inGoal(ball, mouth = GOAL_MOUTH) {
+  const goal = mouth ?? GOAL_MOUTH;
   return (
-    ball.x >= GOAL_MOUTH.x0 &&
-    ball.x <= GOAL_MOUTH.x1 &&
-    ball.y >= GOAL_MOUTH.y0 &&
-    ball.y <= GOAL_MOUTH.y1
+    ball.x >= goal.x0 &&
+    ball.x <= goal.x1 &&
+    ball.y >= goal.y0 &&
+    ball.y <= goal.y1
   );
 }
 
@@ -101,11 +111,13 @@ export const SCORE_GOAL = defineMicrogame({
   prompt: "Score!",
   backgroundId: "pitch",
   duration: GOAL_DURATION,
-  create({ random, duration }) {
+  create({ random, duration, lane = FULL_LANE }) {
     const lifetime = Number.isFinite(duration) && duration > 0 ? duration : GOAL_DURATION;
+    const field = fieldInLane(lane, FIELD);
+    const mouth = mouthInLane(lane);
     let nextId = 1;
     /** @type {Target} */
-    let ball = makeGoalBall(random, nextId++);
+    let ball = makeGoalBall(random, nextId++, field);
     /** @type {Map<string, { x: number, y: number }>} */
     const lastPos = new Map();
     let kicking = false;
@@ -115,7 +127,7 @@ export const SCORE_GOAL = defineMicrogame({
 
     return {
       start() {
-        ball = makeGoalBall(random, nextId++);
+        ball = makeGoalBall(random, nextId++, field);
         lastPos.clear();
         kicking = false;
         timeLeft = lifetime;
@@ -152,8 +164,8 @@ export const SCORE_GOAL = defineMicrogame({
           if (!seen.has(id)) lastPos.delete(id);
         }
 
-        rollBall(ball, step);
-        if (inGoal(ball)) {
+        rollBall(ball, step, field, mouth);
+        if (inGoal(ball, mouth)) {
           ball.vx = 0;
           ball.vy = 0;
           kicking = true;
@@ -176,7 +188,7 @@ export const SCORE_GOAL = defineMicrogame({
           scene: {
             kind: "score-goal",
             ball: { x: ball.x, y: ball.y, stage: outcome === "win" ? 1 : 0 },
-            goal: { ...GOAL_MOUTH },
+            goal: { ...mouth },
             kicking: kicking || outcome === "win",
           },
         };
@@ -212,9 +224,28 @@ function applyImpulse(ball, dx, dy, travel) {
 
 /**
  * @param {number} y
+ * @param {{ y0: number, y1: number }} [mouth]
  */
-function inGoalMouthY(y) {
-  return y >= GOAL_MOUTH.y0 && y <= GOAL_MOUTH.y1;
+function inGoalMouthY(y, mouth = GOAL_MOUTH) {
+  const goal = mouth ?? GOAL_MOUTH;
+  return y >= goal.y0 && y <= goal.y1;
+}
+
+/**
+ * Goal mouth sits just past the right of the lane's pitch.
+ *
+ * @param {import("./layout.js").Lane | null | undefined} lane
+ */
+function mouthInLane(lane) {
+  if (!lane || lane.id === "full") return { ...GOAL_MOUTH };
+  const box = fieldInLane(lane, FIELD);
+  const width = Math.max(0.08, (lane.x1 - lane.x0) * 0.28);
+  return {
+    x0: box.x1,
+    x1: Math.min(lane.x1 - 0.01, box.x1 + width),
+    y0: GOAL_MOUTH.y0,
+    y1: GOAL_MOUTH.y1,
+  };
 }
 
 /**

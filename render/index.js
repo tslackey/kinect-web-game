@@ -72,30 +72,25 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
     }
     drawFlashVeil(state);
     const poses = posesFromSample(state.pose);
-    const footGame = state.scene?.kind === "stomp-bug" || state.scene?.kind === "score-goal";
-    const mood = skeletonMood(state);
+    const footGame =
+      state.scene?.kind === "stomp-bug" ||
+      state.scene?.kind === "score-goal" ||
+      state.scene?.lanes?.some((lane) => lane.kind === "stomp-bug" || lane.kind === "score-goal");
     poses.forEach((pose, index) => {
+      const player = index === 0 ? "p1" : "p2";
       drawSkeleton(ctx, width, height, pose.joints, {
         playerIndex: index,
         label: pose.id,
         footGame,
-        mood,
+        mood: skeletonMood(state, player),
         simple: pose.source === "mouse" || pose.source === "keyboard",
       });
     });
     if (state.phase !== "start") {
-      if (state.scene?.kind === "water-plant") {
-        drawWaterScene(state);
-      } else if (state.scene?.kind === "feed-pet") {
-        drawFeedScene(state);
-      } else if (state.scene?.kind === "douse-fire") {
-        drawFireScene(state);
-      } else if (state.scene?.kind === "stomp-bug") {
-        drawBugScene(state);
-      } else if (state.scene?.kind) {
-        drawSimpleScene(ctx, width, height, state);
-      } else {
-        drawTarget(state);
+      drawSplitChrome(state);
+      const slices = sceneSlices(state);
+      for (const slice of slices) {
+        drawPlayfield(slice);
       }
     }
     drawMarkers(state);
@@ -153,16 +148,19 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
    * @param {GameState} state
    */
   function drawTarget(state) {
-    const { target, phase, timeLeft, elapsed, lifetime } = state;
+    const { phase, timeLeft, elapsed, lifetime } = state;
+    const target = state.scene?.target ?? state.target;
+    if (!target || !Number.isFinite(target.x) || !Number.isFinite(target.y)) return;
     const x = target.x * width;
     const y = target.y * height;
     const pulse = 0.5 + 0.5 * Math.sin(elapsed * 5);
     const covered = (state.transition?.cover ?? 0) > 0.2;
     const gated = phase === "start" || phase === "over" || (phase === "prompt" && covered);
-    const missed = phase === "over" || (phase === "result" && state.result === "fail");
+    const missed = phase === "over" || (phase === "result" && state.result === "fail") || state.result === "fail";
+    const won = state.result === "win";
     const limit = lifetime ?? TARGET_LIFETIME;
     const remaining = phase === "playing" && timeLeft != null ? timeLeft / limit : 1;
-    const palette = missed ? coralCrystal() : remaining < 0.35 ? emberCrystal() : mossCrystal();
+    const palette = missed ? coralCrystal() : won || remaining >= 0.35 ? mossCrystal() : emberCrystal();
     const alpha = gated ? 0.28 : missed ? 0.55 : 0.96;
     const size = 22 + (gated || missed ? 0 : pulse * 3);
 
@@ -191,6 +189,52 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
         ctx.lineWidth = 3;
         ctx.stroke();
       }
+    }
+  }
+
+  /**
+   * Placeholder lane chrome. Shine can polish the split later.
+   *
+   * @param {GameState} state
+   */
+  function drawSplitChrome(state) {
+    if (state.layout !== "split" && state.scene?.layout !== "split") return;
+    const x = width * 0.5;
+    ctx.save();
+    ctx.strokeStyle = `rgba(${FACET_RGB.mist}, 0.35)`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x, height * 0.12);
+    ctx.lineTo(x, height * 0.92);
+    ctx.stroke();
+    ctx.font = `700 ${Math.round(Math.min(width, height) * 0.028)}px "Bebas Neue", "Arial Narrow", sans-serif`;
+    ctx.textBaseline = "top";
+    ctx.fillStyle = `rgba(${PLAYER_RGB[0]}, 0.85)`;
+    ctx.textAlign = "center";
+    ctx.fillText("P1", width * 0.25, height * 0.08);
+    ctx.fillStyle = `rgba(${PLAYER_RGB[1]}, 0.85)`;
+    ctx.fillText("P2", width * 0.75, height * 0.08);
+    ctx.restore();
+  }
+
+  /**
+   * @param {GameState} state
+   */
+  function drawPlayfield(state) {
+    if (state.scene?.kind === "water-plant") {
+      drawWaterScene(state);
+    } else if (state.scene?.kind === "feed-pet") {
+      drawFeedScene(state);
+    } else if (state.scene?.kind === "douse-fire") {
+      drawFireScene(state);
+    } else if (state.scene?.kind === "stomp-bug") {
+      drawBugScene(state);
+    } else if (state.scene?.kind === "orb-hit") {
+      drawTarget(state);
+    } else if (state.scene?.kind) {
+      drawSimpleScene(ctx, width, height, state);
+    } else {
+      drawTarget(state);
     }
   }
 
@@ -481,6 +525,25 @@ export function createRenderer(canvas, { reducedMotion = false } = {}) {
   }
 
   return { resize, draw };
+}
+
+function sceneSlices(state) {
+  const lanes = state.scene?.lanes;
+  if (!Array.isArray(lanes) || lanes.length === 0) return [state];
+  return lanes.map((lane) => {
+    const result =
+      lane.result === "win" || lane.result === "fail"
+        ? lane.result
+        : state.result === "split"
+          ? null
+          : state.result;
+    return {
+      ...state,
+      result,
+      target: lane.target ?? state.target,
+      scene: lane,
+    };
+  });
 }
 
 /**

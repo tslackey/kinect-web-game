@@ -36,6 +36,11 @@ function twoPoses(p1Joints, p2Joints, source = "webcam") {
   };
 }
 
+function laneTarget(game, player) {
+  const lane = game.getState().scene?.lanes?.find((item) => item.player === player);
+  return lane?.target ?? game.getState().target;
+}
+
 const strikers = listSampleStrikers(
   twoPoses(
     { left_wrist: { x: 0.2, y: 0.3, confidence: 0.9 } },
@@ -50,16 +55,17 @@ const scored = createGame({
 });
 scored.start();
 skipPrompt(scored);
-const orb = scored.getState().target;
+const p2Orb = laneTarget(scored, "p2");
 scored.tick(
   1 / 60,
   twoPoses(
-    { left_wrist: { x: 0.05, y: 0.05, confidence: 1 } },
-    { right_wrist: { x: orb.x, y: orb.y, confidence: 1 } },
+    { nose: { x: 0.2, y: 0.4, confidence: 1 }, left_wrist: { x: 0.05, y: 0.05, confidence: 1 } },
+    { nose: { x: 0.8, y: 0.4, confidence: 1 }, right_wrist: { x: p2Orb.x, y: p2Orb.y, confidence: 1 } },
   ),
 );
-assert(scored.getState().score === 1, "the second pose map can hit the shared orb");
-assert(scored.getState().phase === "result", "a second-map hit still wins the game");
+assert(scored.getState().score === 1, "the second pose map can hit its own orb");
+assert(scored.getState().scores.p2 === 1, "that hit credits P2, not a shared pool");
+assert(scored.getState().phase === "playing", "P1 can still play after P2 scores");
 assert(scored.getState().markers.length === 2, "two pose maps should drive two markers");
 
 const solo = createGame({ random: cyclingRandom([0.65, 0.55, 0.2, 0.25]), pack: [ORB_HIT] });
@@ -87,12 +93,13 @@ const pointerOrb = pointers.getState().target;
 const standins = assembleSample({
   pointers: [
     { x: 0.1, y: 0.1, confidence: 1 },
-    { x: pointerOrb.x, y: pointerOrb.y, confidence: 1 },
+    { x: laneTarget(pointers, "p2").x, y: laneTarget(pointers, "p2").y, confidence: 1 },
   ],
 });
 assert(standins.poses.length === 2, "two test pointers are two pose maps");
 pointers.tick(1 / 60, standins);
 assert(pointers.getState().score === 1, "the second test pointer should score");
+assert(pointers.getState().scores.p2 === 1, "the right-hand pointer credits P2");
 assert(pointers.getState().inputSource === "mouse", "two pointers still report mouse");
 
 const cameraBlocksMouse = createGame({
@@ -126,14 +133,15 @@ const firstThenSecond = createGame({
 });
 firstThenSecond.start();
 skipPrompt(firstThenSecond);
-const firstOrb = firstThenSecond.getState().target;
+const firstOrb = laneTarget(firstThenSecond, "p1");
 firstThenSecond.tick(
   1 / 60,
   twoPoses(
-    { pointer: { x: firstOrb.x, y: firstOrb.y, confidence: 1 } },
-    { left_wrist: { x: 0.02, y: 0.98, confidence: 1 } },
+    { nose: { x: 0.22, y: 0.4, confidence: 1 }, pointer: { x: firstOrb.x, y: firstOrb.y, confidence: 1 } },
+    { nose: { x: 0.82, y: 0.4, confidence: 1 }, left_wrist: { x: 0.96, y: 0.08, confidence: 1 } },
   ),
 );
 assert(firstThenSecond.getState().score === 1, "the first pose map can still hit when a second map is present");
+assert(firstThenSecond.getState().scores.p1 === 1, "that hit credits P1");
 
 console.log("game/two-player.test.mjs passed");

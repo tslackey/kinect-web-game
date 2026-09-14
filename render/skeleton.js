@@ -43,13 +43,23 @@ const LIMB_BONES = STICK_BONES.filter(
 
 /**
  * Visual-only. Idle on start / prompt, effort while playing,
- * win / fail from the result beat.
+ * win / fail from the result beat. In 2P split, pass `player` so a
+ * mixed round can smile on one body and miss on the other.
  *
- * @param {{ phase?: string, result?: string | null } | null | undefined} state
+ * @param {{
+ *   phase?: string,
+ *   result?: string | null,
+ *   playerResults?: { p1?: string, p2?: string } | null,
+ * } | null | undefined} state
+ * @param {"p1" | "p2"} [player]
  * @returns {SkeletonMood}
  */
-export function skeletonMood(state) {
+export function skeletonMood(state, player) {
   if (!state) return "idle";
+  if ((player === "p1" || player === "p2") && (state.phase === "result" || state.phase === "over")) {
+    const own = state.playerResults?.[player];
+    if (own === "win" || own === "fail") return own;
+  }
   if (state.phase === "result" && state.result === "win") return "win";
   if (state.phase === "over" || (state.phase === "result" && state.result === "fail")) return "fail";
   if (state.phase === "playing") return "effort";
