@@ -370,6 +370,30 @@ function ledeForGame(state) {
   if (gameId === "hot-potato") return "Pass the potato in the middle. Offer with both hands, then one hand accepts.";
   if (gameId === "shoot-hoops") return "Flick a wrist to toss the ball through the hoop.";
   if (gameId === "roll-dough") return "Both hands on the pin, then roll it up and down.";
+  if (gameId === "swat-fly") return split ? "Each side has a fly. Slap yours." : "Slap the buzzing fly with a wrist.";
+  if (gameId === "ring-bell") return split ? "Each side has a bell. Reach up and ring yours." : "Reach up and slap the hanging bell.";
+  if (gameId === "freeze-dance") return "Keep moving, then freeze when the cue flashes.";
+  if (gameId === "limbo-under") return "Duck under the bar as it comes down. Do not touch it.";
+  if (gameId === "bow-king") return "Bend forward at the waist. Pointer: move down.";
+  if (gameId === "cover-ears") return "Cover both ears with your hands.";
+  if (gameId === "stir-pot") return split ? "Each side has a pot. Stir yours in circles." : "Stir circles over the pot.";
+  if (gameId === "block-it") return "Raise both arms and block before it hits.";
+  if (gameId === "peek-binoculars") return "Put both hands up to your eyes and peek.";
+  if (gameId === "pat-dog") return split ? "Each side has a pup. Reach down and pat yours." : "Reach down and pat the pup.";
+  if (gameId === "pull-rope") return "Grab with both hands and pull down.";
+  if (gameId === "pop-balloons") return split ? "Each side has balloons. Pop yours." : "Slap the balloons until you hit the quota.";
+  if (gameId === "brush-teeth") return "Scrub a hand near your mouth.";
+  if (gameId === "flap-wings") return "Flap both arms like wings.";
+  if (gameId === "open-umbrella") return "Raise both hands high and spread them.";
+  if (gameId === "stamp-passport") return "Lift a hand, then slam it down on the pad.";
+  if (gameId === "head-ball") return "Head the falling ball with your nose.";
+  if (gameId === "hop-foot") return "Hop or hold one foot up.";
+  if (gameId === "comb-hair") return "Stroke a hand over your head.";
+  if (gameId === "knock-door") return split ? "Each side has a door. Knock on yours." : "Knock on the door a few times.";
+  if (gameId === "cheers-toast") return "Raise a cup and clink in the middle.";
+  if (gameId === "tug-of-war") return "Grab the rope and pull. Both sides tug together.";
+  if (gameId === "dig-treasure") return "Scoop down and up in the pile.";
+  if (gameId === "skip-rope") return "Jump when the rope swings under your feet.";
   return split ? "Each side has a target. Hit yours." : "One hit. Timer is live.";
 }
 
