@@ -88,7 +88,7 @@ camera hardware).
 | --- | --- |
 | `input/` | Pose sample from one webcam; else mouse or keyboard. Webcam joints are exponentially smoothed with last-known-good (`SMOOTH_RATE`, `LKG_HOLD_MS`, `MIN_CONFIDENCE` in `input/smooth.js`). A live camera pose suppresses stand-ins. `sample()` emits pose maps. |
 | `game/` | Microgame contract and session loop: curtain → 18s play → win/fail → next. `transition.toNext({ title, backgroundId })` is the shared wipe (timings in `game/transition.js`). Start / game-over share a corner hand-hold Play mark (`START_DWELL` in `game/start-dwell.js`). Playlist + 1P/2P persist in `game/playlist.js`. Sticky-carry offer/accept lives in `game/carry.js`. |
-| `render/` | Stick figures, Facet carry/stomp/simple-pack marks, theater curtains, title placard, verb-matched stage sets, and the start-hold ring. |
+| `render/` | Facet-skinned pose overlays (eyes + expressions), carry/stomp/simple-pack marks, theater curtains, title placard, verb-matched stage sets, and the start-hold ring. |
 | `feel/` | Optional synthesized hit / miss audio. |
 | `main.js` | Wires the loop, camera prompt, corner playlist menu, Play, and sound toggle. |
 
