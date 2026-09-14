@@ -12,6 +12,7 @@
   --moss-ink: color-mix(in srgb, var(--moss) 68%, var(--ink));
   --moss-bone: color-mix(in srgb, var(--moss) 72%, var(--bone));
   --sky-ink: color-mix(in srgb, var(--sky) 68%, var(--ink));
+  --sky-bone: color-mix(in srgb, var(--sky) 72%, var(--bone));
   --ember-bone: color-mix(in srgb, var(--ember) 72%, var(--bone));
   --ink-bone: color-mix(in srgb, var(--ink) 82%, var(--bone));
 
@@ -219,7 +220,8 @@ h1 {
 
 .score-duo {
   flex-direction: row;
-  gap: 1.1rem;
+  align-items: stretch;
+  gap: 0.7rem;
 }
 
 .score-duo[hidden],
@@ -228,10 +230,56 @@ h1 {
 }
 
 .score-player {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  min-width: 3.2rem;
+  min-width: 3.6rem;
+  padding: 0.18rem 0.62rem 0.12rem 0.78rem;
+  border: 2px solid var(--ink);
+  background: var(--ink-bone);
+  clip-path: polygon(0 14%, 12% 0, 100% 0, 100% 86%, 88% 100%, 0 100%);
+}
+
+.score-player::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0.78rem;
+  height: 100%;
+  background: var(--mist);
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+
+.score-player.is-p1 {
+  border-color: var(--moss);
+}
+
+.score-player.is-p1 .score-kicker,
+.score-player.is-p1 .score-value {
+  color: var(--moss);
+}
+
+.score-player.is-p1::before {
+  background: var(--moss-bone);
+}
+
+.score-player.is-p2 {
+  border-color: var(--sky);
+}
+
+.score-player.is-p2 .score-kicker,
+.score-player.is-p2 .score-value {
+  color: var(--sky);
+}
+
+.score-player.is-p2::before {
+  background: var(--sky-bone);
+}
+
+.score-player.is-fail {
+  border-color: var(--coral);
 }
 
 .score-player.is-fail .score-value,
@@ -239,8 +287,8 @@ h1 {
   color: var(--coral);
 }
 
-.score-player.is-win .score-kicker {
-  color: var(--moss);
+.score-player.is-fail::before {
+  background: var(--coral);
 }
 
 .score-kicker {
@@ -268,6 +316,16 @@ h1 {
 .scoreline.is-fail .score-kicker,
 .roundline.is-fail {
   color: var(--coral);
+}
+
+.scoreline.is-fail .score-duo .score-player.is-p1:not(.is-fail) .score-kicker,
+.scoreline.is-fail .score-duo .score-player.is-p1:not(.is-fail) .score-value {
+  color: var(--moss);
+}
+
+.scoreline.is-fail .score-duo .score-player.is-p2:not(.is-fail) .score-kicker,
+.scoreline.is-fail .score-duo .score-player.is-p2:not(.is-fail) .score-value {
+  color: var(--sky);
 }
 
 .scoreline.is-pop .score-value {
@@ -301,7 +359,41 @@ h1.is-fail {
 }
 
 h1.is-split {
-  color: var(--ember);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.5rem;
+  color: var(--bone);
+}
+
+.split-chip {
+  display: inline-block;
+  padding: 0.12rem 0.58rem 0.08rem;
+  border: 2px solid var(--ink);
+  background: var(--ink-bone);
+  clip-path: polygon(0 16%, 10% 0, 100% 0, 100% 84%, 90% 100%, 0 100%);
+  font-family: var(--font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.split-chip.is-p1 {
+  color: var(--moss);
+  border-color: var(--moss);
+}
+
+.split-chip.is-p2 {
+  color: var(--sky);
+  border-color: var(--sky);
+}
+
+.split-chip.is-fail {
+  color: var(--coral);
+  border-color: var(--coral);
+}
+
+.split-sep {
+  color: var(--mist);
 }
 
 .status.is-split {
