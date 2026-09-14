@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { FACET, FACET_STEPS } from "../theme/facet.js";
-import { drawSplitChrome, isSplitLayout } from "./split.js";
+import { drawSplitChrome, isSplitLayout, SPLIT_MIXES } from "./split.js";
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -79,7 +79,8 @@ assert(!split.calls.some((call) => Array.isArray(call) && call[0] === "stroke"),
 
 const fills = hexFills(split.calls);
 assert(fills.includes(FACET.mist), "center seam uses Mist");
-assert(fills.includes(FACET.ink), "seam has Ink shade faces");
+assert(fills.includes(SPLIT_MIXES.mistLit) || fills.includes(FACET.bone), "seam has an upper-left lit face");
+assert(fills.includes(SPLIT_MIXES.mistDeep) || fills.includes(SPLIT_MIXES.mistShade), "seam has Ink-mixed shade faces");
 assert(fills.includes(FACET.bone), "upper pin is Bone-lit");
 assert(fills.includes(FACET.moss) || fills.includes(FACET_STEPS.mossBone), "P1 cue uses Moss steps");
 assert(fills.includes(FACET.sky) || fills.includes(FACET_STEPS.skyBone), "P2 cue uses Sky steps");
@@ -98,7 +99,7 @@ const p1 = labels.find((call) => call[1] === "P1");
 const p2 = labels.find((call) => call[1] === "P2");
 assert(p1 && p2 && p1[2] < 480 && p2[2] > 480, "P1 sits in the left lane, P2 in the right");
 
-const allowedHex = new Set([...Object.values(FACET), ...Object.values(FACET_STEPS)]);
+const allowedHex = new Set([...Object.values(FACET), ...Object.values(FACET_STEPS), ...Object.values(SPLIT_MIXES)]);
 for (const fill of fills) {
   assert(allowedHex.has(fill), `unexpected fill ${fill}`);
 }

@@ -8,8 +8,15 @@
  * Triangles, flat fills, upper-left light. No gradients or soft edges.
  */
 
-import { FACET } from "../theme/facet.js";
+import { FACET, mixHex } from "../theme/facet.js";
 import { facetShade, fillDiamond, fillPoly, fillTri } from "./facet.js";
+
+/** Extra mist steps for the quiet panel seam. Tests whitelist these. */
+export const SPLIT_MIXES = Object.freeze({
+  mistLit: mixHex(FACET.mist, FACET.bone, 0.28),
+  mistShade: mixHex(FACET.mist, FACET.ink, 0.28),
+  mistDeep: mixHex(FACET.mist, FACET.ink, 0.5),
+});
 
 /**
  * Live split chrome only. Coop-center and 1P solo stay undivided.
@@ -48,7 +55,7 @@ function drawLaneSeam(ctx, width, height) {
   const mid = width * 0.5;
   const top = height * 0.12;
   const bot = height * 0.92;
-  const half = Math.max(6, Math.min(11, width * 0.009));
+  const half = Math.max(5, Math.min(8, width * 0.007));
   const folds = 8;
   const span = bot - top;
 
@@ -56,21 +63,20 @@ function drawLaneSeam(ctx, width, height) {
     const y0 = top + (i / folds) * span;
     const y1 = top + ((i + 1) / folds) * span;
     const slash = i % 2 === 0;
-    const leftW = slash ? half : half * 0.58;
-    const rightW = slash ? half * 0.58 : half;
-    const leftLit = slash ? FACET.mist : FACET.bone;
-    const leftShade = FACET.ink;
-    const rightMid = slash ? FACET.ink : FACET.mist;
+    const leftW = slash ? half : half * 0.7;
+    const rightW = slash ? half * 0.7 : half;
+    const leftLit = slash ? SPLIT_MIXES.mistLit : FACET.mist;
+    const rightMid = slash ? SPLIT_MIXES.mistShade : FACET.mist;
 
     fillTri(ctx, [mid - leftW, y0], [mid, y0], [mid, y1], leftLit);
-    fillTri(ctx, [mid - leftW, y0], [mid, y1], [mid - leftW * 0.42, y1], leftShade);
+    fillTri(ctx, [mid - leftW, y0], [mid, y1], [mid - leftW * 0.45, y1], SPLIT_MIXES.mistShade);
     fillTri(ctx, [mid, y0], [mid + rightW, y0], [mid, y1], rightMid);
-    fillTri(ctx, [mid, y1], [mid + rightW * 0.42, y1], [mid + rightW, y0], FACET.ink);
+    fillTri(ctx, [mid, y1], [mid + rightW * 0.45, y1], [mid + rightW, y0], SPLIT_MIXES.mistDeep);
   }
 
-  fillDiamond(ctx, mid, top - 1, 5, FACET.bone);
+  fillDiamond(ctx, mid, top - 1, 4, FACET.bone);
   fillDiamond(ctx, mid, top - 1, 2, FACET.mist);
-  fillDiamond(ctx, mid, bot + 1, 4, FACET.mist);
+  fillDiamond(ctx, mid, bot + 1, 3, SPLIT_MIXES.mistShade);
 }
 
 /**
@@ -104,10 +110,10 @@ function drawSideCue(ctx, width, height, player) {
     fillTri(ctx, [edge, top], [edge + dir * depth, midY], [edge, bot], fill);
   }
 
-  const plateH = Math.max(22, Math.min(28, height * 0.04));
-  const plateW = plateH * 1.7;
-  const plateX = edge + dir * (tickW + 6);
-  const plateY = y0 - plateH - 6;
+  const plateH = Math.max(20, Math.min(26, height * 0.036));
+  const plateW = plateH * 1.55;
+  const plateX = edge + dir * 6;
+  const plateY = y0 + total + 8;
   drawNamePlate(ctx, plateX, plateY, plateW, plateH, p1 ? "P1" : "P2", body, dir);
 }
 
