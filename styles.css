@@ -332,7 +332,8 @@ body.is-curtain .hud {
 body[data-stage="garden"] .atmosphere,
 body[data-stage="bar"] .atmosphere,
 body[data-stage="pitch"] .atmosphere,
-body[data-stage="grove"] .atmosphere {
+body[data-stage="grove"] .atmosphere,
+body[data-stage="steady"] .atmosphere {
   background-color: color-mix(in srgb, var(--moss) 10%, var(--ink));
 }
 
@@ -345,7 +346,8 @@ body[data-stage="ash"] .atmosphere,
 body[data-stage="cue"] .atmosphere,
 body[data-stage="tilt"] .atmosphere,
 body[data-stage="press"] .atmosphere,
-body[data-stage="dough"] .atmosphere {
+body[data-stage="dough"] .atmosphere,
+body[data-stage="pass"] .atmosphere {
   background-color: color-mix(in srgb, var(--ember) 10%, var(--ink));
 }
 
@@ -358,7 +360,8 @@ body[data-stage="hello"] .atmosphere {
 body[data-stage="stage"] .atmosphere,
 body[data-stage="high"] .atmosphere,
 body[data-stage="hoop"] .atmosphere,
-body[data-stage="crystal"] .atmosphere {
+body[data-stage="crystal"] .atmosphere,
+body[data-stage="mirror"] .atmosphere {
   background-color: color-mix(in srgb, var(--lilac) 10%, var(--ink));
 }
 

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet balance tray">
+  <!-- 128 grid. Serving tray with cup and Moss level bead. Upper-left light. -->
+  <polygon fill="#c8adf3" points="16,68 64,44 112,72"/>
+  <polygon fill="#8771b4" points="16,68 112,72 64,92"/>
+  <polygon fill="#bb9af7" points="32,64 96,64 64,84"/>
+  <polygon fill="#f4efe6" points="28,60 64,36 100,64"/>
+  <polygon fill="#bb9af7" points="8,64 24,52 28,76"/>
+  <polygon fill="#8771b4" points="8,64 28,76 4,80"/>
+  <polygon fill="#bb9af7" points="120,68 104,56 100,80"/>
+  <polygon fill="#8771b4" points="120,68 100,80 124,84"/>
+  <polygon fill="#fcb588" points="52,52 64,24 68,68"/>
+  <polygon fill="#ff9e64" points="64,24 80,56 68,68"/>
+  <polygon fill="#b67450" points="52,52 80,56 64,72"/>
+  <polygon fill="#f4efe6" points="48,28 64,16 80,32"/>
+  <polygon fill="#9ece6a" points="56,76 64,68 72,76"/>
+  <polygon fill="#1a1b26" points="56,76 72,76 64,84"/>
+</svg>

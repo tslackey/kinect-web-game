@@ -34,7 +34,7 @@ const RIGHT_ANCHOR = { x: 0.76, y: 0.38 };
 export const MIRROR_ME = defineMicrogame({
   id: "mirror-me",
   prompt: "Copy!",
-  backgroundId: "stage",
+  backgroundId: "mirror",
   duration: MIRROR_DURATION,
   create({ duration }) {
     const lifetime = Number.isFinite(duration) && duration > 0 ? duration : MIRROR_DURATION;

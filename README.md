@@ -45,11 +45,11 @@ frame share the same target and the same win.
 
 Sticky-carry items (plant pot, pet bowl, fire bucket, tray, potato)
 stay with the hand that picked them up. To pass, the owner puts **both
-hands** on the item (offered — a sky ring for now), then another body —
-or the same body’s other hand after it leaves and re-grabs — puts **one
-hand** on it to accept. Without that two-hand offer, a second hand
-cannot steal. Hot potato uses that rule as the verb: one accepted pass
-wins; overlap-steal does not.
+hands** on the item (offered — Facet sky shards around the mark), then
+another body — or the same body’s other hand after it leaves and
+re-grabs — puts **one hand** on it to accept. Without that two-hand
+offer, a second hand cannot steal. Hot potato uses that rule as the
+verb: one accepted pass wins; overlap-steal does not.
 
 If a camera body is in frame, that skeleton is the only player — moving
 the mouse does not add a second body. Keyboard is also suppressed while

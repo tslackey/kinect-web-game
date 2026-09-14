@@ -11,7 +11,7 @@ import { drawCrystal, facetShade, fillDiamond, fillPoly, fillTri } from "./facet
  * @typedef {import("../game/transition.js").CurtainView} CurtainView
  * @typedef {import("./facet.js").Pt} Pt
  * @typedef {"moss" | "sky" | "lilac" | "ember" | "coral"} StageHue
- * @typedef {"hills" | "trees" | "logs" | "mounds" | "shards" | "beams" | "posts" | "flats" | "wedges" | "marks" | "field" | "waves" | "hurdle" | "goals" | "span" | "high" | "press" | "hands"} StageMotif
+ * @typedef {"hills" | "trees" | "logs" | "mounds" | "shards" | "beams" | "posts" | "flats" | "wedges" | "marks" | "field" | "waves" | "hurdle" | "goals" | "span" | "high" | "press" | "hands" | "level" | "glass" | "pass"} StageMotif
  * @typedef {{
  *   hue: StageHue,
  *   motif: StageMotif,
@@ -464,6 +464,27 @@ function drawStageMotif(ctx, width, height, kit) {
     drawCornerHand(ctx, width * 0.92, height * 0.7, kit, -1);
     return;
   }
+  if (motif === "level") {
+    drawLevelShelf(ctx, width * 0.04, height * 0.58, kit, 1);
+    drawLevelShelf(ctx, width * 0.96, height * 0.56, kit, -1);
+    fillTri(ctx, [width * 0.02, height * 0.42], [width * 0.16, height * 0.4], [width * 0.04, height * 0.48], kit.mid);
+    fillTri(ctx, [width * 0.98, height * 0.4], [width * 0.84, height * 0.38], [width * 0.96, height * 0.46], kit.shade);
+    return;
+  }
+  if (motif === "glass") {
+    drawMirrorPane(ctx, width * 0.03, height * 0.18, kit, 1);
+    drawMirrorPane(ctx, width * 0.97, height * 0.16, kit, -1);
+    drawFacetShard(ctx, width * 0.14, height * 0.72, 18, 1);
+    drawFacetShard(ctx, width * 0.86, height * 0.7, 16, -1);
+    return;
+  }
+  if (motif === "pass") {
+    drawCornerHand(ctx, width * 0.1, height * 0.7, kit, 1);
+    drawCornerHand(ctx, width * 0.9, height * 0.68, kit, -1);
+    drawFlameShard(ctx, width * 0.08, height * 0.28, kit);
+    drawFlameShard(ctx, width * 0.92, height * 0.26, kit);
+    return;
+  }
   fillTri(ctx, [width * 0.18, height * 0.08], [width * 0.34, height * 0.08], [width * 0.26, height * 0.16], kit.lit);
   fillTri(ctx, [width * 0.66, height * 0.08], [width * 0.82, height * 0.08], [width * 0.74, height * 0.16], kit.mid);
 }
@@ -660,6 +681,39 @@ function drawWaveBanner(ctx, x, y, kit) {
 }
 
 /**
+ * Side shelf / landing pad for Balance the tray.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {StageKit} kit
+ * @param {number} fx
+ */
+function drawLevelShelf(ctx, x, y, kit, fx) {
+  fillTri(ctx, [x, y + 44], [x + 10 * fx, y - 6], [x + 18 * fx, y + 44], kit.lit);
+  fillTri(ctx, [x + 10 * fx, y - 6], [x + 72 * fx, y - 18], [x + 18 * fx, y + 10], kit.mid);
+  fillTri(ctx, [x + 18 * fx, y + 10], [x + 72 * fx, y - 18], [x + 64 * fx, y + 10], kit.shade);
+  fillTri(ctx, [x + 22 * fx, y - 22], [x + 42 * fx, y - 34], [x + 50 * fx, y - 14], FACET.bone);
+  fillTri(ctx, [x + 8 * fx, y + 40], [x + 56 * fx, y + 8], [x + 16 * fx, y + 48], kit.deep);
+}
+
+/**
+ * Tall mirrored pane for Copy! — paired flats that read as reflection, not pose flats.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {StageKit} kit
+ * @param {number} fx
+ */
+function drawMirrorPane(ctx, x, y, kit, fx) {
+  fillTri(ctx, [x, y], [x + 30 * fx, y + 14], [x, y + 150], kit.lit);
+  fillTri(ctx, [x + 30 * fx, y + 14], [x + 30 * fx, y + 160], [x, y + 150], kit.shade);
+  fillTri(ctx, [x + 6 * fx, y + 28], [x + 22 * fx, y + 40], [x + 6 * fx, y + 88], kit.mid);
+  fillTri(ctx, [x + 8 * fx, y + 44], [x + 18 * fx, y + 34], [x + 10 * fx, y + 62], FACET.bone);
+}
+
+/**
  * @param {StageKit} kit
  */
 function crystalPalette(_kit) {
@@ -722,6 +776,9 @@ const STAGE_KITS = {
   hello: kit("sky", "waves", 0.09),
   press: kit("ember", "press", 0.1),
   dough: kit("ember", "press", 0.1),
+  steady: kit("moss", "level", 0.1),
+  mirror: kit("lilac", "glass", 0.1),
+  pass: kit("ember", "pass", 0.1),
 };
 
 /**

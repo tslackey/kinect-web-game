@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Facet hot potato">
+  <!-- 128 grid. Lumpy ember potato with heat sparks. Upper-left light. -->
+  <polygon fill="#fcb588" points="52,28 24,56 64,64"/>
+  <polygon fill="#fcb588" points="52,28 88,32 64,64"/>
+  <polygon fill="#ff9e64" points="88,32 108,64 64,64"/>
+  <polygon fill="#ff9e64" points="24,56 20,84 64,72"/>
+  <polygon fill="#b67450" points="108,64 96,96 64,72"/>
+  <polygon fill="#b67450" points="20,84 48,104 64,72"/>
+  <polygon fill="#b67450" points="48,104 96,96 64,72"/>
+  <polygon fill="#ff9e64" points="44,48 76,52 64,80"/>
+  <polygon fill="#f4efe6" points="48,32 68,8 72,40"/>
+  <polygon fill="#fcb588" points="84,36 104,16 96,48"/>
+  <polygon fill="#1a1b26" points="48,56 60,60 56,72"/>
+  <polygon fill="#1a1b26" points="76,60 88,64 80,72"/>
+  <polygon fill="#9ece6a" points="72,28 84,8 88,40"/>
+</svg>

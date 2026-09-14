@@ -47,7 +47,7 @@ export function layoutTray(random) {
 export const BALANCE_TRAY = defineMicrogame({
   id: "balance-tray",
   prompt: "Steady!",
-  backgroundId: "garden",
+  backgroundId: "steady",
   duration: TRAY_DURATION,
   create({ random, duration }) {
     const lifetime = Number.isFinite(duration) && duration > 0 ? duration : TRAY_DURATION;

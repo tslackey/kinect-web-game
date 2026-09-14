@@ -39,7 +39,7 @@ export function layoutPotato(random) {
 export const HOT_POTATO = defineMicrogame({
   id: "hot-potato",
   prompt: "Pass!",
-  backgroundId: "hearth",
+  backgroundId: "pass",
   duration: POTATO_DURATION,
   create({ random, duration }) {
     const lifetime = Number.isFinite(duration) && duration > 0 ? duration : POTATO_DURATION;

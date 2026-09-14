@@ -110,6 +110,9 @@ assert(stageKitFor("hello").motif === "waves", "wave stage is sky chevrons");
 assert(stageKitFor("press").motif === "press", "squash stage is an ember press plate");
 assert(stageKitFor("dough").motif === "press", "dough reuses the press plate as a placeholder");
 assert(stageKitFor("cue").motif === "hands", "clap stage is coral hands");
+assert(stageKitFor("steady").motif === "level", "balance stage is moss level shelves");
+assert(stageKitFor("mirror").motif === "glass", "copy stage is lilac mirror panes");
+assert(stageKitFor("pass").motif === "pass", "hot-potato stage is ember pass hands");
 assert(stageKitFor("unknown").hue === "lilac", "unknown stages fall back to crystal");
 
 const pitch = mockCtx();
@@ -119,6 +122,18 @@ assert(hexFills(pitch.calls).includes(FACET.moss), "score pitch uses Moss goals"
 const hello = mockCtx();
 drawStageWash(hello, 800, 600, "hello");
 assert(hexFills(hello.calls).includes(FACET.sky), "wave stage uses Sky chevrons");
+
+const steady = mockCtx();
+drawStageWash(steady, 800, 600, "steady");
+assert(hexFills(steady.calls).includes(FACET.moss), "balance stage uses Moss shelves");
+
+const mirror = mockCtx();
+drawStageWash(mirror, 800, 600, "mirror");
+assert(hexFills(mirror.calls).includes(FACET.lilac), "copy stage uses Lilac glass");
+
+const pass = mockCtx();
+drawStageWash(pass, 800, 600, "pass");
+assert(hexFills(pass.calls).includes(FACET.ember), "hot-potato stage uses Ember heat");
 
 const ctx = mockCtx();
 const curtain = createTransition();
@@ -166,7 +181,7 @@ drawSimpleScene(ctx, 800, 600, {
 });
 assert(ctx.calls.length > 4, "simple-pack scenes draw Facet marks");
 
-for (const fill of [...hexFills(garden.calls), ...hexFills(ctx.calls), ...hexFills(card.calls)]) {
+for (const fill of [...hexFills(garden.calls), ...hexFills(ctx.calls), ...hexFills(card.calls), ...hexFills(steady.calls), ...hexFills(mirror.calls), ...hexFills(pass.calls)]) {
   assert(allowedHex.has(fill), `unexpected fill ${fill}`);
 }
 

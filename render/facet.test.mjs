@@ -1,9 +1,10 @@
 import { readFileSync } from "node:fs";
-import { FACET, FACET_STEPS, mixHex } from "../theme/facet.js";
+import { FACET, FACET_RGB, FACET_STEPS, mixHex } from "../theme/facet.js";
 import {
   coralCrystal,
   drawCrystal,
   drawFaces,
+  drawOfferedCue,
   emberCrystal,
   facetShade,
   fillDiamond,
@@ -11,6 +12,7 @@ import {
   hexVertices,
   lilacCrystal,
   mossCrystal,
+  offerShardFaces,
   strokeHex,
 } from "./facet.js";
 import {
@@ -100,6 +102,29 @@ assert(carryShade({ offered: true }).mid === FACET.sky, "offered marks go Sky");
 assert(carryShade({ held: true }).mid === FACET.ember, "held marks go Ember");
 assert(carryShade({ happy: true }).mid === FACET.moss, "happy pet goes Moss");
 assert(carryShade({ hue: "lilac" }).mid === FACET.lilac, "idle carry marks stay Lilac");
+
+const shards = offerShardFaces(false);
+assert(shards.length >= 6, "offered cue is several sky shards");
+assert(
+  shards.every((face) => face.pts.length === 3),
+  "offered cue faces are triangles",
+);
+assert(
+  shards.some((face) => face.fill === FACET.sky || face.fill === FACET_STEPS.skyBone),
+  "offered cue uses Sky steps",
+);
+
+const idleCue = mockCtx();
+drawOfferedCue(idleCue, 40, 40, 32, { offered: false, held: true });
+const offeredCue = mockCtx();
+drawOfferedCue(offeredCue, 40, 40, 32, { offered: true, held: true });
+const idleFills = idleCue.calls.filter((call) => Array.isArray(call) && call[0] === "fill").length;
+const offeredFills = offeredCue.calls.filter((call) => Array.isArray(call) && call[0] === "fill").length;
+assert(offeredFills > idleFills, "offered cue paints extra Facet shards");
+assert(
+  offeredCue.calls.some((call) => Array.isArray(call) && call[0] === "stroke" && String(call[1]).includes(FACET_RGB.sky)),
+  "offered hit hex stays Sky",
+);
 
 const scene = mockCtx();
 drawCarryPlant(scene, 80, 80, { grown: false, missed: false, gated: false }, 40);

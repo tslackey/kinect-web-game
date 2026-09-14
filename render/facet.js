@@ -3,7 +3,7 @@
  * Depth is a mix toward Bone or Ink — never a new named hue.
  */
 
-import { FACET, FACET_STEPS } from "../theme/facet.js";
+import { FACET, FACET_RGB, FACET_STEPS } from "../theme/facet.js";
 
 /**
  * @typedef {[number, number]} Pt
@@ -191,4 +191,44 @@ export function facetShade(hue) {
     mid: FACET[hue],
     shade: FACET_STEPS[`${hue}Ink`],
   };
+}
+
+/**
+ * Sky pass shards around an offered carry item. Replaces the old extra hex ring.
+ * Local units; origin is the hit center. Drawn outside the mark silhouette.
+ *
+ * @param {boolean} [missed]
+ * @returns {Face[]}
+ */
+export function offerShardFaces(missed = false) {
+  const body = missed ? facetShade("coral") : facetShade("sky");
+  const tip = missed ? FACET.coral : FACET.bone;
+  return [
+    { pts: [[-8, -24], [0, -36], [8, -24]], fill: body.lit },
+    { pts: [[18, -16], [32, -26], [26, -8]], fill: tip },
+    { pts: [[24, 2], [36, 0], [24, -10]], fill: body.mid },
+    { pts: [[8, 24], [0, 36], [-8, 24]], fill: body.shade },
+    { pts: [[-24, 2], [-36, 0], [-24, -10]], fill: body.shade },
+    { pts: [[-18, -16], [-32, -26], [-26, -8]], fill: body.lit },
+    { pts: [[-32, -8], [-20, 0], [-32, 8]], fill: body.mid },
+    { pts: [[32, -8], [20, 0], [32, 8]], fill: body.lit },
+  ];
+}
+
+/**
+ * Hit hex plus Facet offered shards. Shared by carry-trio, tray, and potato.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {number} zone
+ * @param {{ missed?: boolean, held?: boolean, offered?: boolean, gated?: boolean }} [look]
+ */
+export function drawOfferedCue(ctx, x, y, zone, { missed = false, held = false, offered = false, gated = false } = {}) {
+  const rgb = missed ? FACET_RGB.coral : offered ? FACET_RGB.sky : held ? FACET_RGB.ember : FACET_RGB.lilac;
+  const alpha = offered ? 0.95 : held ? 0.85 : gated ? 0.28 : 0.7;
+  strokeHex(ctx, x, y, zone, `rgba(${rgb}, ${alpha})`, offered ? 4 : held ? 3 : 2);
+  if (offered && !missed) {
+    drawFaces(ctx, x, y, zone / 28, offerShardFaces(false));
+  }
 }
