@@ -181,6 +181,13 @@ const scenes = [
     potato: { x: 0.4, y: 0.5, held: true, offered: true, heldBy: "p1:left_wrist" },
     passes: 0,
   },
+  { kind: "swat-fly", fly: { x: 0.4, y: 0.3, stage: 0 }, swatted: false },
+  { kind: "ring-bell", bell: { x: 0.62, y: 0.16 }, rung: true },
+  { kind: "freeze-dance", cue: true, danced: true, frozen: false },
+  { kind: "limbo-under", bar: { y: 0.4 }, ducked: true },
+  { kind: "pop-balloons", balloons: [{ id: 1, x: 0.4, y: 0.5 }], popped: 1, quota: 3 },
+  { kind: "cheers-toast", clink: { x: 0.5, y: 0.32 }, p1: true, p2: true, toasting: true },
+  { kind: "skip-rope", rope: { y: 0.5 }, skips: 1, jumping: true },
 ];
 
 const scene = mockCtx();

@@ -3,13 +3,14 @@
  * prompt → one game on a 15–20s timer → win, fail, or split → next.
  *
  * Default session shuffles a short run from the expanded pack (plant, pet,
- * fire, stomp, orb, the simple sweep, score / hoops / dough, plus tray /
- * mirror / potato). 2P split verbs give each body their own props and
- * score; coop verbs stay centered and a shared win credits both. Curtain
- * wipes live on the session, not on each game. Start and game-over share
- * an on-canvas hand-hold Play mark on the top-right playlist chrome;
- * click Play stays as the fallback. 1P uses the first body; 2P is two
- * bodies in one webcam frame.
+ * fire, stomp, orb, the simple sweep, score / hoops / dough, tray /
+ * mirror / potato, plus the second and third concept waves). 2P split
+ * verbs give each body their own props and score; coop verbs stay
+ * centered and a shared win credits both. Curtain wipes live on the
+ * session, not on each game. Start and game-over share an on-canvas
+ * hand-hold Play mark on the top-right playlist chrome; click Play stays
+ * as the fallback. 1P uses the first body; 2P is two bodies in one
+ * webcam frame.
  */
 
 import { posesFromSample } from "../input/poses.js";
@@ -54,6 +55,30 @@ import { MIRROR_ME } from "./mirror.js";
 import { HOT_POTATO } from "./potato.js";
 import { BALANCE_TRAY } from "./tray.js";
 import { WAVE_HELLO } from "./wave.js";
+import { SWAT_FLY, driftFly } from "./fly.js";
+import { RING_BELL } from "./bell.js";
+import { FREEZE_DANCE } from "./freeze.js";
+import { LIMBO_UNDER } from "./limbo.js";
+import { BOW_KING } from "./bow.js";
+import { COVER_EARS } from "./ears.js";
+import { STIR_POT } from "./stir.js";
+import { BLOCK_IT } from "./block.js";
+import { PEEK_BINOCULARS } from "./peek.js";
+import { PAT_DOG } from "./pat.js";
+import { PULL_ROPE } from "./rope.js";
+import { POP_BALLOONS } from "./balloons.js";
+import { BRUSH_TEETH } from "./brush.js";
+import { FLAP_WINGS } from "./flap.js";
+import { OPEN_UMBRELLA } from "./umbrella.js";
+import { STAMP_PASSPORT } from "./stamp.js";
+import { HEAD_BALL } from "./headball.js";
+import { HOP_FOOT } from "./hop.js";
+import { COMB_HAIR } from "./comb.js";
+import { KNOCK_DOOR } from "./knock.js";
+import { CHEERS_TOAST } from "./cheers.js";
+import { TUG_OF_WAR } from "./tug.js";
+import { DIG_TREASURE } from "./dig.js";
+import { SKIP_ROPE } from "./skip.js";
 
 /**
  * @typedef {import("../input/index.js").PoseSample} PoseSample
@@ -159,6 +184,30 @@ export { STRETCH_WIDE, STRETCH_DURATION, STRETCH_SPAN } from "./stretch.js";
 export { HIGH_FIVE, HIGH_FIVE_DURATION } from "./highfive.js";
 export { CATCH_FRUIT, FRUIT_DURATION, FRUIT_FALL, makeFruit } from "./fruit.js";
 export { WAVE_HELLO, WAVE_DURATION, WAVE_DWELL } from "./wave.js";
+export { FLY_DURATION, FLY_RADIUS, SWAT_FLY, driftFly } from "./fly.js";
+export { BELL_DURATION, BELL_DWELL, RING_BELL } from "./bell.js";
+export { FREEZE_CUE_AT, FREEZE_DURATION, FREEZE_DWELL, FREEZE_DANCE } from "./freeze.js";
+export { LIMBO_CLEARANCE, LIMBO_DURATION, LIMBO_END_Y, LIMBO_START_Y, LIMBO_UNDER } from "./limbo.js";
+export { BOW_DURATION, BOW_DWELL, BOW_KING } from "./bow.js";
+export { COVER_EARS, EARS_DURATION, EARS_DWELL } from "./ears.js";
+export { STIR_BREAK, STIR_DURATION, STIR_LOOPS, STIR_POT } from "./stir.js";
+export { BLOCK_DURATION, BLOCK_IT, BLOCK_SPEED } from "./block.js";
+export { PEEK_BINOCULARS, PEEK_DURATION, PEEK_DWELL } from "./peek.js";
+export { PAT_DOG, PAT_DURATION, PAT_DWELL } from "./pat.js";
+export { PULL_ROPE, ROPE_BREAK, ROPE_DURATION, ROPE_PULL } from "./rope.js";
+export { BALLOON_DURATION, BALLOON_QUOTA, POP_BALLOONS, makeBalloon } from "./balloons.js";
+export { BRUSH_DURATION, BRUSH_STROKES, BRUSH_TEETH } from "./brush.js";
+export { FLAP_COUNT, FLAP_DURATION, FLAP_WINGS } from "./flap.js";
+export { OPEN_UMBRELLA, UMBRELLA_DURATION, UMBRELLA_DWELL, UMBRELLA_SPAN } from "./umbrella.js";
+export { STAMP_DURATION, STAMP_LIFT, STAMP_PASSPORT } from "./stamp.js";
+export { HEAD_BALL, HEAD_DURATION, HEAD_FALL } from "./headball.js";
+export { HOP_DWELL, HOP_DURATION, HOP_FOOT, HOP_LIFT } from "./hop.js";
+export { COMB_DURATION, COMB_HAIR, COMB_STROKES } from "./comb.js";
+export { KNOCK_COUNT, KNOCK_DOOR, KNOCK_DURATION } from "./knock.js";
+export { CHEERS_DWELL, CHEERS_DURATION, CHEERS_TOAST } from "./cheers.js";
+export { TUG_DURATION, TUG_OF_WAR, TUG_PULL } from "./tug.js";
+export { DIG_DURATION, DIG_STROKES, DIG_TREASURE } from "./dig.js";
+export { SKIP_COUNT, SKIP_DURATION, SKIP_PERIOD, SKIP_ROPE } from "./skip.js";
 export { SQUASH_IT, SQUASH_DURATION, SQUASH_DWELL } from "./squash.js";
 export {
   BALANCE_TRAY,
@@ -257,10 +306,34 @@ export const DEFAULT_PACK = [
   HOT_POTATO,
   SHOOT_HOOPS,
   ROLL_DOUGH,
+  SWAT_FLY,
+  RING_BELL,
+  FREEZE_DANCE,
+  LIMBO_UNDER,
+  BOW_KING,
+  COVER_EARS,
+  STIR_POT,
+  BLOCK_IT,
+  PEEK_BINOCULARS,
+  PAT_DOG,
+  PULL_ROPE,
+  POP_BALLOONS,
+  BRUSH_TEETH,
+  FLAP_WINGS,
+  OPEN_UMBRELLA,
+  STAMP_PASSPORT,
+  HEAD_BALL,
+  HOP_FOOT,
+  COMB_HAIR,
+  KNOCK_DOOR,
+  CHEERS_TOAST,
+  TUG_OF_WAR,
+  DIG_TREASURE,
+  SKIP_ROPE,
 ];
 
-const FOOT_GAMES = new Set(["stomp-bug", "score-goal"]);
-const HEIGHT_GAMES = new Set(["duck-beam", "jump-bar"]);
+const FOOT_GAMES = new Set(["stomp-bug", "score-goal", "hop-foot", "skip-rope"]);
+const HEIGHT_GAMES = new Set(["duck-beam", "jump-bar", "limbo-under", "bow-king", "head-ball", "hop-foot", "skip-rope"]);
 const LEAN_GAMES = new Set(["lean-away"]);
 
 /**
@@ -745,7 +818,27 @@ export function createGame({
    */
   function laneTarget(player) {
     const lane = state.scene?.lanes?.find((item) => item.player === player);
-    const point = lane?.target ?? lane?.pot ?? lane?.bowl ?? lane?.bucket ?? lane?.bug ?? lane?.ball ?? lane?.plant ?? lane?.pet ?? lane?.fire;
+    const point =
+      lane?.target ??
+      lane?.pot ??
+      lane?.bowl ??
+      lane?.bucket ??
+      lane?.bug ??
+      lane?.ball ??
+      lane?.plant ??
+      lane?.pet ??
+      lane?.fire ??
+      lane?.fly ??
+      lane?.bell ??
+      lane?.dog ??
+      lane?.shot ??
+      lane?.handle ??
+      lane?.pad ??
+      lane?.door ??
+      lane?.pile ??
+      lane?.clink ??
+      lane?.rope ??
+      lane?.balloons?.[0];
     if (point && Number.isFinite(point.x) && Number.isFinite(point.y)) return point;
     return state.target;
   }
@@ -856,6 +949,8 @@ function driftLiveTarget(state, step) {
       });
       if (lane.kind === "stomp-bug" || state.scene?.kind === "stomp-bug") {
         driftBug(target, step, { ...box, y0: 0.68, y1: 0.88 });
+      } else if (lane.kind === "swat-fly" || state.scene?.kind === "swat-fly") {
+        driftFly(target, step, { ...box, y0: 0.22, y1: 0.72 });
       } else if (lane.kind === "orb-hit" || !lane.kind) {
         driftOrb(target, step, { ...box, y0: 0.28, y1: 0.76 });
       }
@@ -868,7 +963,11 @@ function driftLiveTarget(state, step) {
     driftBug(state.target, step);
     return;
   }
-  if (state.scene?.kind === "catch-fruit") {
+  if (state.scene?.kind === "swat-fly") {
+    driftFly(state.target, step);
+    return;
+  }
+  if (state.scene?.kind === "catch-fruit" || state.scene?.kind === "pop-balloons" || state.scene?.kind === "head-ball") {
     return;
   }
   if (state.scene && state.scene.kind !== undefined && state.scene.kind !== "orb-hit") {

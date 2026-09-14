@@ -1,6 +1,7 @@
 /**
  * Shared timeout-or-success play wrapper. Simple microgames opt in so
- * each file does not reinvent the timer. Fail is timeout only.
+ * each file does not reinvent the timer. Fail is timeout, or an early
+ * miss the verb names (freeze after the cue, bar contact, trip).
  */
 
 /**
@@ -14,7 +15,7 @@
  * @param {object} options
  * @param {number} options.lifetime
  * @param {() => void} options.reset
- * @param {(dt: number, sample: PoseSample) => "win" | "playing"} options.step
+ * @param {(dt: number, sample: PoseSample) => "win" | "fail" | "playing"} options.step
  * @param {() => Partial<MicrogameView>} options.view
  * @returns {MicrogamePlay}
  */
@@ -38,9 +39,9 @@ export function createTimedPlay({ lifetime, reset, step, view }) {
       if (outcome !== "playing") return outcome;
       const slice = Number.isFinite(dt) ? Math.max(0, dt) : 0;
       const result = step(slice, sample);
-      if (result === "win") {
-        outcome = "win";
-        return "win";
+      if (result === "win" || result === "fail") {
+        outcome = result;
+        return result;
       }
       timeLeft = Math.max(0, timeLeft - slice);
       if (timeLeft <= 0) {

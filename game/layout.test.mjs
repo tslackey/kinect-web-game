@@ -91,7 +91,9 @@ assert(assigned.p1.id === "p1", "leftmost body is P1");
 assert(assigned.p2.id === "p2", "rightmost body is P2");
 
 assert(
-  DEFAULT_PACK.filter((def) => def.layout === LAYOUT_COOP).every((def) => def.id === "hot-potato" || def.id === "mirror-me"),
+  DEFAULT_PACK.filter((def) => def.layout === LAYOUT_COOP).every(
+    (def) => def.id === "hot-potato" || def.id === "mirror-me" || def.id === "cheers-toast" || def.id === "tug-of-war",
+  ),
   "only true shared verbs opt into coop-center",
 );
 
