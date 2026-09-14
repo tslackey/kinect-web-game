@@ -52,10 +52,16 @@ export function drawSimpleScene(ctx, width, height, state) {
     drawClap(ctx, width, height, scene.cue, scene.clapped || won, missed, elapsed);
   } else if (scene.kind === "score-goal") {
     drawGoalMouth(ctx, width, height, scene.goal, scene.kicking || won, missed);
-    drawBall(ctx, width, height, scene.ball.x * width, scene.ball.y * height, scene.kicking || won, missed, elapsed);
+    drawBall(ctx, width, height, scene.ball.x * width, scene.ball.y * height, scene.kicking || won, missed, elapsed, {
+      hue: "sky",
+      foot: true,
+    });
   } else if (scene.kind === "shoot-hoops") {
     drawHoop(ctx, width, height, scene.hoop.x * width, scene.hoop.y * height, scene.shooting || won, missed);
-    drawBall(ctx, width, height, scene.ball.x * width, scene.ball.y * height, scene.shooting || won, missed, elapsed);
+    drawBall(ctx, width, height, scene.ball.x * width, scene.ball.y * height, scene.shooting || won, missed, elapsed, {
+      hue: "ember",
+      foot: false,
+    });
   } else if (scene.kind === "stretch-wide") {
     drawStretchPost(ctx, width, height, scene.left.x * width, scene.left.y * height, scene.left.held || won, missed, -1);
     drawStretchPost(ctx, width, height, scene.right.x * width, scene.right.y * height, scene.right.held || won, missed, 1);
@@ -368,25 +374,26 @@ export function clapHandFaces(body, fx, missed) {
  * @param {number} height
  * @param {number} x
  * @param {number} y
- * @param {boolean} kicking
+ * @param {boolean} active
  * @param {boolean} missed
  * @param {number} elapsed
+ * @param {{ hue?: "sky" | "ember", foot?: boolean }} [look]
  */
-function drawBall(ctx, width, height, x, y, kicking, missed, elapsed) {
+function drawBall(ctx, width, height, x, y, active, missed, elapsed, { hue = "sky", foot = false } = {}) {
   const s = unit(width, height);
   const zone = 30 * s;
-  const body = simpleShade({ missed, ready: kicking, hue: "sky" });
-  const rgb = missed ? FACET_RGB.coral : kicking ? FACET_RGB.moss : FACET_RGB.sky;
-  drawHitRing(ctx, x, y, zone, rgb, kicking ? 0.85 : 0.5, kicking ? 3 : 2);
+  const body = simpleShade({ missed, ready: active, hue });
+  const rgb = missed ? FACET_RGB.coral : active ? FACET_RGB.moss : FACET_RGB[hue];
+  drawHitRing(ctx, x, y, zone, rgb, active ? 0.85 : 0.5, active ? 3 : 2);
   drawFaces(ctx, x, y, 2.4 * s, ballFaces(body, missed));
-  if (kicking) {
+  if (active) {
     drawFaces(ctx, x, y, 2 * s, impactFaces(missed, elapsed));
-    drawFaces(ctx, x - 12 * s, y + 10 * s, 1.5 * s, stompFootFaces(missed));
+    if (foot) drawFaces(ctx, x - 12 * s, y + 10 * s, 1.5 * s, stompFootFaces(missed));
   }
 }
 
 /**
- * Low-poly kick / hoop ball. Upper-left panel is lit.
+ * Low-poly score / hoop ball. Upper-left panel is lit.
  *
  * @param {ReturnType<typeof facetShade>} body
  * @param {boolean} missed
@@ -416,17 +423,19 @@ export function ballFaces(body, missed) {
  * @param {boolean} missed
  */
 function drawGoalMouth(ctx, width, height, goal, ready, missed) {
-  const s = unit(width, height);
-  const x = ((goal.x0 + goal.x1) / 2) * width;
-  const y = ((goal.y0 + goal.y1) / 2) * height;
+  const x0 = goal.x0 * width;
+  const x1 = goal.x1 * width;
+  const y0 = goal.y0 * height;
+  const y1 = goal.y1 * height;
+  const x = (x0 + x1) / 2;
+  const y = (y0 + y1) / 2;
   const body = simpleShade({ missed, ready, hue: "moss" });
-  const rgb = missed ? FACET_RGB.coral : ready ? FACET_RGB.moss : FACET_RGB.sky;
-  drawHitRing(ctx, x, y, 36 * s, rgb, ready ? 0.75 : 0.4, ready ? 3 : 2);
-  drawFaces(ctx, x, y, 3.2 * s, goalMouthFaces(body, missed));
+  const s = Math.min((x1 - x0) / 44, (y1 - y0) / 54);
+  drawFaces(ctx, x, y, s, goalMouthFaces(body, missed));
 }
 
 /**
- * Placeholder goal mouth. Shine can skin after #74.
+ * Soccer mouth: near/far posts, crossbar, net. Opening faces the field (−x).
  *
  * @param {ReturnType<typeof facetShade>} body
  * @param {boolean} missed
@@ -434,13 +443,21 @@ function drawGoalMouth(ctx, width, height, goal, ready, missed) {
  */
 export function goalMouthFaces(body, missed) {
   const net = missed ? FACET.coral : FACET.bone;
+  const mesh = missed ? FACET.coral : FACET.mist;
+  const flag = missed ? FACET.coral : FACET.ember;
   return [
-    { pts: [[-8, 22], [-4, -20], [0, 22]], fill: body.lit },
-    { pts: [[8, 22], [4, -18], [12, 22]], fill: body.shade },
-    { pts: [[-4, -20], [14, -16], [4, -18]], fill: body.mid },
-    { pts: [[-4, -18], [12, -14], [0, -4]], fill: net },
-    { pts: [[-2, -4], [10, -2], [2, 16]], fill: body.shade },
-    { pts: [[-10, 18], [14, 16], [2, 26]], fill: body.mid },
+    { pts: [[-20, 24], [-18, -24], [-12, 24]], fill: body.lit },
+    { pts: [[-18, -24], [-12, -22], [-12, 24]], fill: body.shade },
+    { pts: [[14, 20], [16, -18], [22, 20]], fill: body.mid },
+    { pts: [[16, -18], [22, -16], [22, 20]], fill: body.shade },
+    { pts: [[-18, -24], [16, -18], [-12, -18]], fill: body.lit },
+    { pts: [[-12, -18], [16, -18], [22, -16]], fill: body.mid },
+    { pts: [[-12, -16], [14, -12], [0, 2]], fill: net },
+    { pts: [[-12, -2], [14, 2], [2, 16]], fill: mesh },
+    { pts: [[-10, 14], [16, 12], [4, 22]], fill: body.shade },
+    { pts: [[-20, 22], [22, 18], [0, 28]], fill: body.mid },
+    { pts: [[12, -10], [22, -14], [20, 16]], fill: body.shade },
+    { pts: [[-22, -24], [-12, -30], [-14, -18]], fill: flag },
   ];
 }
 
@@ -457,13 +474,12 @@ function drawHoop(ctx, width, height, x, y, ready, missed) {
   const s = unit(width, height);
   const body = simpleShade({ missed, ready, hue: "ember" });
   const rgb = missed ? FACET_RGB.coral : ready ? FACET_RGB.moss : FACET_RGB.ember;
-  drawHitRing(ctx, x, y, 34 * s, rgb, ready ? 0.85 : 0.5, ready ? 3 : 2);
-  drawHitRing(ctx, x, y, 22 * s, rgb, ready ? 0.55 : 0.3, 2);
-  drawFaces(ctx, x, y, 2.6 * s, hoopFaces(body, missed));
+  drawHitRing(ctx, x, y, 28 * s, rgb, ready ? 0.85 : 0.5, ready ? 3 : 2);
+  drawFaces(ctx, x, y, 2.8 * s, hoopFaces(body, missed));
 }
 
 /**
- * Placeholder rim + backboard shard.
+ * Backboard, ember rim, hanging net. Opening stays at the hit center.
  *
  * @param {ReturnType<typeof facetShade>} body
  * @param {boolean} missed
@@ -471,13 +487,22 @@ function drawHoop(ctx, width, height, x, y, ready, missed) {
  */
 export function hoopFaces(body, missed) {
   const rim = missed ? FACET.coral : FACET.ember;
+  const board = missed ? facetShade("coral") : facetShade("lilac");
+  const net = missed ? FACET.coral : FACET.mist;
+  const shine = missed ? FACET.coral : FACET.bone;
   return [
-    { pts: [[-16, 2], [0, -8], [16, 4]], fill: body.lit },
-    { pts: [[-16, 2], [16, 4], [0, 10]], fill: body.shade },
-    { pts: [[-10, 0], [10, 0], [0, 6]], fill: rim },
-    { pts: [[10, -6], [22, -18], [18, 2]], fill: body.mid },
-    { pts: [[12, -16], [24, -22], [22, -6]], fill: body.lit },
-    { pts: [[-4, 8], [4, 8], [0, 18]], fill: body.shade },
+    { pts: [[6, -6], [24, -26], [26, 8]], fill: board.mid },
+    { pts: [[6, -6], [26, 8], [8, 10]], fill: board.shade },
+    { pts: [[10, -18], [22, -24], [20, -4]], fill: board.lit },
+    { pts: [[12, -16], [18, -20], [16, -6]], fill: shine },
+    { pts: [[4, -2], [16, -8], [8, 4]], fill: body.shade },
+    { pts: [[-16, 0], [0, -7], [16, 2]], fill: rim },
+    { pts: [[-16, 0], [16, 2], [0, 7]], fill: body.shade },
+    { pts: [[-8, 0], [8, 1], [0, 4]], fill: missed ? FACET.coral : FACET.ink },
+    { pts: [[-12, 6], [0, 8], [-8, 20]], fill: net },
+    { pts: [[12, 6], [0, 8], [8, 20]], fill: body.mid },
+    { pts: [[-8, 20], [0, 8], [8, 20]], fill: body.shade },
+    { pts: [[0, 10], [-4, 24], [4, 24]], fill: net },
   ];
 }
 
@@ -495,9 +520,9 @@ function drawDough(ctx, width, height, x, heightY, flatten, rolling, missed) {
   const s = unit(width, height);
   const body = simpleShade({ missed, ready: rolling, hue: "ember" });
   const rgb = missed ? FACET_RGB.coral : rolling ? FACET_RGB.moss : FACET_RGB.ember;
-  const squash = 1 - 0.4 * Math.min(1, Math.max(0, flatten));
-  drawHitRing(ctx, x, heightY, 42 * s, rgb, rolling ? 0.7 : 0.4, rolling ? 3 : 2);
-  drawFaces(ctx, x, heightY, 3 * s, squashPadFaces(body, missed, squash));
+  const spread = Math.min(1, Math.max(0, flatten));
+  drawHitRing(ctx, x, heightY, (36 + 10 * spread) * s, rgb, rolling ? 0.7 : 0.4, rolling ? 3 : 2);
+  drawFaces(ctx, x, heightY, 3.2 * s, doughBlobFaces(body, missed, spread));
 }
 
 /**
@@ -521,7 +546,7 @@ function drawPin(ctx, width, height, x0, x1, y, held, missed) {
 }
 
 /**
- * Placeholder rolling pin. Handle nubs at the ends.
+ * Rolling pin barrel with Bone grips. Light from upper-left.
  *
  * @param {ReturnType<typeof facetShade>} body
  * @param {boolean} missed
@@ -529,13 +554,42 @@ function drawPin(ctx, width, height, x0, x1, y, held, missed) {
  */
 export function doughPinFaces(body, missed) {
   const grip = missed ? FACET.coral : FACET.bone;
+  const band = missed ? FACET.coral : FACET.ember;
   return [
-    { pts: [[-22, 2], [0, -8], [22, 4]], fill: body.lit },
-    { pts: [[-22, 2], [22, 4], [0, 10]], fill: body.shade },
-    { pts: [[-16, 0], [14, -2], [0, 6]], fill: body.mid },
-    { pts: [[-26, -2], [-18, -8], [-14, 6]], fill: grip },
-    { pts: [[26, 0], [18, -6], [14, 8]], fill: grip },
-    { pts: [[-8, -6], [8, -4], [0, 2]], fill: body.lit },
+    { pts: [[-20, -6], [20, -8], [20, 0]], fill: body.lit },
+    { pts: [[-20, -6], [20, 0], [-20, 6]], fill: body.shade },
+    { pts: [[-16, -4], [16, -4], [0, 4]], fill: body.mid },
+    { pts: [[-4, -7], [4, -7], [0, 1]], fill: band },
+    { pts: [[-28, -3], [-20, -8], [-20, 6]], fill: grip },
+    { pts: [[-32, -1], [-28, -6], [-26, 5]], fill: body.shade },
+    { pts: [[28, -2], [20, -8], [20, 6]], fill: grip },
+    { pts: [[32, 1], [28, -6], [26, 6]], fill: body.mid },
+  ];
+}
+
+/**
+ * Lumpy dough. `flatten` 0 is a mound; 1 is a wide pancake (visual only).
+ *
+ * @param {ReturnType<typeof facetShade>} body
+ * @param {boolean} missed
+ * @param {number} [flatten]
+ * @returns {Face[]}
+ */
+export function doughBlobFaces(body, missed, flatten = 0) {
+  const t = Math.min(1, Math.max(0, flatten));
+  const sx = 1 + 0.55 * t;
+  const sy = 1 - 0.5 * t;
+  const map = (pts) => pts.map(([x, y]) => /** @type {Pt} */ ([x * sx, y * sy]));
+  const flour = missed ? FACET.coral : FACET.bone;
+  return [
+    { pts: map([[0, -16], [-18, 0], [2, 4]]), fill: body.lit },
+    { pts: map([[0, -16], [18, -2], [2, 4]]), fill: body.mid },
+    { pts: map([[-18, 0], [2, 4], [0, 16]]), fill: body.shade },
+    { pts: map([[18, -2], [2, 4], [0, 16]]), fill: body.shade },
+    { pts: map([[-10, -6], [6, -10], [4, 2]]), fill: body.lit },
+    { pts: map([[10, -14], [20, -18], [16, -4]]), fill: body.mid },
+    { pts: map([[-16, 6], [16, 8], [0, 18]]), fill: body.shade },
+    { pts: map([[-4, -4], [4, -2], [0, 4]]), fill: flour },
   ];
 }
 

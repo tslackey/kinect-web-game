@@ -23,6 +23,7 @@ import {
   goalMouthFaces,
   hoopFaces,
   doughPinFaces,
+  doughBlobFaces,
 } from "./simple.js";
 
 function assert(condition, message) {
@@ -93,6 +94,7 @@ const builders = [
   ["wave chevrons", waveChevronFaces(sky, false)],
   ["squash pad", squashPadFaces(ember, false, 1)],
   ["dough pin", doughPinFaces(sky, false)],
+  ["dough blob", doughBlobFaces(ember, false, 0)],
   ["tray", trayFaces(lilac, false)],
   ["tray goal", trayGoalFaces(facetShade("moss"), false)],
   ["potato", potatoFaces(ember, false)],
@@ -114,6 +116,28 @@ assert(flipped[0].pts[0][0] === -live[0].pts[0][0], "beam pylons flip on the x a
 const flat = squashPadFaces(ember, false, 0.72);
 const tall = squashPadFaces(ember, false, 1);
 assert(Math.abs(flat[0].pts[0][1]) < Math.abs(tall[0].pts[0][1]), "squash pad flattens when pressed");
+
+const puffy = doughBlobFaces(ember, false, 0);
+const rolled = doughBlobFaces(ember, false, 1);
+const extent = (faces, axis) => Math.max(...faces.flatMap((face) => face.pts.map((pt) => Math.abs(pt[axis]))));
+assert(extent(rolled, 0) > extent(puffy, 0), "rolled dough spreads sideways");
+assert(extent(rolled, 1) < extent(puffy, 1), "rolled dough flattens");
+
+const hoopMark = hoopFaces(ember, false);
+assert(
+  hoopMark.some((face) => face.fill === FACET.ember),
+  "hoop rim is Ember",
+);
+assert(
+  hoopMark.some((face) => face.fill === FACET.lilac || face.fill === FACET_STEPS.lilacBone || face.fill === FACET_STEPS.lilacInk),
+  "hoop backboard is Lilac",
+);
+
+const mouth = goalMouthFaces(facetShade("moss"), false);
+assert(
+  mouth.some((face) => face.fill === FACET.bone) && mouth.some((face) => face.fill === FACET.mist),
+  "goal mouth has Bone/Mist net",
+);
 
 const scenes = [
   { kind: "duck-beam", beam: { y: 0.46 }, ducked: false },
@@ -235,6 +259,9 @@ const marks = [
   "fruit.svg",
   "wave.svg",
   "squash.svg",
+  "goal.svg",
+  "hoop.svg",
+  "dough.svg",
   "tray.svg",
   "potato.svg",
   "ghost.svg",

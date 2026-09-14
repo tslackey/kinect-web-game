@@ -151,6 +151,6 @@ session.start();
 const steps = Math.ceil(PROMPT_DURATION / (1 / 60)) + 2;
 for (let i = 0; i < steps; i += 1) session.tick(1 / 60, idle());
 assert(session.getState().gameId === "score-goal", "the session can play score a goal");
-assert(session.getState().backgroundId === "pitch", "score reuses the pitch stage set");
+assert(session.getState().backgroundId === "pitch", "score uses the moss pitch stage set");
 
 console.log("game/goal.test.mjs passed");

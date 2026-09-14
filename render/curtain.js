@@ -11,7 +11,7 @@ import { drawCrystal, facetShade, fillDiamond, fillPoly, fillTri } from "./facet
  * @typedef {import("../game/transition.js").CurtainView} CurtainView
  * @typedef {import("./facet.js").Pt} Pt
  * @typedef {"moss" | "sky" | "lilac" | "ember" | "coral"} StageHue
- * @typedef {"hills" | "trees" | "logs" | "mounds" | "shards" | "beams" | "posts" | "flats" | "wedges" | "marks" | "field" | "waves" | "hurdle" | "goals" | "span" | "high" | "press" | "hands" | "level" | "glass" | "pass"} StageMotif
+ * @typedef {"hills" | "trees" | "logs" | "mounds" | "shards" | "beams" | "posts" | "flats" | "wedges" | "marks" | "field" | "waves" | "hurdle" | "goals" | "span" | "high" | "press" | "hands" | "level" | "glass" | "pass" | "court" | "board"} StageMotif
  * @typedef {{
  *   hue: StageHue,
  *   motif: StageMotif,
@@ -485,6 +485,20 @@ function drawStageMotif(ctx, width, height, kit) {
     drawFlameShard(ctx, width * 0.92, height * 0.26, kit);
     return;
   }
+  if (motif === "court") {
+    drawCourtBackboard(ctx, width * 0.07, height * 0.2, kit, 1);
+    drawCourtBackboard(ctx, width * 0.93, height * 0.18, kit, -1);
+    fillTri(ctx, [width * 0.02, height * 0.78], [width * 0.2, height * 0.84], [width * 0.04, height * 0.94], kit.mid);
+    fillTri(ctx, [width * 0.98, height * 0.76], [width * 0.8, height * 0.82], [width * 0.96, height * 0.94], kit.shade);
+    return;
+  }
+  if (motif === "board") {
+    drawSidePin(ctx, width * 0.12, height * 0.82, kit);
+    drawSidePin(ctx, width * 0.88, height * 0.8, kit);
+    drawDoughMound(ctx, width * 0.08, height * 0.28, kit);
+    drawDoughMound(ctx, width * 0.92, height * 0.26, kit);
+    return;
+  }
   fillTri(ctx, [width * 0.18, height * 0.08], [width * 0.34, height * 0.08], [width * 0.26, height * 0.16], kit.lit);
   fillTri(ctx, [width * 0.66, height * 0.08], [width * 0.82, height * 0.08], [width * 0.74, height * 0.16], kit.mid);
 }
@@ -698,6 +712,56 @@ function drawLevelShelf(ctx, x, y, kit, fx) {
 }
 
 /**
+ * Side hoop stand for Shoot! — backboard + rim, not a high-five podium.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {StageKit} kit
+ * @param {number} fx
+ */
+function drawCourtBackboard(ctx, x, y, kit, fx) {
+  fillTri(ctx, [x, y + 88], [x + 8 * fx, y - 6], [x + 14 * fx, y + 88], kit.lit);
+  fillTri(ctx, [x + 8 * fx, y - 6], [x + 16 * fx, y + 4], [x + 14 * fx, y + 88], kit.shade);
+  fillTri(ctx, [x + 4 * fx, y - 8], [x + 46 * fx, y - 26], [x + 10 * fx, y + 26], kit.mid);
+  fillTri(ctx, [x + 46 * fx, y - 26], [x + 50 * fx, y + 16], [x + 10 * fx, y + 26], kit.shade);
+  fillTri(ctx, [x + 16 * fx, y - 4], [x + 34 * fx, y - 14], [x + 18 * fx, y + 14], FACET.bone);
+  fillTri(ctx, [x + 8 * fx, y + 18], [x + 28 * fx, y + 10], [x + 30 * fx, y + 22], FACET.ember);
+  fillTri(ctx, [x + 8 * fx, y + 18], [x + 30 * fx, y + 22], [x + 12 * fx, y + 28], kit.deep);
+}
+
+/**
+ * Kitchen rolling pin for Roll!
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {StageKit} kit
+ */
+function drawSidePin(ctx, x, y, kit) {
+  fillTri(ctx, [x - 42, y - 6], [x + 42, y - 10], [x + 42, y], kit.lit);
+  fillTri(ctx, [x - 42, y - 6], [x + 42, y], [x - 42, y + 8], kit.shade);
+  fillTri(ctx, [x - 16, y - 6], [x + 16, y - 6], [x, y + 4], kit.mid);
+  fillTri(ctx, [x - 50, y - 2], [x - 38, y - 8], [x - 38, y + 6], FACET.bone);
+  fillTri(ctx, [x + 50, y], [x + 38, y - 8], [x + 38, y + 6], FACET.bone);
+}
+
+/**
+ * Corner dough mound.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {StageKit} kit
+ */
+function drawDoughMound(ctx, x, y, kit) {
+  fillTri(ctx, [x - 22, y + 10], [x, y - 24], [x + 6, y + 10], kit.lit);
+  fillTri(ctx, [x, y - 24], [x + 24, y + 8], [x + 6, y + 10], kit.mid);
+  fillTri(ctx, [x - 22, y + 10], [x + 24, y + 8], [x, y + 20], kit.shade);
+  fillTri(ctx, [x - 6, y - 6], [x, y - 18], [x + 6, y - 2], FACET.bone);
+}
+
+/**
  * Tall mirrored pane for Copy! — paired flats that read as reflection, not pose flats.
  *
  * @param {CanvasRenderingContext2D} ctx
@@ -772,10 +836,10 @@ const STAGE_KITS = {
   pitch: kit("moss", "goals", 0.1),
   span: kit("sky", "span", 0.1),
   high: kit("lilac", "high", 0.1),
-  hoop: kit("lilac", "high", 0.1),
+  hoop: kit("lilac", "court", 0.1),
   hello: kit("sky", "waves", 0.09),
   press: kit("ember", "press", 0.1),
-  dough: kit("ember", "press", 0.1),
+  dough: kit("ember", "board", 0.1),
   steady: kit("moss", "level", 0.1),
   mirror: kit("lilac", "glass", 0.1),
   pass: kit("ember", "pass", 0.1),
